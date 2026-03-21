@@ -45,21 +45,8 @@ jobs:
         env:
           HUSKY: '0'
 
-      - name: Remove stale upstream changesets
-        run: |
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const dir = '.changeset';
-            for (const f of fs.readdirSync(dir)) {
-              if (!f.endsWith('.md') || f === 'README.md') continue;
-              const content = fs.readFileSync(path.join(dir, f), 'utf-8');
-              if (content.includes('@platejs/') || content.includes('@udecode/')) {
-                fs.unlinkSync(path.join(dir, f));
-                console.log('Removed stale changeset:', f);
-              }
-            }
-          "
+      - name: Convert upstream changesets
+        run: node scripts/convert-changesets.mjs
 
       - name: Build
         run: pnpm turbo build --filter "./packages/**"
