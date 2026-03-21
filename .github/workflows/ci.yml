@@ -114,13 +114,13 @@ jobs:
         run: bun check
 
       - name: 🔧 Configure git
-        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' && github.repository == 'udecode/plate' }}
+        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: ⬆️ Push barrel updates
-        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' && github.repository == 'udecode/plate' }}
+        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' }}
         run: |
           git add packages
           git commit -m "chore: sync barrels [skip ci] [skip release]"
