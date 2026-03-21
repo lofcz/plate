@@ -3,12 +3,7 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "linked": [
-    [
-      "@lofcz/platejs",
-      "@lofcz/platejs-*",
-      "@lofcz/udecode-*",
-      "@lofcz/depset"
-    ]
+    ["@lofcz/platejs", "@lofcz/platejs-*", "@lofcz/udecode-*", "@lofcz/depset"]
   ],
   "access": "public",
   "baseBranch": "main",
