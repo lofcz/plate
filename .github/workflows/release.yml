@@ -1,41 +1,41 @@
-name: Publish @lofcz packages
+name: Release
 
 on:
   push:
-    tags: ['@lofcz/*']
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
 
 jobs:
-  publish:
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: lofcz
+          fetch-depth: 0
+
+      - name: Setup git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
           cache: pnpm
-
-      - name: Extract package from tag
-        id: meta
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          # Tag format: @lofcz/platejs-ai@52.3.2-lofcz.1
-          # Extract package name (everything before the last @version)
-          PKG_NAME="${TAG%@*}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "package=$PKG_NAME" >> "$GITHUB_OUTPUT"
-          echo "Publishing: $PKG_NAME"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -43,39 +43,14 @@ jobs:
           HUSKY: '0'
 
       - name: Build
-        run: pnpm turbo build --filter="${{ steps.meta.outputs.package }}..."
+        run: pnpm turbo build --filter "./packages/**"
 
-      - name: Find package directory
-        id: find-dir
-        run: |
-          DIR=$(node -e "
-            const fs = require('fs');
-            const path = require('path');
-            function find(dir, depth = 0) {
-              if (depth > 3) return null;
-              for (const entry of fs.readdirSync(dir)) {
-                if (['node_modules', 'dist', '.git'].includes(entry)) continue;
-                const full = path.join(dir, entry);
-                if (!fs.statSync(full).isDirectory()) continue;
-                const pkgPath = path.join(full, 'package.json');
-                if (fs.existsSync(pkgPath)) {
-                  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-                  if (pkg.name === '${{ steps.meta.outputs.package }}') {
-                    console.log(full);
-                    return full;
-                  }
-                }
-                const found = find(full, depth + 1);
-                if (found) return found;
-              }
-              return null;
-            }
-            find('packages');
-          ")
-          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
-
-      - name: Publish
-        working-directory: ${{ steps.find-dir.outputs.dir }}
-        run: pnpm publish --provenance --access public --no-git-checks
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

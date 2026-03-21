@@ -25,6 +25,8 @@
       "!!**/*otf.json",
       "!!**/*.html",
       "!!tooling/config/global.d.ts",
+      "!!scripts/rename-to-lofcz.mjs",
+      "!!scripts/bootstrap-publish.ps1",
       "!!templates",
       "!**/__registry__",
       "!**/next-env.d.ts"

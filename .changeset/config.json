@@ -1,18 +1,17 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
-  "changelog": ["./changelog-config", { "repo": "udecode/plate" }],
+  "changelog": "@changesets/cli/changelog",
   "commit": false,
   "linked": [
     [
-      "platejs",
-      "@platejs/*",
-      "@udecode/react*",
-      "@udecode/cn",
-      "@udecode/utils"
+      "@lofcz/platejs",
+      "@lofcz/platejs-*",
+      "@lofcz/udecode-*",
+      "@lofcz/depset"
     ]
   ],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["www"]
+  "ignore": ["www", "@plate/scripts"]
 }
