@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/test-utils",
+  "name": "@lofcz/platejs-test-utils",
   "version": "52.3.4",
   "description": "Testing utilities for Plate",
   "keywords": [
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/test-utils"
   },
   "license": "MIT",
@@ -41,7 +41,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/slate": "workspace:*",
+    "@platejs/slate": "workspace:@lofcz/platejs-slate@*",
     "slate": "0.123.0",
     "slate-hyperscript": "0.100.0"
   },

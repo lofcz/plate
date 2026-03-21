@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/dnd",
+  "name": "@lofcz/platejs-dnd",
   "version": "52.0.11",
   "description": "React drag and drop feature for Plate",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/dnd"
   },
   "license": "MIT",

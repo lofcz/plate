@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/emoji",
+  "name": "@lofcz/platejs-emoji",
   "version": "52.0.15",
   "description": "Emoji plugin for Plate",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/emoji"
   },
   "license": "MIT",
@@ -40,7 +40,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/combobox": "workspace:*",
+    "@platejs/combobox": "workspace:@lofcz/platejs-combobox@*",
     "react-compiler-runtime": "^1.0.0"
   },
   "devDependencies": {

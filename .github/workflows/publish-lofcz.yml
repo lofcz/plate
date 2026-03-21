@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: lofcz
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -24,16 +26,56 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
+      - name: Extract package from tag
+        id: meta
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          # Tag format: @lofcz/platejs-ai@52.3.2-lofcz.1
+          # Extract package name (everything before the last @version)
+          PKG_NAME="${TAG%@*}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "package=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "Publishing: $PKG_NAME"
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
         env:
           HUSKY: '0'
 
       - name: Build
-        run: pnpm turbo build --filter=./packages/ai...
+        run: pnpm turbo build --filter="${{ steps.meta.outputs.package }}..."
+
+      - name: Find package directory
+        id: find-dir
+        run: |
+          DIR=$(node -e "
+            const fs = require('fs');
+            const path = require('path');
+            function find(dir, depth = 0) {
+              if (depth > 3) return null;
+              for (const entry of fs.readdirSync(dir)) {
+                if (['node_modules', 'dist', '.git'].includes(entry)) continue;
+                const full = path.join(dir, entry);
+                if (!fs.statSync(full).isDirectory()) continue;
+                const pkgPath = path.join(full, 'package.json');
+                if (fs.existsSync(pkgPath)) {
+                  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+                  if (pkg.name === '${{ steps.meta.outputs.package }}') {
+                    console.log(full);
+                    return full;
+                  }
+                }
+                const found = find(full, depth + 1);
+                if (found) return found;
+              }
+              return null;
+            }
+            find('packages');
+          ")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
 
       - name: Publish
-        working-directory: packages/ai
+        working-directory: ${{ steps.find-dir.outputs.dir }}
         run: pnpm publish --provenance --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

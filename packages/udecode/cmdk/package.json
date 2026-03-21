@@ -1,5 +1,5 @@
 {
-  "name": "@udecode/cmdk",
+  "name": "@lofcz/udecode-cmdk",
   "version": "1.0.2",
   "description": "Fork of cmdk with control actions.",
   "keywords": [],
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/udecode/plate.git",
+    "url": "git+https://github.com/lofcz/plate.git",
     "directory": "packages/udecode/cmdk"
   },
   "license": "MIT",

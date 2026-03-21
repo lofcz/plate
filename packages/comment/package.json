@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/comment",
+  "name": "@lofcz/platejs-comment",
   "version": "52.0.11",
   "description": "Plate plugin for comments",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/comment"
   },
   "license": "MIT",

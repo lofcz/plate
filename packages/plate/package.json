@@ -1,5 +1,5 @@
 {
-  "name": "platejs",
+  "name": "@lofcz/platejs",
   "version": "52.3.4",
   "description": "Plate – a framework for building rich text editors on the web",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/plate"
   },
   "license": "MIT",
@@ -46,12 +46,12 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/core": "workspace:*",
-    "@platejs/slate": "workspace:*",
-    "@platejs/utils": "workspace:*",
-    "@udecode/react-hotkeys": "workspace:*",
-    "@udecode/react-utils": "workspace:*",
-    "@udecode/utils": "workspace:*",
+    "@platejs/core": "workspace:@lofcz/platejs-core@*",
+    "@platejs/slate": "workspace:@lofcz/platejs-slate@*",
+    "@platejs/utils": "workspace:@lofcz/platejs-utils@*",
+    "@udecode/react-hotkeys": "workspace:@lofcz/udecode-react-hotkeys@*",
+    "@udecode/react-utils": "workspace:@lofcz/udecode-react-utils@*",
+    "@udecode/utils": "workspace:@lofcz/udecode-utils@*",
     "react-compiler-runtime": "^1.0.0"
   },
   "peerDependencies": {

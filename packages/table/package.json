@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/table",
+  "name": "@lofcz/platejs-table",
   "version": "52.0.11",
   "description": "Table plugin for Plate",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/table"
   },
   "license": "MIT",
@@ -40,7 +40,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/resizable": "workspace:^",
+    "@platejs/resizable": "workspace:@lofcz/platejs-resizable@^",
     "lodash": "^4.17.21",
     "react-compiler-runtime": "^1.0.0"
   },

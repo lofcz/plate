@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/tag",
+  "name": "@lofcz/platejs-tag",
   "version": "52.0.11",
   "description": "Tag plugin for Plate",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/tag"
   },
   "license": "MIT",

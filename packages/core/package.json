@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/core",
+  "name": "@lofcz/platejs-core",
   "version": "52.3.4",
   "description": "The core of Plate – a plugin system for slate",
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/core"
   },
   "license": "MIT",
@@ -47,10 +47,10 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/slate": "workspace:*",
-    "@udecode/react-hotkeys": "workspace:*",
-    "@udecode/react-utils": "workspace:*",
-    "@udecode/utils": "workspace:*",
+    "@platejs/slate": "workspace:@lofcz/platejs-slate@*",
+    "@udecode/react-hotkeys": "workspace:@lofcz/udecode-react-hotkeys@*",
+    "@udecode/react-utils": "workspace:@lofcz/udecode-react-utils@*",
+    "@udecode/utils": "workspace:@lofcz/udecode-utils@*",
     "clsx": "^2.1.1",
     "html-entities": "^2.6.0",
     "is-hotkey": "^0.2.0",

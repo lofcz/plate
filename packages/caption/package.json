@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/caption",
+  "name": "@lofcz/platejs-caption",
   "version": "52.0.11",
   "description": "Primitive components for caption.",
   "keywords": [
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/caption"
   },
   "license": "MIT",

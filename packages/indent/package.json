@@ -1,5 +1,5 @@
 {
-  "name": "@platejs/indent",
+  "name": "@lofcz/platejs-indent",
   "version": "52.0.11",
   "description": "Indent plugin for Plate",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/indent"
   },
   "license": "MIT",

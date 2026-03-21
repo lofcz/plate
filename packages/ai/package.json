@@ -40,10 +40,10 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/markdown": "workspace:^",
-    "@platejs/selection": "workspace:^",
-    "@platejs/suggestion": "workspace:^",
-    "@platejs/table": "workspace:^",
+    "@platejs/markdown": "workspace:@lofcz/platejs-markdown@^",
+    "@platejs/selection": "workspace:@lofcz/platejs-selection@^",
+    "@platejs/suggestion": "workspace:@lofcz/platejs-suggestion@^",
+    "@platejs/table": "workspace:@lofcz/platejs-table@^",
     "fastest-levenshtein": "1.0.16",
     "lodash": "^4.17.21",
     "react-compiler-runtime": "^1.0.0"
