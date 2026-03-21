@@ -26,7 +26,9 @@
       "!!**/*.html",
       "!!tooling/config/global.d.ts",
       "!!scripts/rename-to-lofcz.mjs",
+      "!!scripts/convert-changesets.mjs",
       "!!scripts/bootstrap-publish.ps1",
+      "!!scripts/sync-upstream.ps1",
       "!!templates",
       "!**/__registry__",
       "!**/next-env.d.ts"
