@@ -1,0 +1,39 @@
+name: Publish @lofcz packages
+
+on:
+  push:
+    tags: ['@lofcz/*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+        env:
+          HUSKY: '0'
+
+      - name: Build
+        run: pnpm turbo build --filter=./packages/ai...
+
+      - name: Publish
+        working-directory: packages/ai
+        run: pnpm publish --provenance --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
