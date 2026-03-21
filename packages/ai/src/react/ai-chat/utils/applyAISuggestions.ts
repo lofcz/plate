@@ -55,17 +55,13 @@ export const applyAISuggestions = (editor: SlateEditor, content: string) => {
     );
 
     replaceNodes.forEach(([node, path], index) => {
-      const replaceNode = node as unknown as TSuggestionElement;
-      const diffNode = diffNodes[index] as unknown as TSuggestionElement;
+      const diffNode = diffNodes[index];
 
-      const isSameString =
-        SkipSuggestionDeletes(editor, replaceNode) ===
-        SkipSuggestionDeletes(editor, diffNode);
+      // AI returned fewer blocks than original — nothing to apply here.
+      if (!diffNode) return;
 
-      const isSameSuggestion =
-        (replaceNode.suggestion as TSuggestionData | undefined)?.type ===
-        (diffNode.suggestion as TSuggestionData | undefined)?.type;
-
+      // When the model outputs more top-level blocks than we currently track,
+      // replace the last tracked block with the remaining diff tail in one op.
       if (
         index === replaceNodes.length - 1 &&
         diffNodes.length > replaceNodes.length
@@ -73,8 +69,20 @@ export const applyAISuggestions = (editor: SlateEditor, content: string) => {
         editor.tf.replaceNodes(diffNodes.slice(index), {
           at: path,
         });
+        return;
       }
-      // Performance optimization
+
+      const replaceNode = node as unknown as TSuggestionElement;
+      const diffSuggestion = diffNode as unknown as TSuggestionElement;
+
+      const isSameString =
+        SkipSuggestionDeletes(editor, replaceNode) ===
+        SkipSuggestionDeletes(editor, diffSuggestion);
+
+      const isSameSuggestion =
+        (replaceNode.suggestion as TSuggestionData | undefined)?.type ===
+        (diffSuggestion.suggestion as TSuggestionData | undefined)?.type;
+
       if (isSameString && isSameSuggestion && node.id === diffNode.id) {
         return;
       }

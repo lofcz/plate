@@ -1,6 +1,6 @@
 {
-  "name": "@platejs/ai",
-  "version": "52.3.1",
+  "name": "@lofcz/platejs-ai",
+  "version": "52.3.2-lofcz.1",
   "description": "Text AI plugin for Plate",
   "keywords": [
     "plate",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/udecode/plate.git",
+    "url": "https://github.com/lofcz/plate.git",
     "directory": "packages/ai"
   },
   "license": "MIT",
