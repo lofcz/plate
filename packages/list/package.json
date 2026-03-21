@@ -40,7 +40,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/indent": "workspace:@lofcz/platejs-indent@^",
+    "@platejs/indent": "workspace:@lofcz/platejs-indent@*",
     "clsx": "^2.1.1",
     "lodash": "^4.17.23",
     "react-compiler-runtime": "^1.0.0"

@@ -18,12 +18,14 @@ function updateWorkspaceDep(depName, depValue) {
   const newName = mapName(depName);
   if (!newName || newName === depName) return depValue;
 
-  // Extract range specifier: workspace:^ → ^, workspace:* → *, workspace:>=1.0.0 → >=1.0.0
-  const range = depValue.slice('workspace:'.length);
-  // Already has an alias (workspace:@lofcz/foo@*)
-  if (range.includes('@lofcz/')) return depValue;
+  const rest = depValue.slice('workspace:'.length);
 
-  return `workspace:${newName}@${range}`;
+  // Already aliased — normalize range to @*
+  if (rest.includes('@lofcz/')) {
+    return rest.replace(/@[^@]*$/, '@*').replace(/^/, 'workspace:');
+  }
+
+  return `workspace:${newName}@*`;
 }
 
 function updateDepsSection(deps) {
@@ -88,13 +90,16 @@ for (const pj of packageJsons) {
   processPackageJson(pj);
 }
 
-console.log('\nUpdating root package.json workspace deps...');
-const rootPkgPath = join(ROOT, 'package.json');
-const rootRaw = readFileSync(rootPkgPath, 'utf-8');
-const rootPkg = JSON.parse(rootRaw);
-if (rootPkg.dependencies) rootPkg.dependencies = updateDepsSection(rootPkg.dependencies);
-if (rootPkg.devDependencies) rootPkg.devDependencies = updateDepsSection(rootPkg.devDependencies);
-writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, 2) + '\n');
-console.log('  ROOT: updated');
+for (const extra of ['package.json', 'apps/www/package.json']) {
+  const filePath = join(ROOT, extra);
+  try {
+    const raw = readFileSync(filePath, 'utf-8');
+    const pkg = JSON.parse(raw);
+    if (pkg.dependencies) pkg.dependencies = updateDepsSection(pkg.dependencies);
+    if (pkg.devDependencies) pkg.devDependencies = updateDepsSection(pkg.devDependencies);
+    writeFileSync(filePath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`\n  UPDATED: ${extra}`);
+  } catch { /* file may not exist */ }
+}
 
 console.log('\nDone! All packages renamed to @lofcz/ scope.');

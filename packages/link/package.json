@@ -40,7 +40,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
-    "@platejs/floating": "workspace:@lofcz/platejs-floating@^",
+    "@platejs/floating": "workspace:@lofcz/platejs-floating@*",
     "react-compiler-runtime": "^1.0.0"
   },
   "devDependencies": {
