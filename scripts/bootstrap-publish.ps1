@@ -4,7 +4,7 @@ param(
     [switch]$SkipBuild
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $ROOT = Split-Path -Parent (Split-Path -Parent $PSCommandPath)
 
 # All publishable packages in topological (dependency) order.
@@ -135,9 +135,9 @@ access=public
         $name = $pkgJson.name
         $version = $pkgJson.version
 
-        # Check if already published
-        $existing = npm view "$name@$version" version 2>&1
-        if ($LASTEXITCODE -eq 0 -and $existing -eq $version) {
+        # Check if already published (E404 is expected for new packages)
+        $existingOutput = & npm view "$name@$version" version 2>&1 | Out-String
+        if ($LASTEXITCODE -eq 0 -and $existingOutput.Trim() -eq $version) {
             Write-Host "  SKIP (already published): $name@$version" -ForegroundColor Yellow
             $skipped += $name
             continue
@@ -145,7 +145,7 @@ access=public
 
         Write-Host "`n  Publishing $name@$version..." -ForegroundColor Cyan
         Push-Location $pkgDir
-        pnpm publish --access public --no-git-checks 2>&1
+        pnpm publish --access public --no-git-checks
         $exitCode = $LASTEXITCODE
         Pop-Location
 
@@ -154,7 +154,23 @@ access=public
             $succeeded += $name
         } else {
             Write-Host "  FAIL: $name@$version" -ForegroundColor Red
-            $failed += $name
+            Write-Host "  Press Enter to retry, or type 'skip' to skip this package:" -ForegroundColor Yellow
+            $response = Read-Host
+            if ($response -ne 'skip') {
+                Push-Location $pkgDir
+                pnpm publish --access public --no-git-checks
+                $retryCode = $LASTEXITCODE
+                Pop-Location
+                if ($retryCode -eq 0) {
+                    Write-Host "  OK (retry): $name@$version" -ForegroundColor Green
+                    $succeeded += $name
+                } else {
+                    Write-Host "  FAIL (retry): $name@$version" -ForegroundColor Red
+                    $failed += $name
+                }
+            } else {
+                $failed += $name
+            }
         }
     }
 
