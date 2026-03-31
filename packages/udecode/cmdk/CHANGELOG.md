@@ -1,5 +1,11 @@
 # @udecode/cmdk
 
+## 52.3.6
+
+### Patch Changes
+
+- be8da05: Sync upstream
+
 ## 1.0.2
 
 ### Patch Changes

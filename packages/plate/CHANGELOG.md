@@ -1,5 +1,11 @@
 # platejs
 
+## 52.3.6
+
+### Patch Changes
+
+- be8da05: Sync upstream
+
 ## 52.3.16
 
 ### Patch Changes

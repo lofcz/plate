@@ -1,5 +1,11 @@
 # @udecode/slate
 
+## 52.3.6
+
+### Patch Changes
+
+- be8da05: Sync upstream
+
 ## 52.3.12
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@lofcz/depset",
-  "version": "0.1.1",
+  "version": "52.3.6",
   "description": "Synchronize dependencies in package.json",
   "keywords": [
     "dependencies",
