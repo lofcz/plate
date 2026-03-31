@@ -1,5 +1,26 @@
 # @udecode/plate-serializer-csv
 
+## 52.3.20
+
+## 52.3.18
+
+## 52.3.17
+
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
+## 52.3.8
+
+### Patch Changes
+
+- [#4890](https://github.com/udecode/plate/pull/4890) by [@zbeyens](https://github.com/zbeyens) –
+  - Fixed Papa Parse interop so native Node ESM runtimes like Vitest can import `@platejs/csv` without failing on a CommonJS named export.
+
+## 52.3.6
+
 ## 52.0.11
 
 ### Patch Changes

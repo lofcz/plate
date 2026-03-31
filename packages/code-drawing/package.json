@@ -23,12 +23,14 @@
   },
   "license": "MIT",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": "./dist/index.js",
     "./react": "./dist/react/index.js",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -60,7 +62,8 @@
     "@plate/scripts": "workspace:*",
     "@types/lodash": "^4.17.13",
     "@types/plantuml-encoder": "^1.4.2",
-    "@types/viz.js": "^2.1.5"
+    "@types/viz.js": "^2.1.5",
+    "platejs": "workspace:@lofcz/platejs@*"
   },
   "peerDependencies": {
     "platejs": ">=52.0.11",
@@ -69,7 +72,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "type": "module",
-  "module": "./dist/index.js"
+  }
 }

@@ -1,5 +1,22 @@
 # @platejs/link
 
+## 52.3.17
+
+### Patch Changes
+
+- [#4919](https://github.com/udecode/plate/pull/4919) by [@zbeyens](https://github.com/zbeyens) –
+
+  - Fixed custom `isUrl` handling so it can reject internal paths like `/docs` and anchor links like `#top` instead of those shortcuts always being accepted.
+
+- [#4917](https://github.com/udecode/plate/pull/4917) by [@zbeyens](https://github.com/zbeyens) –
+  - Fixed link validation so text starting with `//` is no longer treated as an internal path. This stops comment-style paste content from being autolinked by mistake, including inside code blocks.
+
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
 ## 52.0.11
 
 ### Patch Changes

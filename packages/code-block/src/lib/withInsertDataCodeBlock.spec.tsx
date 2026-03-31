@@ -2,27 +2,27 @@
 
 import type { SlateEditor } from 'platejs';
 
+import { BaseLinkPlugin } from '@platejs/link';
 import { createDataTransfer, jsxt } from '@platejs/test-utils';
 import { BaseParagraphPlugin, createSlateEditor } from 'platejs';
 
-import { CodeBlockPlugin } from '../react/CodeBlockPlugin';
+import { BaseCodeBlockPlugin } from './BaseCodeBlockPlugin';
 
 jsxt;
 
-const editorTest = (input: any, data: DataTransfer, expected: any) => {
-  const plugins = [BaseParagraphPlugin, CodeBlockPlugin];
-
-  const editor = createSlateEditor({
-    plugins,
+const createEditor = (input: SlateEditor) =>
+  createSlateEditor({
+    plugins: [BaseParagraphPlugin, BaseCodeBlockPlugin],
     selection: input.selection,
     value: input.children,
   });
 
-  editor.tf.insertData(data);
-
-  // biome-ignore lint/suspicious/noMisplacedAssertion: helper function called inside tests
-  expect(editor.children).toEqual(expected.children);
-};
+const createEditorWithLink = (input: SlateEditor) =>
+  createSlateEditor({
+    plugins: [BaseParagraphPlugin, BaseCodeBlockPlugin, BaseLinkPlugin],
+    selection: input.selection,
+    value: input.children,
+  });
 
 describe('when pasting text into a code block', () => {
   it('paste only the fragment', () => {
@@ -56,6 +56,121 @@ describe('when pasting text into a code block', () => {
       </editor>
     ) as any as SlateEditor;
 
-    editorTest(input, fragment, expected);
+    const editor = createEditor(input);
+
+    editor.tf.insertData(fragment);
+
+    expect(editor.children).toEqual(expected.children);
+  });
+
+  it('creates a new code block from vscode metadata outside an existing code block', () => {
+    const input = (
+      <editor>
+        <hp>
+          <cursor />
+        </hp>
+      </editor>
+    ) as any as SlateEditor;
+
+    const data = createDataTransfer(
+      new Map([
+        ['text/plain', 'const a = "b";\nconst c = "d";'],
+        ['vscode-editor-data', JSON.stringify({ mode: 'typescript' })],
+      ])
+    );
+
+    const expected = (
+      <editor>
+        <hp>
+          <htext />
+        </hp>
+        <hcodeblock lang="typescript">
+          <hcodeline>const a = "b";</hcodeline>
+          <hcodeline>
+            const c = "d";
+            <cursor />
+          </hcodeline>
+        </hcodeblock>
+      </editor>
+    ) as any as SlateEditor;
+
+    const editor = createEditor(input);
+
+    editor.tf.insertData(data);
+
+    expect(editor.children).toEqual(expected.children);
+  });
+
+  it('inserts vscode lines into the current code block instead of nesting one', () => {
+    const input = (
+      <editor>
+        <hcodeblock>
+          <hcodeline>
+            <cursor />
+          </hcodeline>
+        </hcodeblock>
+      </editor>
+    ) as any as SlateEditor;
+
+    const data = createDataTransfer(
+      new Map([
+        ['text/plain', 'const a = "b";\nconst c = "d";'],
+        ['vscode-editor-data', JSON.stringify({ mode: 'typescript' })],
+      ])
+    );
+
+    const expected = (
+      <editor>
+        <hcodeblock>
+          <hcodeline>const a = "b";</hcodeline>
+          <hcodeline>
+            const c = "d";
+            <cursor />
+          </hcodeline>
+        </hcodeblock>
+      </editor>
+    ) as any as SlateEditor;
+
+    const editor = createEditor(input);
+
+    editor.tf.insertData(data);
+
+    expect(editor.children).toEqual(expected.children);
+  });
+
+  it('keeps pasted // comments as plain code when link plugin is present', () => {
+    const input = (
+      <editor>
+        <hcodeblock>
+          <hcodeline>
+            <cursor />
+          </hcodeline>
+        </hcodeblock>
+      </editor>
+    ) as any as SlateEditor;
+
+    const data = createDataTransfer(
+      new Map([
+        ['text/plain', '// this is a comment\nconsole.log("hello world");'],
+      ])
+    );
+
+    const expected = (
+      <editor>
+        <hcodeblock>
+          <hcodeline>// this is a comment</hcodeline>
+          <hcodeline>
+            console.log("hello world");
+            <cursor />
+          </hcodeline>
+        </hcodeblock>
+      </editor>
+    ) as any as SlateEditor;
+
+    const editor = createEditorWithLink(input);
+
+    editor.tf.insertData(data);
+
+    expect(editor.children).toEqual(expected.children);
   });
 });

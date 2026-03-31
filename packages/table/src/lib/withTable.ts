@@ -16,11 +16,17 @@ import { withInsertTextTable } from './withInsertTextTable';
 import { withNormalizeTable } from './withNormalizeTable';
 import { withSetFragmentDataTable } from './withSetFragmentDataTable';
 import { withTableCellSelection } from './withTableCellSelection';
+import { moveSelectionFromCell } from './transforms';
+import {
+  getTableMoveSelectionContext,
+  hasAdjacentBlockInCell,
+  shouldMoveSelectionFromCell,
+} from './transforms/shouldMoveSelectionFromCell';
 
 export const withTable: OverrideEditor<TableConfig> = (ctx) => {
   const {
     editor,
-    tf: { selectAll, tab },
+    tf: { moveLine, selectAll, tab },
     type,
   } = ctx;
   const cellSelection = withTableCellSelection(ctx);
@@ -32,6 +38,45 @@ export const withTable: OverrideEditor<TableConfig> = (ctx) => {
       ...cellSelection.api,
     },
     transforms: {
+      moveLine: (options) => {
+        const apply = () => {
+          if (!editor.api.isCollapsed()) return;
+
+          const context = getTableMoveSelectionContext(editor);
+
+          if (!context) return;
+
+          const { blockPath, cellPath, point } = context;
+
+          if (
+            hasAdjacentBlockInCell(editor, {
+              blockPath,
+              cellPath,
+              reverse: options.reverse,
+            })
+          ) {
+            return;
+          }
+
+          const shouldMoveAcrossCell = shouldMoveSelectionFromCell(editor, {
+            blockPath,
+            point,
+            reverse: options.reverse,
+          });
+
+          if (!shouldMoveAcrossCell) {
+            return;
+          }
+
+          return moveSelectionFromCell(editor, {
+            reverse: options.reverse,
+          });
+        };
+
+        if (apply()) return true;
+
+        return moveLine(options);
+      },
       selectAll: () => {
         const apply = () => {
           const table = editor.api.above<TElement>({ match: { type } });

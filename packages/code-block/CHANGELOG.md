@@ -1,5 +1,30 @@
 # @platejs/code-block
 
+## 52.3.16
+
+### Patch Changes
+
+- [`3465ee1`](https://github.com/udecode/plate/commit/3465ee17a0f2d1557f08656a8d08d3d4a332143b) by [@zbeyens](https://github.com/zbeyens) – Refresh `@platejs/code-block` release metadata.
+
+## 52.3.14
+
+### Patch Changes
+
+- [#4907](https://github.com/udecode/plate/pull/4907) by [@zbeyens](https://github.com/zbeyens) –
+  - Fixed `formatCodeBlock` to rewrite formatted code into real `code_line` nodes and trigger a redecorate pass so syntax highlighting persists after formatting.
+
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
+## 52.3.9
+
+### Patch Changes
+
+- [#4893](https://github.com/udecode/plate/pull/4893) by [@hhhjin](https://github.com/hhhjin) – Redecorate code blocks when the language changes to avoid stale highlighting.
+
 ## 52.0.11
 
 ### Patch Changes

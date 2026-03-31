@@ -41,10 +41,11 @@
   },
   "devDependencies": {
     "@plate/scripts": "workspace:*",
+    "platejs": "workspace:@lofcz/platejs@*",
     "lowlight": "^3.3.0"
   },
   "peerDependencies": {
-    "platejs": ">=52.0.11",
+    "platejs": ">=52.3.16",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },

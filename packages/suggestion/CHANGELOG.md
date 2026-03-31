@@ -1,5 +1,18 @@
 # @platejs/suggestion
 
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
+## 52.3.8
+
+### Patch Changes
+
+- [#4882](https://github.com/udecode/plate/pull/4882) by [@zbeyens](https://github.com/zbeyens) –
+  - Fix suggestion metadata lookups using the actual per-suggestion keys and IDs for active descriptions, node matching, and line-break detection
+
 ## 52.0.11
 
 ### Patch Changes

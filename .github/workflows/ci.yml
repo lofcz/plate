@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - next
+    paths:
+      - 'packages/**'
+      - 'tooling/**'
+      - 'package.json'
+      - '.github/actions/**'
+      - '.github/workflows/**'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'biome.jsonc'
+      - 'eslint*'
+      - 'bunfig.toml'
+      - 'tsconfig.json'
+      - 'turbo.json'
+      - 'config'
+      - 'scripts'
+      - 'patches'
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'packages/**'
+      - 'tooling/**'
+      - 'package.json'
+      - '.github/actions/**'
+      - '.github/workflows/**'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'biome.jsonc'
+      - 'eslint*'
+      - 'bunfig.toml'
+      - 'tsconfig.json'
+      - 'turbo.json'
+      - 'config'
+      - 'scripts'
+      - 'patches'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Add concurrency to cancel redundant runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.title != '[Release] Version packages') &&
+      (github.event_name != 'push' || (
+        github.event.head_commit.message != 'Version Packages' &&
+        !contains(github.event.head_commit.message, '[skip ci]')
+      ))
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.API_TOKEN_GITHUB || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/pnpm-install
+
+      - name: ♻️ Restore packages cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.cache
+            ${{ github.workspace }}/**/tsconfig.tsbuildinfo
+          key: packages-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: 🧱 Generate barrels
+        run: pnpm brl
+
+      - name: 🔍 Detect barrel changes
+        id: barrel-changes
+        run: |
+          if [[ -n "$(git status --porcelain --untracked-files=all -- packages)" ]]; then
+            git status --short -- packages
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ❌ Fail on barrel drift in PR
+        if: ${{ github.event_name == 'pull_request' && steps.barrel-changes.outputs.changed == 'true' }}
+        run: |
+          echo "pnpm brl produced changes. Commit the generated barrel updates."
+          exit 1
+
+      - name: ✅ Check push
+        if: ${{ github.event_name == 'push' }}
+        run: bun run check:push
+
+      - name: ✅ Check PR
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
+        run: bun check
+
+      - name: 🔧 Configure git
+        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' && github.repository == 'udecode/plate' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: ⬆️ Push barrel updates
+        if: ${{ github.event_name == 'push' && steps.barrel-changes.outputs.changed == 'true' && github.repository == 'udecode/plate' }}
+        run: |
+          git add packages
+          git commit -m "chore: sync barrels [skip ci] [skip release]"
+          git push origin HEAD:${{ github.ref_name }}
+
+      # - name: 📥 Install Playwright dependencies
+      #   run: |
+      #     pnpm exec playwright install-deps
+      #     pnpm exec playwright install
+
+      # - name: 🎭 Run Playwright tests
+      #   run: pnpm e2e
+
+  # notify-failure:
+  #   name: Discord Notification
+  #   runs-on: ubuntu-latest
+  #   needs: [ci]
+  #   if: ${{ github.event_name == 'push' && failure() }}
+
+  #   steps:
+  #     - name: Send Discord Notification
+  #       uses: nobrayner/discord-webhook@v1
+  #       with:
+  #         github-token: ${{ secrets.X_GITHUB_READ_ACTIONS_TOKEN }}
+  #         discord-webhook: ${{ secrets.DISCORD_CI_WEBHOOK }}
+  #         description: ${{ github.event.number && format('https://github.com/udecode/plate/pull/{0}', github.event.number) || 'Push' }}

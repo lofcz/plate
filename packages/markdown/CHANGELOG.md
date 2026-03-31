@@ -1,5 +1,23 @@
 # @platejs/markdown
 
+## 52.3.19
+
+### Patch Changes
+
+- [#4926](https://github.com/udecode/plate/pull/4926) by [@zbeyens](https://github.com/zbeyens) – Fix ordered markdown lists starting above `1` losing their numbering after `editor.tf.setValue()`
+
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
+## 52.3.7
+
+### Patch Changes
+
+- [#4885](https://github.com/udecode/plate/pull/4885) by [@hhhjin](https://github.com/hhhjin) – Fix extra blank lines in nested indented list serialization
+
 ## 52.3.5
 
 ### Patch Changes

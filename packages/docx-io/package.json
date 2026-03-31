@@ -59,11 +59,12 @@
     "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
-    "@plate/scripts": "workspace:*"
+    "@plate/scripts": "workspace:*",
+    "platejs": "workspace:@lofcz/platejs@*"
   },
   "peerDependencies": {
-    "@platejs/docx": ">=52.0.0",
-    "@platejs/markdown": ">=52.0.0",
+    "@platejs/docx": ">=52.3.10",
+    "@platejs/markdown": ">=52.3.10",
     "platejs": ">=52.0.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"

@@ -19,6 +19,37 @@ const createTestEditor = (editor: any, options?: BaseLinkConfig['options']) =>
 
 describe('upsertLink', () => {
   describe('when selection is collapsed', () => {
+    describe('when custom isUrl rejects an internal path', () => {
+      const input = createEditor(
+        (
+          <editor>
+            <hp>
+              insert link
+              <cursor />.
+            </hp>
+          </editor>
+        ) as any
+      );
+
+      const output = (
+        <editor>
+          <hp>
+            insert link
+            <cursor />.
+          </hp>
+        </editor>
+      ) as any;
+
+      it('does not insert the link', () => {
+        const editor = createTestEditor(input, {
+          isUrl: (inputUrl: string) => !inputUrl.startsWith('/'),
+        });
+
+        expect(upsertLink(editor, { url: '/internal/path' })).toBeUndefined();
+        expect(editor.children).toEqual(output.children);
+      });
+    });
+
     // https://github.com/udecode/editor-protocol/issues/46
     describe('when not in link, url only', () => {
       const input = createEditor(
@@ -401,6 +432,35 @@ describe('upsertLink', () => {
       });
     });
 
+    describe('when containing a link and replacing its text', () => {
+      const input = createEditor(
+        (
+          <editor>
+            <hp>
+              insert link <anchor />
+              <ha url={url}>here</ha>
+              <focus />.
+            </hp>
+          </editor>
+        ) as any
+      );
+
+      const output = (
+        <editor>
+          <hp>
+            insert link <ha url={url}>renamed</ha>.
+          </hp>
+        </editor>
+      ) as any;
+
+      it('replaces the wrapped text instead of keeping the original link text', () => {
+        const editor = createTestEditor(input);
+        upsertLink(editor, { text: 'renamed', url });
+
+        expect(editor.children).toEqual(output.children);
+      });
+    });
+
     // https://github.com/udecode/editor-protocol/issues/70
     describe('when inserting a link in a marked text', () => {
       const input = createEditor(
@@ -493,6 +553,67 @@ describe('upsertLink', () => {
         skipValidation: true,
         url: 'invalid',
       });
+
+      expect(editor.children).toEqual(output.children);
+    });
+  });
+
+  describe('when selection is missing', () => {
+    it('returns undefined and keeps content unchanged', () => {
+      const editor = createTestEditor(
+        createEditor(
+          (
+            <editor>
+              <hp>plain text</hp>
+            </editor>
+          ) as any
+        )
+      );
+
+      editor.selection = null;
+
+      expect(upsertLink(editor, { url })).toBeUndefined();
+      expect(editor.children).toEqual([
+        {
+          children: [{ text: 'plain text' }],
+          type: 'p',
+        },
+      ]);
+    });
+  });
+
+  describe('when in a link and updating target only', () => {
+    const input = createEditor(
+      (
+        <editor>
+          <hp>
+            .
+            <ha url={url}>
+              insert <cursor />
+              link
+            </ha>
+            .
+          </hp>
+        </editor>
+      ) as any
+    );
+
+    const output = (
+      <editor>
+        <hp>
+          .
+          <ha target="_blank" url={url}>
+            insert link
+          </ha>
+          .
+        </hp>
+      </editor>
+    ) as any;
+
+    it('updates target without replacing the existing text', () => {
+      const editor = createTestEditor(input);
+
+      upsertLink(editor, { target: '_blank', url });
 
       expect(editor.children).toEqual(output.children);
     });

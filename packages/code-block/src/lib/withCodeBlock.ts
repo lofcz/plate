@@ -20,16 +20,27 @@ export const withCodeBlock: OverrideEditor<CodeBlockConfig> = (ctx) => {
   return {
     transforms: {
       apply(operation) {
+        let shouldRedecorate = false;
+
         if (getOptions().lowlight && operation.type === 'set_node') {
           const entry = editor.api.node(operation.path);
+          const touchesLang =
+            'lang' in (operation.properties ?? {}) ||
+            'lang' in (operation.newProperties ?? {});
+          const langChanged =
+            operation.properties?.lang !== operation.newProperties?.lang;
 
-          if (entry?.[0].type === type && operation.newProperties?.lang) {
-            // Clear decorations for all code lines in this block
+          if (entry?.[0].type === type && touchesLang && langChanged) {
             resetCodeBlockDecorations(entry[0] as TCodeBlockElement);
+            shouldRedecorate = true;
           }
         }
 
         apply(operation);
+
+        if (shouldRedecorate) {
+          editor.api.redecorate();
+        }
       },
       insertBreak() {
         const apply = () => {
@@ -99,8 +110,9 @@ export const withCodeBlock: OverrideEditor<CodeBlockConfig> = (ctx) => {
       },
       tab: (options) => {
         const apply = () => {
+          const codeLineType = editor.getType('code_line');
           const _codeLines = editor.api.nodes<TElement>({
-            match: { type },
+            match: { type: codeLineType },
           });
           const codeLines = Array.from(_codeLines);
 

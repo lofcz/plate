@@ -1,5 +1,39 @@
 # @platejs/table
 
+## 52.3.20
+
+### Patch Changes
+
+- [#4931](https://github.com/udecode/plate/pull/4931) by [@hhhjin](https://github.com/hhhjin) – Fix `Shift+Arrow` table selection to switch cells without showing a transient native range
+
+- [#4930](https://github.com/udecode/plate/pull/4930) by [@zbeyens](https://github.com/zbeyens) – Fix merged table border toggles targeting the wrong adjacent cell
+
+## 52.3.18
+
+### Patch Changes
+
+- [#4923](https://github.com/udecode/plate/pull/4923) by [@hhhjin](https://github.com/hhhjin) – Fixed `ArrowUp` and `ArrowDown` table navigation to avoid the transient caret flash when moving between table cells.
+
+## 52.3.17
+
+### Patch Changes
+
+- [#4922](https://github.com/udecode/plate/pull/4922) by [@zbeyens](https://github.com/zbeyens) –
+  - Fixed table border toggling so left-border updates apply to every selected row in a multi-row cell selection instead of only the topmost row.
+
+## 52.3.10
+
+### Patch Changes
+
+- [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
+
+## 52.3.6
+
+### Patch Changes
+
+- [#4872](https://github.com/udecode/plate/pull/4872) by [@felixfeng33](https://github.com/felixfeng33) –
+  - Reduce large-table selection latency by deriving reactive table selection from editor selectors, keeping selected-cell DOM sync at the table root, and avoiding plugin-store writes on every `set_selection`.
+
 ## 52.0.11
 
 ### Patch Changes
