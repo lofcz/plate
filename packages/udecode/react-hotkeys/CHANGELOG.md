@@ -1,5 +1,11 @@
 # @udecode/react-hotkeys
 
+## 52.3.6
+
+### Patch Changes
+
+- be8da05: Sync upstream
+
 ## 52.0.11
 
 ### Patch Changes

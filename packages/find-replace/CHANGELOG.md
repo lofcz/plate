@@ -1,5 +1,11 @@
 # @platejs/find-replace
 
+## 52.3.6
+
+### Patch Changes
+
+- be8da05: Sync upstream
+
 ## 52.3.10
 
 ### Patch Changes
