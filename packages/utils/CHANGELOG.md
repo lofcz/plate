@@ -1,10 +1,10 @@
 # @platejs/utils
 
-## 52.3.6
+## 52.3.21
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- Updated `@platejs/core`, `@platejs/slate`.
 
 ## 52.3.16
 

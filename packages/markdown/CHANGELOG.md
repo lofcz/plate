@@ -1,10 +1,10 @@
 # @platejs/markdown
 
-## 52.3.6
+## 52.3.22
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- [#4938](https://github.com/udecode/plate/pull/4938) by [@zbeyens](https://github.com/zbeyens) – Fix classic markdown deserialization for empty list items
 
 ## 52.3.19
 

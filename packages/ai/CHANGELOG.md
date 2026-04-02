@@ -1,10 +1,10 @@
 # @platejs/ai
 
-## 52.3.6
+## 52.3.22
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- Updated `@platejs/markdown`.
 
 ## 52.3.20
 
