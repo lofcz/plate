@@ -201,7 +201,31 @@ jobs:
         with:
           version: pnpm changeset version
           publish: pnpm changeset publish
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PACKAGES='${{ steps.changesets.outputs.publishedPackages }}'
+          VERSION=$(echo "$PACKAGES" | jq -r '.[0].version')
+          TAG="v${VERSION}"
+
+          BODY="## Published packages\n\n"
+          BODY+=$(echo "$PACKAGES" | jq -r '.[] | "- \(.name)@\(.version)"')
+
+          git tag "$TAG" 2>/dev/null || true
+          git push origin "$TAG" 2>/dev/null || true
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$(echo -e "$BODY")" \
+            --latest 2>/dev/null || \
+          gh release edit "$TAG" \
+            --title "$TAG" \
+            --notes "$(echo -e "$BODY")"
