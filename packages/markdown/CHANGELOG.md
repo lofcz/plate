@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 52.3.8
+
+### Patch Changes
+
+- 606c375: Bump
+
 ## 52.3.7
 
 ### Patch Changes
