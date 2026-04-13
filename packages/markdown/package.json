@@ -44,6 +44,7 @@
   "dependencies": {
     "lodash": "^4.17.23",
     "marked": "^15.0.12",
+    "mdast-util-to-markdown": "^2.1.2",
     "mdast-util-math": "3.0.0",
     "mdast-util-mdx": "3.0.0",
     "react-compiler-runtime": "^1.0.0",
