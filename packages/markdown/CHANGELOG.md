@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 52.3.7
+
+### Patch Changes
+
+- 9ec18f0: Add `serializeMdWithSourceMap` for mapping Slate selections to markdown line numbers.
+
 ## 52.3.22
 
 ### Patch Changes

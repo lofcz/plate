@@ -24,6 +24,8 @@ const statusOutputPath = path.join(
   'prepare-release-changesets-status.json'
 );
 const scopePrefixPattern = /^@/;
+const frontmatterPattern = /^---\n([\s\S]*?)\n---/;
+const upstreamPackagePattern = /"@platejs\/([^"]+)"/g;
 
 if (isMainModule()) {
   await main();
@@ -31,6 +33,7 @@ if (isMainModule()) {
 
 async function main() {
   await mkdir(path.dirname(statusOutputPath), { recursive: true });
+  await rewriteUpstreamPackageNames();
 
   const workspacePackages = await getWorkspacePackages();
   const manualChangesetPaths = await getManualChangesetPaths();
@@ -186,21 +189,20 @@ async function getManualChangesetPaths() {
 }
 
 function getChangesetStatus() {
-  const result = spawnSync(
-    'pnpm',
-    ['exec', 'changeset', 'status', `--output=${statusOutputPath}`],
-    {
-      cwd: repoRoot,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        CI: process.env.CI || '1',
-      },
-    }
-  );
+  const cmd = `pnpm exec changeset status --output=${statusOutputPath}`;
+  const result = spawnSync(cmd, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: true,
+    env: {
+      ...process.env,
+      CI: process.env.CI || '1',
+    },
+  });
 
   if (result.status !== 0) {
-    process.stderr.write(result.stderr);
+    if (result.stderr) process.stderr.write(result.stderr);
+    if (result.stdout) process.stderr.write(result.stdout);
     process.exit(result.status ?? 1);
   }
 
@@ -292,4 +294,37 @@ export { autoChangesetFilenamePrefix };
 
 function readFileSyncUtf8(filePath) {
   return readFileSync(filePath, 'utf8');
+}
+
+/**
+ * Changeset files authored against the upstream repo use `@platejs/` package
+ * names. This fork publishes under `@lofcz/platejs-`. Rewrite the YAML
+ * frontmatter of every pending changeset so `changeset status` can resolve
+ * the packages.
+ */
+async function rewriteUpstreamPackageNames() {
+  const entries = await readdir(changesetDir, { withFileTypes: true });
+  const mdFiles = entries.filter(
+    (e) => e.isFile() && e.name.endsWith('.md') && e.name !== 'README.md'
+  );
+
+  for (const entry of mdFiles) {
+    const filePath = path.join(changesetDir, entry.name);
+    const content = await readFile(filePath, 'utf8');
+
+    const fmMatch = content.match(frontmatterPattern);
+    if (!fmMatch) continue;
+
+    const frontmatter = fmMatch[1];
+    if (!frontmatter.includes('"@platejs/')) continue;
+
+    const fixed = frontmatter.replace(
+      upstreamPackagePattern,
+      '"@lofcz/platejs-$1"'
+    );
+    const updated = content.replace(fmMatch[0], `---\n${fixed}\n---`);
+
+    await writeFile(filePath, updated);
+    console.log(`Rewrote upstream package names in ${entry.name}`);
+  }
 }

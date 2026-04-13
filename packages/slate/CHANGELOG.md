@@ -1,5 +1,11 @@
 # @udecode/slate
 
+## 52.3.7
+
+### Patch Changes
+
+- 081cbe9: Updated `slate`, `slate-dom`.
+
 ## 52.3.21
 
 ### Patch Changes
