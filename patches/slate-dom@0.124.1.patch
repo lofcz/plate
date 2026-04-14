@@ -1,5 +1,5 @@
 diff --git a/dist/index.es.js b/dist/index.es.js
-index 4858333f4d0079449ae186567428f721b0eebad0..b0998e5897ebe5e932731c5e22ebbba6b9e976ac 100644
+index 48bfe9c08a6e1147d8996dff9cd741264b33c073..b0998e5897ebe5e932731c5e22ebbba6b9e976ac 100644
 --- a/dist/index.es.js
 +++ b/dist/index.es.js
 @@ -1,4 +1,4 @@
@@ -8,15 +8,6 @@ index 4858333f4d0079449ae186567428f721b0eebad0..b0998e5897ebe5e932731c5e22ebbba6
  import { isHotkey } from 'is-hotkey';
  
  /**
-@@ -891,7 +891,7 @@ var DOMEditor = {
-         offset--;
-       }
-     }
--    if (!textNode && !exactMatch) {
-+    if (IS_ANDROID && !textNode && !exactMatch) {
-       var node = parentNode.hasAttribute('data-slate-node') ? parentNode : parentNode.closest('[data-slate-node]');
-       if (node && DOMEditor.hasDOMNode(editor, node, {
-         editable: true
 @@ -1047,21 +1047,53 @@ var DOMEditor = {
        exactMatch,
        suppressThrow
@@ -93,18 +84,9 @@ index 4858333f4d0079449ae186567428f721b0eebad0..b0998e5897ebe5e932731c5e22ebbba6
    }
  };
 diff --git a/dist/index.js b/dist/index.js
-index 05cf7144ef413dc692b98ef45bc86b392036cbfa..82eeb6a25be5da441b234c643d61bf278da546cf 100644
+index 866b6c8f96e0c4c70fe0bee83dc74d35e6cb0e3b..82eeb6a25be5da441b234c643d61bf278da546cf 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1128,7 +1128,7 @@ var DOMEditor = {
-         offset--;
-       }
-     }
--    if (!textNode && !exactMatch) {
-+    if (IS_ANDROID && !textNode && !exactMatch) {
-       var node = parentNode.hasAttribute('data-slate-node') ? parentNode : parentNode.closest('[data-slate-node]');
-       if (node && DOMEditor.hasDOMNode(editor, node, {
-         editable: true
 @@ -1281,21 +1281,53 @@ var DOMEditor = {
        exactMatch: exactMatch,
        suppressThrow: suppressThrow

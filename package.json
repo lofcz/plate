@@ -154,10 +154,10 @@
     "y-webrtc": "10.3.0",
     "zod": "4.1.12"
   },
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=18.12.0",
-    "pnpm": ">=9.15.0"
+    "pnpm": ">=10.33.0"
   },
   "patchedDependencies": {
     "is-hotkey@0.2.0": "patches/is-hotkey@0.2.0.patch",
@@ -167,10 +167,5 @@
     "apps/*",
     "packages/*",
     "packages/udecode/*"
-  ],
-  "pnpm": {
-    "patchedDependencies": {
-      "slate-dom@0.124.1": "patches/slate-dom@0.124.1.patch"
-    }
-  }
+  ]
 }
