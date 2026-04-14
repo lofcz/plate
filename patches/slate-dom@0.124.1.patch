@@ -1,0 +1,182 @@
+diff --git a/dist/index.es.js b/dist/index.es.js
+index 4858333f4d0079449ae186567428f721b0eebad0..b0998e5897ebe5e932731c5e22ebbba6b9e976ac 100644
+--- a/dist/index.es.js
++++ b/dist/index.es.js
+@@ -1,4 +1,4 @@
+-import { Range, Editor, Scrubber, Node, Transforms, Path, Point, Location } from 'slate';
++import { Editor, Range, Scrubber, Node, Transforms, Path, Point, Location } from 'slate';
+ import { isHotkey } from 'is-hotkey';
+ 
+ /**
+@@ -891,7 +891,7 @@ var DOMEditor = {
+         offset--;
+       }
+     }
+-    if (!textNode && !exactMatch) {
++    if (IS_ANDROID && !textNode && !exactMatch) {
+       var node = parentNode.hasAttribute('data-slate-node') ? parentNode : parentNode.closest('[data-slate-node]');
+       if (node && DOMEditor.hasDOMNode(editor, node, {
+         editable: true
+@@ -1047,21 +1047,53 @@ var DOMEditor = {
+       exactMatch,
+       suppressThrow
+     });
+-    if (!anchor) {
++    var resolvedAnchor = anchor;
++    var anchorRemapped = false;
++    if (!resolvedAnchor && suppressThrow) {
++      var remapFn = editor.remapDomPoint;
++      if (typeof remapFn === 'function') {
++        var targetEl = remapFn(anchorNode);
++        if (targetEl) {
++          try {
++            var slateNode = DOMEditor.toSlateNode(editor, targetEl);
++            var path = DOMEditor.findPath(editor, slateNode);
++            resolvedAnchor = Editor.start(editor, path);
++            anchorRemapped = true;
++          } catch (_unused) {}
++        }
++      }
++    }
++    if (!resolvedAnchor) {
+       return null;
+     }
+     var focusBeforeAnchor = isBefore(anchorNode, focusNode) || anchorNode === focusNode && focusOffset < anchorOffset;
+-    var focus = isCollapsed ? anchor : DOMEditor.toSlatePoint(editor, [focusNode, focusOffset], {
++    var focus = isCollapsed ? resolvedAnchor : DOMEditor.toSlatePoint(editor, [focusNode, focusOffset], {
+       exactMatch,
+       suppressThrow,
+       searchDirection: focusBeforeAnchor ? 'forward' : 'backward'
+     });
+-    if (!focus) {
++    var resolvedFocus = focus;
++    var focusRemapped = false;
++    if (!resolvedFocus && suppressThrow) {
++      var _remapFn = editor.remapDomPoint;
++      if (typeof _remapFn === 'function') {
++        var _targetEl = _remapFn(focusNode);
++        if (_targetEl) {
++          try {
++            var _slateNode2 = DOMEditor.toSlateNode(editor, _targetEl);
++            var _path2 = DOMEditor.findPath(editor, _slateNode2);
++            resolvedFocus = Editor.start(editor, _path2);
++            focusRemapped = true;
++          } catch (_unused2) {}
++        }
++      }
++    }
++    if (!resolvedFocus) {
+       return null;
+     }
+     var range = {
+-      anchor: anchor,
+-      focus: focus
++      anchor: resolvedAnchor,
++      focus: resolvedFocus
+     };
+     // if the selection is a hanging range that ends in a void
+     // and the DOM focus is an Element
+@@ -1075,6 +1107,15 @@ var DOMEditor = {
+         voids: true
+       });
+     }
++    if (anchorRemapped || focusRemapped) {
++      if (!exactMatch) {
++        editor.selection = range;
++      }
++      // For exactMatch (reconciliation check): return the range so Slate
++      // sees the remapped range as "in sync" and skips DOM reconciliation.
++      // For !exactMatch: return null so Transforms.select is NOT called.
++      return exactMatch ? range : null;
++    }
+     return range;
+   }
+ };
+diff --git a/dist/index.js b/dist/index.js
+index 05cf7144ef413dc692b98ef45bc86b392036cbfa..82eeb6a25be5da441b234c643d61bf278da546cf 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1128,7 +1128,7 @@ var DOMEditor = {
+         offset--;
+       }
+     }
+-    if (!textNode && !exactMatch) {
++    if (IS_ANDROID && !textNode && !exactMatch) {
+       var node = parentNode.hasAttribute('data-slate-node') ? parentNode : parentNode.closest('[data-slate-node]');
+       if (node && DOMEditor.hasDOMNode(editor, node, {
+         editable: true
+@@ -1281,21 +1281,53 @@ var DOMEditor = {
+       exactMatch: exactMatch,
+       suppressThrow: suppressThrow
+     });
+-    if (!anchor) {
++    var resolvedAnchor = anchor;
++    var anchorRemapped = false;
++    if (!resolvedAnchor && suppressThrow) {
++      var remapFn = editor.remapDomPoint;
++      if (typeof remapFn === 'function') {
++        var targetEl = remapFn(anchorNode);
++        if (targetEl) {
++          try {
++            var slateNode = DOMEditor.toSlateNode(editor, targetEl);
++            var path = DOMEditor.findPath(editor, slateNode);
++            resolvedAnchor = slate.Editor.start(editor, path);
++            anchorRemapped = true;
++          } catch (_unused) {}
++        }
++      }
++    }
++    if (!resolvedAnchor) {
+       return null;
+     }
+     var focusBeforeAnchor = isBefore(anchorNode, focusNode) || anchorNode === focusNode && focusOffset < anchorOffset;
+-    var focus = isCollapsed ? anchor : DOMEditor.toSlatePoint(editor, [focusNode, focusOffset], {
++    var focus = isCollapsed ? resolvedAnchor : DOMEditor.toSlatePoint(editor, [focusNode, focusOffset], {
+       exactMatch: exactMatch,
+       suppressThrow: suppressThrow,
+       searchDirection: focusBeforeAnchor ? 'forward' : 'backward'
+     });
+-    if (!focus) {
++    var resolvedFocus = focus;
++    var focusRemapped = false;
++    if (!resolvedFocus && suppressThrow) {
++      var _remapFn = editor.remapDomPoint;
++      if (typeof _remapFn === 'function') {
++        var _targetEl = _remapFn(focusNode);
++        if (_targetEl) {
++          try {
++            var _slateNode2 = DOMEditor.toSlateNode(editor, _targetEl);
++            var _path2 = DOMEditor.findPath(editor, _slateNode2);
++            resolvedFocus = slate.Editor.start(editor, _path2);
++            focusRemapped = true;
++          } catch (_unused2) {}
++        }
++      }
++    }
++    if (!resolvedFocus) {
+       return null;
+     }
+     var range = {
+-      anchor: anchor,
+-      focus: focus
++      anchor: resolvedAnchor,
++      focus: resolvedFocus
+     };
+     // if the selection is a hanging range that ends in a void
+     // and the DOM focus is an Element
+@@ -1309,6 +1341,15 @@ var DOMEditor = {
+         voids: true
+       });
+     }
++    if (anchorRemapped || focusRemapped) {
++      if (!exactMatch) {
++        editor.selection = range;
++      }
++      // For exactMatch (reconciliation check): return the range so Slate
++      // sees the remapped range as "in sync" and skips DOM reconciliation.
++      // For !exactMatch: return null so Transforms.select is NOT called.
++      return exactMatch ? range : null;
++    }
+     return range;
+   }
+ };

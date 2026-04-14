@@ -50,7 +50,10 @@ export type MarkdownSourceMapSegment = {
 };
 
 export type SerializeMdSourceMapResult = {
+  /** All segments including container-level (parent MDX) segments, sorted by path. */
+  allSegments: MarkdownSourceMapSegment[];
   markdown: string;
+  /** Leaf-level segments only (most precise per path). */
   segments: MarkdownSourceMapSegment[];
 };
 
@@ -193,11 +196,10 @@ const buildSource = (node: any, editor: SlateEditor): SegmentSource | null => {
 
   const text = collectSlateText(node);
 
-  // Media and catch-all blocks may be void elements with no Slate text
-  // (images, videos, embeds, etc.) yet still produce meaningful markdown.
-  // Text-centric kinds (paragraph, heading, blockquote, list_item, code_block,
-  // table_cell) must have non-empty text to be quoteable.
-  if (!text.trim() && kind !== 'media' && kind !== 'block') return null;
+  // Media and catch-all blocks may be void elements with no Slate text.
+  // Empty text-centric blocks (empty paragraphs, etc.) still need segments
+  // for accurate line mapping — they serialize to blank lines and anchoring
+  // selections on them must resolve to the correct line number.
 
   return {
     containsMdx: false,
@@ -294,6 +296,117 @@ const attachTableCellSources = (
   }
 };
 
+/**
+ * Custom serializers (e.g. MDX components) build their own mdast subtree,
+ * bypassing convertNodesWithSource. Walk Slate and mdast element children
+ * in parallel (by position) and attach sourceMap data so the handler
+ * wrappers capture per-child segments during serialization.
+ *
+ * Position-based matching works because custom serializers preserve child
+ * order. We filter to element children only (skip text/leaf nodes) in both
+ * trees before zipping.
+ */
+/**
+ * Walk the mdast list tree and attach sources from the flat Slate list
+ * paragraphs. Slate uses flat paragraphs with `listStyleType` while mdast
+ * nests them as list > listItem > paragraph. We walk both in document order
+ * to zip them correctly.
+ */
+const attachListSources = (
+  mdastList: SourceMapNode,
+  slateListItems: any[],
+  editor: SlateEditor,
+  insideMdx: boolean
+) => {
+  let slateIdx = 0;
+
+  const walkList = (list: SourceMapNode) => {
+    if (!Array.isArray(list.children)) return;
+
+    for (const listItem of list.children) {
+      if (listItem.type !== 'listItem' || !Array.isArray(listItem.children))
+        continue;
+
+      for (const child of listItem.children) {
+        if (child.type === 'list') {
+          walkList(child);
+        } else if (slateIdx < slateListItems.length) {
+          // Match this mdast paragraph/block with the next flat Slate list item
+          const slateChild = slateListItems[slateIdx++];
+          const source = buildSource(slateChild, editor);
+
+          if (source) {
+            if (insideMdx) source.containsMdx = true;
+            attachSource(child, source);
+          }
+        }
+      }
+    }
+  };
+
+  walkList(mdastList);
+};
+
+const attachDescendantSources = (
+  mdastNode: SourceMapNode,
+  slateNode: any,
+  editor: SlateEditor,
+  insideMdx: boolean
+) => {
+  // Only operate within MDX subtrees where custom serializers handle children.
+  // Regular blocks (paragraphs, headings) have inline children (links, bold)
+  // that shouldn't get separate segments.
+  if (!insideMdx && !MDX_MDAST_TYPES.has(mdastNode?.type ?? '')) return;
+
+  const slateChildren = slateNode?.children;
+  const mdastChildren = mdastNode?.children;
+  if (!Array.isArray(slateChildren) || !Array.isArray(mdastChildren)) return;
+
+  const slateElements = slateChildren.filter(
+    (c: any) => c?.type && Array.isArray(c.children)
+  );
+  const mdastElements = mdastChildren.filter(
+    (c: any) => c.type && c.type !== 'text'
+  );
+
+  // Two-pointer walk: Slate has flat list paragraphs where mdast has nested
+  // list nodes. When we encounter a mdast `list`, consume the corresponding
+  // run of Slate list paragraphs (those with `listStyleType`).
+  let si = 0;
+
+  for (const mdastChild of mdastElements) {
+    if (mdastChild.type === 'list') {
+      // Collect the contiguous run of Slate list paragraphs
+      const listRun: any[] = [];
+
+      while (si < slateElements.length && slateElements[si].listStyleType) {
+        listRun.push(slateElements[si]);
+        si++;
+      }
+
+      attachListSources(mdastChild, listRun, editor, insideMdx);
+      continue;
+    }
+
+    if (si >= slateElements.length) break;
+
+    const slateChild = slateElements[si];
+    si++;
+
+    const isMdx = insideMdx || MDX_MDAST_TYPES.has(mdastChild.type ?? '');
+    const source = buildSource(slateChild, editor);
+
+    if (source) {
+      if (isMdx) source.containsMdx = true;
+      attachSource(mdastChild, source);
+    }
+
+    if (MDX_MDAST_TYPES.has(mdastChild.type ?? '')) {
+      attachDescendantSources(mdastChild, slateChild, editor, isMdx);
+    }
+  }
+};
+
 const buildMdastNodeWithSource = (
   node: any,
   options: SerializeMdOptions,
@@ -312,8 +425,6 @@ const buildMdastNodeWithSource = (
         type: 'paragraph',
       };
     } else {
-      // Void-like element with no text — emit an HTML comment placeholder
-      // so the node occupies a line in the output and can be located.
       const label = node.type ?? 'unknown';
       mdastNode = { type: 'html', value: `<!-- ${label} -->` } as any;
     }
@@ -326,22 +437,16 @@ const buildMdastNodeWithSource = (
   }
 
   const source = buildSource(node, options.editor!);
+  const isMdxOutput = MDX_MDAST_TYPES.has(mdastNode?.type ?? '');
 
   if (!source) {
-    if (mdastNode && MDX_MDAST_TYPES.has(mdastNode.type ?? '')) {
-      propagateMdxFlag(mdastNode);
-    }
+    if (isMdxOutput) propagateMdxFlag(mdastNode);
+    attachDescendantSources(mdastNode, node, options.editor!, isMdxOutput);
     return mdastNode;
   }
 
-  const isMdxOutput = MDX_MDAST_TYPES.has(mdastNode?.type ?? '');
   if (isMdxOutput) {
     source.containsMdx = true;
-    if (Array.isArray(mdastNode?.children)) {
-      for (const child of mdastNode.children) {
-        propagateMdxFlag(child);
-      }
-    }
   }
 
   if (
@@ -353,7 +458,9 @@ const buildMdastNodeWithSource = (
     return mdastNode;
   }
 
-  return attachSource(mdastNode, source);
+  attachSource(mdastNode, source);
+  attachDescendantSources(mdastNode, node, options.editor!, isMdxOutput);
+  return mdastNode;
 };
 
 // ---------------------------------------------------------------------------
@@ -684,5 +791,5 @@ export const serializeMdWithSourceMap = (
       )
   );
 
-  return { markdown, segments: leafSegments };
+  return { allSegments: ordered, markdown, segments: leafSegments };
 };

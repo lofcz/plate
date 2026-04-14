@@ -9,5 +9,7 @@ export const toSlateRange = (
 ) => {
   try {
     return DOMEditor.toSlateRange(editor as any, domRange, options);
-  } catch {}
+  } catch (err) {
+    console.warn('[toSlateRange] failed:', err);
+  }
 };

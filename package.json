@@ -167,5 +167,10 @@
     "apps/*",
     "packages/*",
     "packages/udecode/*"
-  ]
+  ],
+  "pnpm": {
+    "patchedDependencies": {
+      "slate-dom@0.124.1": "patches/slate-dom@0.124.1.patch"
+    }
+  }
 }

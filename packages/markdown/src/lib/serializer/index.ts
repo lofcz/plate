@@ -8,5 +8,6 @@ export * from './listToMdastTree';
 export * from './serializeInlineMd';
 export * from './serializeMd';
 export * from './serializeMdWithSourceMap';
+export * from './resolveSelectionLines';
 export * from './wrapWithBlockId';
 export * from './utils/index';
