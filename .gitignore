@@ -29,6 +29,7 @@ jspm_packages/
 /dist
 /tmp
 /tmp*
+/.tmp
 /out-tsc
 **/build
 
