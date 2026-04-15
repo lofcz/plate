@@ -401,7 +401,9 @@ const attachDescendantSources = (
       attachSource(mdastChild, source);
     }
 
-    if (MDX_MDAST_TYPES.has(mdastChild.type ?? '')) {
+    if (mdastChild.type === 'table') {
+      attachTableCellSources(mdastChild, slateChild, editor);
+    } else if (insideMdx || MDX_MDAST_TYPES.has(mdastChild.type ?? '')) {
       attachDescendantSources(mdastChild, slateChild, editor, isMdx);
     }
   }

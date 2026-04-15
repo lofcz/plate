@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 
 import { createTestEditor } from '../../__tests__/createTestEditor';
+import { MarkdownPlugin } from '../../MarkdownPlugin';
 import { serializeMdWithSourceMap } from '../serializeMdWithSourceMap';
 import type {
   MarkdownSourceMapKind,
@@ -1231,19 +1232,24 @@ describe('void and media elements', () => {
     // that's fine too — no segment is expected when the type can't serialize.
   });
 
-  it('empty paragraph still produces no segment', () => {
+  it('empty paragraph still produces a segment for line mapping', () => {
     const editor = makeEditor([{ type: 'p', children: [{ text: '' }] }]);
     const { segments } = serializeMdWithSourceMap(editor);
 
-    // Empty paragraphs produce empty/whitespace markdown, so the handler
-    // wrapper's emitted.trim() check filters them out.
-    expect(segments).toHaveLength(0);
+    // Empty paragraphs serialize to a zero-width space. They still need
+    // segments so selections anchored on them resolve to the correct line.
+    expect(segments).toHaveLength(1);
+    expect(segments[0].kind).toBe('paragraph');
+    expect(segments[0].text).toBe('');
   });
 
-  it('paragraph with only whitespace still produces no segment', () => {
+  it('paragraph with only whitespace still produces a segment for line mapping', () => {
     const editor = makeEditor([{ type: 'p', children: [{ text: '   ' }] }]);
     const { segments } = serializeMdWithSourceMap(editor);
-    expect(segments).toHaveLength(0);
+
+    expect(segments).toHaveLength(1);
+    expect(segments[0].kind).toBe('paragraph');
+    expect(segments[0].text).toBe('   ');
   });
 
   it('hr produces a segment with its markdown', () => {
@@ -1895,5 +1901,228 @@ describe('cross-section selections', () => {
         expect(lineContent).toContain(probe);
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tables inside MDX / custom containers
+// ---------------------------------------------------------------------------
+
+describe('tables inside custom containers', () => {
+  const { convertNodesSerialize } = require('../convertNodesSerialize') as any;
+
+  // Cell content: either an array of inline nodes (auto-wrapped in one p)
+  // or an array of block elements (used as-is for multi-paragraph / list cells).
+  type CellContent = any[] | { blocks: any[] };
+
+  const wrapCell = (content: CellContent): any[] => {
+    if ('blocks' in (content as any)) return (content as any).blocks;
+    return [{ type: 'p', children: content }];
+  };
+
+  const buildWrappedTableEditor = (tableCells?: {
+    th: CellContent[];
+    rows: CellContent[][];
+  }) => {
+    const cells = tableCells ?? {
+      th: [[{ text: 'Col A' }], [{ text: 'Col B' }]],
+      rows: [[[{ text: 'Val 1' }], [{ text: 'Val 2' }]]],
+    };
+
+    const headerRow = {
+      type: 'tr',
+      children: cells.th.map((content) => ({
+        type: 'th',
+        children: wrapCell(content),
+      })),
+    };
+
+    const dataRows = cells.rows.map((row) => ({
+      type: 'tr',
+      children: row.map((content) => ({
+        type: 'td',
+        children: wrapCell(content),
+      })),
+    }));
+
+    const editor = createTestEditor();
+    (editor as any).setOption(MarkdownPlugin, 'rules', {
+      my_wrapper: {
+        serialize: (node: any, options: any) => ({
+          attributes: [],
+          children: convertNodesSerialize(node.children, options),
+          name: 'my_wrapper',
+          type: 'mdxJsxFlowElement',
+        }),
+      },
+    });
+
+    editor.children = [
+      { type: 'p', children: [{ text: 'Before' }] },
+      {
+        type: 'my_wrapper',
+        children: [
+          { type: 'p', children: [{ text: 'Inside wrapper' }] },
+          {
+            type: 'table',
+            children: [headerRow, ...dataRows],
+          },
+        ],
+      } as any,
+      { type: 'p', children: [{ text: 'After' }] },
+    ];
+
+    return editor;
+  };
+
+  it('table_cell segments produced for table inside MDX container', () => {
+    const editor = buildWrappedTableEditor();
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+
+    expect(markdown).toContain('| Col A |');
+
+    const cellSegs = segsOf(segments, 'table_cell');
+    expect(cellSegs.length).toBeGreaterThanOrEqual(4);
+
+    const colA = cellSegs.find((c) => c.text.includes('Col A'));
+    expect(colA).toBeDefined();
+    expect(colA!.path[0]).toBe(1);
+  });
+
+  it('multi-paragraph cells use <br/> and map to the correct single line', () => {
+    const editor = buildWrappedTableEditor({
+      th: [[{ text: 'Name' }], [{ text: 'Description' }]],
+      rows: [
+        [
+          [{ text: 'Alice' }],
+          {
+            blocks: [
+              { type: 'p', children: [{ text: 'First line' }] },
+              { type: 'p', children: [{ text: 'Second line' }] },
+            ],
+          },
+        ],
+        [[{ text: 'Bob' }], [{ text: 'Only one line' }]],
+      ],
+    });
+
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+
+    expect(markdown).toContain('<br/>');
+    expect(markdown).toContain('Name');
+
+    const cellSegs = segsOf(segments, 'table_cell');
+    // 2 header + 2×2 data = 6 cells
+    expect(cellSegs.length).toBe(6);
+
+    // GFM tables are single-line per row — even cells with <br/>
+    for (const c of cellSegs) {
+      expect(c.startLine).toBe(c.endLine);
+    }
+
+    // The multi-paragraph cell segment contains combined text
+    const multiParaCell = cellSegs.find(
+      (c) => c.text.includes('First line') && c.text.includes('Second line')
+    );
+    expect(multiParaCell).toBeDefined();
+
+    // Data cells are on distinct lines from headers
+    const aliceSeg = cellSegs.find((c) => c.text.includes('Alice'))!;
+    const nameSeg = cellSegs.find((c) => c.text === 'Name')!;
+    expect(aliceSeg).toBeDefined();
+    expect(nameSeg).toBeDefined();
+    expect(aliceSeg.startLine).toBeGreaterThan(nameSeg.startLine);
+
+    // The multi-paragraph cell lives on the same row line as "Alice"
+    expect(multiParaCell!.startLine).toBe(aliceSeg.startLine);
+  });
+
+  it('cell with three paragraphs serializes with <br/> and stays on one line', () => {
+    const editor = buildWrappedTableEditor({
+      th: [[{ text: 'Task' }], [{ text: 'Steps' }]],
+      rows: [
+        [
+          [{ text: 'Deploy' }],
+          {
+            blocks: [
+              { type: 'p', children: [{ text: 'Step 1: Build' }] },
+              { type: 'p', children: [{ text: 'Step 2: Test' }] },
+              { type: 'p', children: [{ text: 'Step 3: Ship' }] },
+            ],
+          },
+        ],
+      ],
+    });
+
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+
+    expect(markdown).toContain('<br/>');
+
+    const cellSegs = segsOf(segments, 'table_cell');
+    // 2 header + 2 data = 4 cells
+    expect(cellSegs.length).toBe(4);
+
+    const deploySeg = cellSegs.find((c) => c.text.includes('Deploy'))!;
+    expect(deploySeg).toBeDefined();
+
+    // The multi-paragraph cell is one segment with combined text
+    const stepsSeg = cellSegs.find((c) => c.text.includes('Step 1'))!;
+    expect(stepsSeg).toBeDefined();
+    expect(stepsSeg.text).toContain('Step 2');
+    expect(stepsSeg.text).toContain('Step 3');
+
+    // Both cells in the data row are on the same line
+    expect(stepsSeg.startLine).toBe(deploySeg.startLine);
+    expect(stepsSeg.startLine).toBe(stepsSeg.endLine);
+
+    // Verify the actual markdown line contains all three steps
+    const lines = markdown.split('\n');
+    const rowLine = lines[deploySeg.startLine - 1];
+    expect(rowLine).toContain('Step 1');
+    expect(rowLine).toContain('Step 2');
+    expect(rowLine).toContain('Step 3');
+  });
+
+  it('selection in a table cell resolves to the correct markdown line', () => {
+    const editor = buildWrappedTableEditor({
+      th: [[{ text: 'Item' }], [{ text: 'Count' }]],
+      rows: [
+        [[{ text: 'Apples' }], [{ text: '10' }]],
+        [[{ text: 'Bananas' }], [{ text: '20' }]],
+      ],
+    });
+
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+    const lines = markdown.split('\n');
+
+    const bananasSeg = segments.find((s) => s.text.includes('Bananas'))!;
+    expect(bananasSeg).toBeDefined();
+    expect(bananasSeg.kind).toBe('table_cell');
+
+    // The markdown line at bananasSeg.startLine must contain "Bananas"
+    const lineContent = lines[bananasSeg.startLine - 1];
+    expect(lineContent).toContain('Bananas');
+    // And must not contain the header row
+    expect(lineContent).not.toContain('Item');
+  });
+
+  it('selection spanning paragraph → table cell extracts both', () => {
+    const editor = buildWrappedTableEditor();
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+
+    const wrapperPara = segments.find((s) => s.text === 'Inside wrapper')!;
+    const val1 = segments.find((s) => s.text === 'Val 1')!;
+    expect(wrapperPara).toBeDefined();
+    expect(val1).toBeDefined();
+
+    const extracted = extractMarkdownLines(
+      markdown,
+      wrapperPara.startLine,
+      val1.endLine
+    );
+
+    expect(extracted).toContain('Inside wrapper');
+    expect(extracted).toContain('Col A');
+    expect(extracted).toContain('Val 1');
   });
 });
