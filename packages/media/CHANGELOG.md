@@ -1,10 +1,18 @@
 # @platejs/media
 
-## 52.3.6
+## 53.0.1
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- [#4957](https://github.com/udecode/plate/pull/4957) by [@zbeyens](https://github.com/zbeyens) – Fix video URL parsing to avoid ReDoS on crafted time parameters
+
+## 53.0.0
+
+### Patch Changes
+
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Support allowlisted Twitter/X embed snippet extraction in media embed URL transforms
+
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Normalize supported media embeds into canonical provider metadata and preserve source URLs for embed editing
 
 ## 52.3.10
 

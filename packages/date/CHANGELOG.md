@@ -1,10 +1,10 @@
 # @platejs/date
 
-## 52.3.6
+## 53.0.0
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Store date nodes as canonical `YYYY-MM-DD` values and preserve unparseable legacy text as fallback data
 
 ## 52.3.10
 

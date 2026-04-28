@@ -1,5 +1,44 @@
 # @platejs/markdown
 
+## 53.0.0
+
+### Major Changes
+
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Round-trip blockquotes as nested block content instead of flat newline-packed text.
+  Serialize image titles from `node.title` instead of copying the caption into the markdown title slot.
+  Preserve MDX media attribute expressions during markdown serialization instead of stringifying them into JSON text.
+  Serialize plain URL links back to bare URL markdown instead of bracket-link form.
+  Round-trip footnote references and definitions as dedicated footnote nodes instead of collapsing them to plain-text fallback.
+
+  **Migration:**
+
+  1. Update snapshots and direct value assertions to expect `blockquote.children` to contain block nodes such as paragraphs and lists.
+  2. If you generate initial editor values from markdown, hydrate blockquotes with paragraph children instead of flat text.
+  3. If you want markdown output like `![alt](url "title")`, set `node.title`. Images without a title now serialize as `![alt](url)`.
+  4. If you serialize MDX media nodes with expression attributes like `width={640}`, expect those expressions to stay as expressions instead of turning into quoted JSON.
+  5. Plain URL links such as `https://platejs.org` now serialize as bare URLs instead of `[https://platejs.org](https://platejs.org)`.
+  6. If you enable footnote-aware markdown input, install `@platejs/footnote` and include `BaseFootnoteReferencePlugin` and `BaseFootnoteDefinitionPlugin` so footnote nodes have real editor semantics instead of falling back to unknown node types.
+
+  ```tsx
+  // Before
+  { type: 'blockquote', children: [{ text: 'Quote\\nNext line' }] }
+
+  // After
+  {
+    type: 'blockquote',
+    children: [
+      { type: 'p', children: [{ text: 'Quote' }] },
+      { type: 'p', children: [{ text: 'Next line' }] },
+    ],
+  }
+  ```
+
+### Patch Changes
+
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Write canonical date nodes as `<date value="..."/>` and round-trip normalized media embed metadata
+
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Preserve unknown MDX and raw HTML block source more faithfully during markdown deserialization fallback
+
 ## 52.3.9
 
 ### Patch Changes
@@ -30,6 +69,8 @@
 
 - 9ec18f0: Add `serializeMdWithSourceMap` for mapping Slate selections to markdown line numbers.
 
+- [#4885](https://github.com/udecode/plate/pull/4885) by [@hhhjin](https://github.com/hhhjin) – Fix extra blank lines in nested indented list serialization
+
 ## 52.3.22
 
 ### Patch Changes
@@ -47,12 +88,6 @@
 ### Patch Changes
 
 - [#4897](https://github.com/udecode/plate/pull/4897) by [@zbeyens](https://github.com/zbeyens) – Fix declaration bundling by restoring the workspace `platejs` build edge during package builds
-
-## 52.3.7
-
-### Patch Changes
-
-- [#4885](https://github.com/udecode/plate/pull/4885) by [@hhhjin](https://github.com/hhhjin) – Fix extra blank lines in nested indented list serialization
 
 ## 52.3.5
 

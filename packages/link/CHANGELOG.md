@@ -1,10 +1,10 @@
 # @platejs/link
 
-## 52.3.6
+## 53.0.0
 
 ### Patch Changes
 
-- be8da05: Sync upstream
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Keep pasted URLs literal inside markdown link source entry by default
 
 ## 52.3.17
 

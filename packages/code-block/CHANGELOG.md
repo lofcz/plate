@@ -1,10 +1,11 @@
 # @platejs/code-block
 
-## 52.3.6
+## 53.0.0
 
-### Patch Changes
+### Major Changes
 
-- be8da05: Sync upstream
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Keep `Backspace` at the start of a non-empty first code line inside the code block.
+  Merge an empty inner code line into the previous code line instead of unwrapping the block.
 
 ## 52.3.16
 

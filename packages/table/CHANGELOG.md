@@ -1,10 +1,10 @@
 # @platejs/table
 
-## 52.3.6
+## 53.0.0
 
-### Patch Changes
+### Major Changes
 
-- be8da05: Sync upstream
+- [#4941](https://github.com/udecode/plate/pull/4941) by [@zbeyens](https://github.com/zbeyens) – Escalate the second `selectAll` from the current table to the whole document.
 
 ## 52.3.20
 

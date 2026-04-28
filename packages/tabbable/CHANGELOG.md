@@ -1,5 +1,6 @@
 # @platejs/tabbable
 
+## 53.0.0
 ## 52.3.6
 
 ### Patch Changes
