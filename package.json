@@ -171,7 +171,5 @@
     "packages/*",
     "packages/udecode/*"
   ],
-  "pnpm": {
-    "neverBuiltDependencies": []
-  }
+  "pnpm": {}
 }
