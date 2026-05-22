@@ -8,6 +8,7 @@ import { type Descendant, TextApi } from 'platejs';
 import type { ComputeDiffOptions } from '../../lib/computeDiff';
 import type { StringCharMapping } from '../utils/string-char-mapping';
 
+import { pairBlocksWithWordHints } from '../transforms/pairBlocksWithWordHints';
 import { transformDiffNodes } from '../transforms/transformDiffNodes';
 import { transformDiffTexts } from '../transforms/transformDiffTexts';
 import { type NodeRelatedItem, diffNodes } from '../utils/diff-nodes';
@@ -28,6 +29,8 @@ export function transformDiffDescendants(
   { stringCharMapping, ...options }: TransformDiffDescendantsOptions
 ): Descendant[] {
   const { getDeleteProps, getInsertProps, ignoreProps, isInline } = options;
+  const granularity = options.granularity ?? 'inline';
+  const pairOrder = options.pairOrder ?? 'delete-first';
 
   // Current index in the diff array
   let i = 0;
@@ -37,8 +40,13 @@ export function transformDiffDescendants(
   let deleteBuffer: Descendant[] = [];
 
   const flushBuffers = () => {
-    // Return all deletions followed by all insertions
-    children.push(...deleteBuffer, ...insertBuffer);
+    // Pair ordering: deletes-above-inserts (git unified default) or
+    // inserts-above-deletes (read-the-new-content-first presentation).
+    if (pairOrder === 'insert-first') {
+      children.push(...insertBuffer, ...deleteBuffer);
+    } else {
+      children.push(...deleteBuffer, ...insertBuffer);
+    }
     insertBuffer = [];
     deleteBuffer = [];
   };
@@ -96,6 +104,25 @@ export function transformDiffDescendants(
             // Consume two diff chunks (delete and insert)
             i += 2;
 
+            continue;
+          }
+
+          // Block-granularity mode: each top-level block is one diff unit.
+          // `pairBlocksWithWordHints` produces a fully-ordered list of
+          // diff'd descendants (unchanged container wrappers, paired
+          // delete/insert blocks interleaved by `pairOrder`, standalone
+          // overflows). We bypass the delete/insert buffers entirely so the
+          // per-pair ordering survives — but we still flush any pending
+          // inline buffer from a preceding chunk first.
+          if (granularity === 'block') {
+            const pairedBlocks = pairBlocksWithWordHints(
+              nodes,
+              nextNodes,
+              options
+            );
+            flushBuffers();
+            children.push(...pairedBlocks);
+            i += 2;
             continue;
           }
 

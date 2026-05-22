@@ -145,6 +145,7 @@ jobs:
         env:
           HOME: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.API_TOKEN_GITHUB || secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Push package tags
         if: ${{ steps.changesets.outputs.published == 'true' }}

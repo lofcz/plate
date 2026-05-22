@@ -5,6 +5,7 @@ import {
   type ValueOf,
   ElementApi,
   KEYS,
+  nanoid,
   TextApi,
 } from 'platejs';
 
@@ -17,16 +18,23 @@ export function diffToSuggestions<E extends SlateEditor>(
   doc0: Descendant[],
   doc1: Descendant[],
   {
-    getDeleteProps = (node) =>
+    getDeleteProps = (node, ctx) =>
       getSuggestionProps(editor, node, {
+        id: ctx?.pairId,
         suggestionDeletion: true,
       }),
-    getInsertProps = (node) => getSuggestionProps(editor, node),
+    getInsertProps = (node, ctx) =>
+      getSuggestionProps(editor, node, { id: ctx?.pairId }),
     getUpdateProps = (node, _properties, newProperties) =>
       getSuggestionProps(editor, node, {
         suggestionUpdate: newProperties,
       }),
     isInline = editor.api.isInline,
+    // Use nanoid so the pair id is in the same format the suggestion plugin
+    // generates everywhere else. Without this override, the diff package would
+    // fall back to a counter-based id which wouldn't collide with anything in
+    // practice but is harder to spot in dev tools.
+    generatePairId = () => nanoid(),
     ...options
   }: Partial<ComputeDiffOptions> = {}
 ): ValueOf<E> {
@@ -35,6 +43,7 @@ export function diffToSuggestions<E extends SlateEditor>(
     getInsertProps,
     getUpdateProps,
     isInline,
+    generatePairId,
     ...options,
   }) as ValueOf<E>;
 
@@ -60,10 +69,18 @@ export function diffToSuggestions<E extends SlateEditor>(
 }
 
 /**
- * Unifies the ID of adjacent insert and remove suggestions. When an insert
- * suggestion follows a remove suggestion, the insert suggestion inherits the ID
- * and creation time from the remove suggestion. This allows the UI to treat
- * them as a single suggestion for display and interaction purposes.
+ * Unifies the ID of adjacent insert and remove suggestions so the UI treats
+ * them as a single reviewable change.
+ *
+ * Two orderings are handled:
+ *
+ *   - Remove → Insert (default / `delete-first` flush order):
+ *     the insert leaf inherits the remove leaf's id + createdAt.
+ *   - Insert → Remove (`insert-first` flush order):
+ *     the remove leaf inherits the insert leaf's id + createdAt.
+ *
+ * Without this pass, the new-above-old presentation would emit two separate
+ * suggestion groups for what is conceptually one change.
  */
 function unifyAdjacentSuggestionIds<E extends SlateEditor>(
   node: Descendant,
@@ -74,32 +91,67 @@ function unifyAdjacentSuggestionIds<E extends SlateEditor>(
   const api = editor.getApi(BaseSuggestionPlugin);
   const currentNodeData = api.suggestion.suggestionData(node as any);
 
-  if (currentNodeData?.type === 'insert') {
-    // Get the previous node if it exists
-    const previousNode = index > 0 ? nodes[index - 1] : null;
+  if (!currentNodeData) return node;
 
-    if (previousNode?.[KEYS.suggestion]) {
-      const previousData = api.suggestion.suggestionData(previousNode as any);
+  const previousNode = index > 0 ? nodes[index - 1] : null;
+  const nextNode = index < nodes.length - 1 ? nodes[index + 1] : null;
 
-      if (previousData?.type === 'remove') {
-        // Create a new node with the updated suggestion data
-        const updatedNode = {
-          ...node,
-          [getSuggestionKey(previousData.id)]: {
-            ...currentNodeData,
-            id: previousData.id,
-            createdAt: previousData.createdAt,
-          },
-        };
+  // Case 1: current insert follows a remove (delete-first order).
+  if (currentNodeData.type === 'insert' && previousNode?.[KEYS.suggestion]) {
+    const previousData = api.suggestion.suggestionData(previousNode as any);
 
-        // Remove the original insert suggestion key to avoid duplication
-        const key = getSuggestionKey(currentNodeData.id);
-        delete updatedNode[key];
-
-        return updatedNode;
-      }
+    if (previousData?.type === 'remove') {
+      return rewriteSuggestionId(
+        node,
+        currentNodeData,
+        previousData.id,
+        previousData.createdAt
+      );
     }
   }
 
+  // Case 2: current remove follows an insert (insert-first order).
+  if (currentNodeData.type === 'remove' && previousNode?.[KEYS.suggestion]) {
+    const previousData = api.suggestion.suggestionData(previousNode as any);
+
+    if (previousData?.type === 'insert') {
+      return rewriteSuggestionId(
+        node,
+        currentNodeData,
+        previousData.id,
+        previousData.createdAt
+      );
+    }
+  }
+
+  // Case 3: current insert is followed by a remove (also insert-first order;
+  // covers the case where we walk the insert first and need to forward our id
+  // to the upcoming remove). In practice case 2 catches this on the next
+  // iteration, so we leave the insert as-is here.
+  void nextNode;
+
   return node;
+}
+
+function rewriteSuggestionId(
+  node: Descendant,
+  currentNodeData: { id: string; createdAt: number; type: string },
+  targetId: string,
+  targetCreatedAt: number
+): Descendant {
+  const updatedNode = {
+    ...node,
+    [getSuggestionKey(targetId)]: {
+      ...currentNodeData,
+      id: targetId,
+      createdAt: targetCreatedAt,
+    },
+  };
+
+  const oldKey = getSuggestionKey(currentNodeData.id);
+  if (oldKey !== getSuggestionKey(targetId)) {
+    delete updatedNode[oldKey];
+  }
+
+  return updatedNode;
 }

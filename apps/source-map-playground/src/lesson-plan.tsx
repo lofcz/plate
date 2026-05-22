@@ -1,4 +1,5 @@
 import React from 'react';
+import type { DiffStrategy } from '@platejs/diff';
 import {
   convertChildrenDeserialize,
   convertNodesSerialize,
@@ -163,6 +164,42 @@ function infoFieldRule(key: InfoFieldKey): MdRules[string] {
     }),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Diff strategies (declarative)
+//
+// Each MDX element type declares how it should be diffed. This is the
+// inverse of the engine's structural heuristics: rather than guessing from
+// node shape, we tell the diff engine exactly what "identity" means for
+// each container. Strategies compose bottom-up — a `phase` recurses into
+// activities, and each activity consults its own strategy in turn.
+// ---------------------------------------------------------------------------
+
+const STRATEGIES: Record<string, DiffStrategy> = {
+  // A phase's identity is its `name`. Renaming a phase is a real change
+  // (whole-block); adding/removing activities inside is a child edit
+  // (recurse with the wrapper unchanged).
+  [PHASE_KEY]: { kind: 'container', identityProps: ['name'] },
+  // An activity's identity is `name` + `duration`. Changing either spawns
+  // a whole-block diff; editing prose inside recurses.
+  [ACTIVITY_KEY]: {
+    kind: 'container',
+    identityProps: ['name', 'duration'],
+  },
+  // The lesson_info wrapper has no own attrs — its identity is simply
+  // "I am the lesson_info node". Always recurse.
+  [LESSON_INFO_KEY]: { kind: 'container' },
+  // Info fields (grade/learns/why/...): same as above.
+  ...Object.fromEntries(
+    INFO_FIELD_KEYS.map(
+      (k) => [k, { kind: 'container' } satisfies DiffStrategy] as const
+    )
+  ),
+};
+
+export const lessonPlanDiffStrategy = (node: {
+  type?: string;
+}): DiffStrategy | undefined => (node.type ? STRATEGIES[node.type] : undefined);
 
 export const lessonPlanRules: MdRules = {
   [LESSON_INFO_KEY]: {

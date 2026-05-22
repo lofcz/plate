@@ -1,3 +1,4 @@
+import type { ComputeDiffOptions } from '@platejs/diff';
 import { deserializeMd } from '@platejs/markdown';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
 import {
@@ -24,7 +25,21 @@ import {
   isSingleCellTable,
 } from './nestedContainerUtils';
 
-export const applyAISuggestions = (editor: SlateEditor, content: string) => {
+/**
+ * Options the caller can use to opt into the block-level / new-above-old diff
+ * presentation. They are forwarded verbatim to `diffToSuggestions`. Omitted
+ * keys preserve the upstream default (inline char diff, delete-above-insert).
+ */
+export type ApplyAISuggestionsOptions = Pick<
+  ComputeDiffOptions,
+  'granularity' | 'pairOrder' | 'wordBoundary' | 'generatePairId'
+>;
+
+export const applyAISuggestions = (
+  editor: SlateEditor,
+  content: string,
+  diffOptions?: ApplyAISuggestionsOptions
+) => {
   /** Conflict with block selection */
   editor
     .getApi({ key: KEYS.cursorOverlay })
@@ -43,7 +58,7 @@ export const applyAISuggestions = (editor: SlateEditor, content: string) => {
       setReplaceIds(chatNodes.map((node) => node.id as string));
     }
 
-    const diffNodes = getDiffNodes(editor, content);
+    const diffNodes = getDiffNodes(editor, content, diffOptions);
 
     const replaceNodes = Array.from(
       editor.api.nodes<TIdElement>({
@@ -97,7 +112,7 @@ export const applyAISuggestions = (editor: SlateEditor, content: string) => {
       .blockSelection.set(diffNodes.map((node) => node.id as string));
     setReplaceIds(diffNodes.map((node) => node.id as string));
   } else {
-    const diffNodes = getDiffNodes(editor, content);
+    const diffNodes = getDiffNodes(editor, content, diffOptions);
 
     editor.tf.insertFragment(diffNodes);
 
@@ -186,7 +201,11 @@ export const withoutSuggestionAndComments = (
     return node;
   });
 
-const getDiffNodes = (editor: SlateEditor, aiContent: string) => {
+const getDiffNodes = (
+  editor: SlateEditor,
+  aiContent: string,
+  diffOptions?: ApplyAISuggestionsOptions
+) => {
   /** Original document nodes */
   const rawChatNodes = editor.getOption(AIChatPlugin, 'chatNodes');
 
@@ -202,6 +221,7 @@ const getDiffNodes = (editor: SlateEditor, aiContent: string) => {
   const diffNodes = withTransient(
     diffToSuggestions(editor, chatNodes, aiNodes, {
       ignoreProps: ['id', 'listStart'],
+      ...diffOptions,
     })
   );
 

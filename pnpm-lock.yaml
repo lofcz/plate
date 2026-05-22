@@ -265,6 +265,9 @@ importers:
       '@platejs/code-block':
         specifier: workspace:@lofcz/platejs-code-block@*
         version: link:../../packages/code-block
+      '@platejs/diff':
+        specifier: workspace:@lofcz/platejs-diff@*
+        version: link:../../packages/diff
       '@platejs/indent':
         specifier: workspace:@lofcz/platejs-indent@*
         version: link:../../packages/indent

@@ -4,3 +4,9 @@ packages:
   - "packages/udecode/*"
 patchedDependencies:
   slate-dom@0.124.1: patches/slate-dom@0.124.1.patch
+# pnpm 10 blocks lifecycle scripts by default. `bun`'s postinstall downloads
+# the platform-specific binary it ships in node_modules/bun/bin/, and `pnpm test`
+# invokes that local bun via `bun tooling/scripts/test-fast.mjs`. Without this
+# the script fails with "Bun's postinstall script was not run."
+onlyBuiltDependencies:
+  - bun

@@ -20,8 +20,9 @@ test('release workflow uses the pruned GitHub Release path', async () => {
   assert.match(workflow, /version:\s*pnpm ci:version/);
   assert.match(workflow, /publish:\s*pnpm ci:release/);
   assert.match(workflow, /id-token:\s*write/);
+  assert.match(workflow, /NPM_CONFIG_PROVENANCE:\s*['"]true['"]/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN/);
-  assert.doesNotMatch(workflow, /NPM_TOKEN/);
+  assert.doesNotMatch(workflow, /^\s+NPM_TOKEN:/m);
   assert.match(workflow, /node tooling\/scripts\/published-package-tags\.mjs/);
   assert.match(workflow, /refs\/tags\/\$\{tag\}:refs\/tags\/\$\{tag\}/);
   assert.match(

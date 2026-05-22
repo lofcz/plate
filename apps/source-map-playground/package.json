@@ -10,6 +10,7 @@
     "@platejs/basic-nodes": "workspace:@lofcz/platejs-basic-nodes@*",
     "@platejs/callout": "workspace:@lofcz/platejs-callout@*",
     "@platejs/code-block": "workspace:@lofcz/platejs-code-block@*",
+    "@platejs/diff": "workspace:@lofcz/platejs-diff@*",
     "@platejs/indent": "workspace:@lofcz/platejs-indent@*",
     "@platejs/link": "workspace:@lofcz/platejs-link@*",
     "@platejs/list": "workspace:@lofcz/platejs-list@*",

@@ -11,6 +11,7 @@ import type {
   MarkdownSourceMapSegment,
   SerializeMdSourceMapResult,
 } from './editor';
+import { DiffPlayground } from './diff-playground';
 import { resolveSelection, type ResolvedSelection } from './resolveSelection';
 import { PRESETS } from './values';
 
@@ -18,7 +19,87 @@ type MonacoInstance = monacoEditor.IStandaloneCodeEditor;
 const PRESET_KEYS = Object.keys(PRESETS);
 const DEBOUNCE_MS = 150;
 
+type Mode = 'source-map' | 'diff';
+
+const readMode = (): Mode =>
+  typeof window !== 'undefined' && window.location.hash === '#diff'
+    ? 'diff'
+    : 'source-map';
+
+/**
+ * Top-level shell that routes between the two playground modes. We use a
+ * plain `location.hash` instead of pulling in a router — both modes share
+ * nothing beyond the toolbar, and the URL fragment is enough state to
+ * bookmark a particular view.
+ */
 export function App() {
+  const [mode, setMode] = useState<Mode>(readMode);
+
+  useEffect(() => {
+    const sync = () => setMode(readMode());
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+
+  const navigate = useCallback((next: Mode) => {
+    if (next === 'diff') window.location.hash = '#diff';
+    else window.location.hash = '';
+    setMode(next);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <ModeNav mode={mode} onChange={navigate} />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {mode === 'diff' ? <DiffPlayground /> : <SourceMapApp />}
+      </div>
+    </div>
+  );
+}
+
+function ModeNav({
+  mode,
+  onChange,
+}: {
+  mode: Mode;
+  onChange: (m: Mode) => void;
+}) {
+  const tab = (key: Mode, label: string) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => onChange(key)}
+      style={{
+        padding: '6px 14px',
+        background: mode === key ? '#111827' : 'transparent',
+        color: mode === key ? '#fff' : '#374151',
+        border: 'none',
+        borderRadius: 4,
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+      }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 4,
+        padding: '6px 16px',
+        background: '#f3f4f6',
+        borderBottom: '1px solid #e5e7eb',
+      }}
+    >
+      {tab('source-map', 'Source map')}
+      {tab('diff', 'Diff')}
+    </div>
+  );
+}
+
+function SourceMapApp() {
   const [preset, setPreset] = useState(PRESET_KEYS[0]);
   const [sourceMap, setSourceMap] = useState<SerializeMdSourceMapResult | null>(
     null
