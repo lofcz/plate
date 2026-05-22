@@ -40,6 +40,7 @@
     "typecheck": "plate-pkg p:typecheck"
   },
   "dependencies": {
+    "@platejs/diff": "workspace:@lofcz/platejs-diff@*",
     "@platejs/markdown": "workspace:@lofcz/platejs-markdown@*",
     "@platejs/selection": "workspace:@lofcz/platejs-selection@*",
     "@platejs/suggestion": "workspace:@lofcz/platejs-suggestion@*",
