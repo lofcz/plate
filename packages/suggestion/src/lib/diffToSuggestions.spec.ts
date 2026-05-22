@@ -226,7 +226,9 @@ describe('diffToSuggestions', () => {
       // both — otherwise accepting/rejecting one word would leave the block
       // in an inconsistent state.
       const blockId = blockSuggestionId(value[0]);
-      expect(blockId).toBeDefined();
+      if (!blockId) {
+        throw new Error('Expected the deleted block to carry a suggestion id.');
+      }
 
       const leafIds = leafSuggestionIds(value[0]);
       // At least one leaf must carry a word-level mark.
