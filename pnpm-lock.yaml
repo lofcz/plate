@@ -867,6 +867,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@platejs/diff':
+        specifier: workspace:@lofcz/platejs-diff@*
+        version: link:../diff
       '@platejs/markdown':
         specifier: workspace:@lofcz/platejs-markdown@*
         version: link:../markdown
