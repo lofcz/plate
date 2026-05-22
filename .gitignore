@@ -6,6 +6,7 @@ apps/www/public/rd
 **/*.tsbuildinfo
 templates/my-app
 .cursor/local
+.bun
 
 .pnpm-store/*
 .repo_ignore
@@ -16,6 +17,7 @@ templates/my-app
 
 # Generated files
 .history
+apps/www/next-env.d.ts
 node_modules/
 report.*
 *.tsv

@@ -190,8 +190,9 @@
   "devDependencies": {
     "@shikijs/compat": "1.1.7",
     "@tailwindcss/cli": "4.1.8",
-    "@types/unist": "^3.0.3",
     "@types/react-syntax-highlighter": "15.5.13",
+    "@types/unist": "^3.0.3",
+    "agentation": "^3.0.2",
     "autoprefixer": "10.4.21",
     "concurrently": "9.1.2",
     "glob": "11.0.2",
