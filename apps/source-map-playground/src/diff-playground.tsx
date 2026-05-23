@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { computeDiff } from '@platejs/diff';
 import { lessonPlanDiffStrategy } from './lesson-plan';
+import { mediaMathDiffStrategy } from './extra-plugins';
 import { usePlateEditor } from 'platejs/react';
 import type { Descendant, Value } from 'platejs';
 
@@ -97,11 +98,27 @@ export function DiffPlayground() {
         pairOrder,
         wordBoundary,
         generatePairId: () => `p${++pairCounter}`,
+        // Git-diff layout + run-scope word marks. The presentation we want
+        // in this playground IS the git-diff style — group all deletes
+        // then all inserts in a run, and treat each run as a single
+        // "before/after" body for the leaf word marks. See
+        // `groupRunsAndRehintWords` in @platejs/diff for the engine-side
+        // contract. Both default to false so production consumers (e.g.
+        // the suggestion plugin) keep the legacy per-pair output.
+        groupConsecutiveChanges: granularity === 'block',
+        runScopeWordHints: granularity === 'block',
         // Declarative per-element strategies. Each MDX type owns its own
         // identity rules: see lesson-plan.tsx. Plain block types (p, h1,
         // blockquote, ...) return undefined here and continue to be
         // handled by the engine's structural heuristics.
-        getDiffStrategy: lessonPlanDiffStrategy,
+        //
+        // Multiple registries compose by short-circuiting at the first
+        // hit — order matters only when a key is registered in BOTH (it
+        // isn't here: lesson-plan keys are MDX-domain, media/math keys
+        // are global element types). Add new registries to this chain
+        // as new domains arrive.
+        getDiffStrategy: (node) =>
+          lessonPlanDiffStrategy(node) ?? mediaMathDiffStrategy(node),
       });
 
       return { beforeNodes, afterNodes, diff, error: null as string | null };

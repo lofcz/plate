@@ -31,6 +31,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
 import { lessonPlanPlugins, lessonPlanRules } from './lesson-plan';
+import { extraPlugins, extraRules } from './extra-plugins';
 
 export type {
   MarkdownSourceMapSegment,
@@ -112,7 +113,7 @@ const markdownPlugin = MarkdownPlugin.configure({
   options: {
     plainMarks: ['suggestion', 'comment'],
     remarkPlugins,
-    rules: lessonPlanRules,
+    rules: { ...lessonPlanRules, ...extraRules },
   },
 });
 
@@ -140,5 +141,6 @@ export const EDITOR_PLUGINS = [
   TableCellPlugin.withComponent(SimpleTableCellElement),
   TableCellHeaderPlugin.withComponent(SimpleTableCellHeaderElement),
   ...lessonPlanPlugins,
+  ...extraPlugins,
   markdownPlugin,
 ];

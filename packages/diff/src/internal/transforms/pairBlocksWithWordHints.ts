@@ -466,8 +466,14 @@ const applyWordHintsToPair = (
  *
  * Non-text inline children (e.g. mentions, inline equations) are emitted as
  * single opaque tokens with `inline: <node>` so they never get split.
+ *
+ * Exported (alongside `diffTokens` and `mergeAdjacentLeaves`) so the
+ * run-scope rehinter (see `groupRunsAndRehintWords`) can build its
+ * multi-block token streams from the same primitives this per-pair path
+ * uses. Keeping one tokenizer guarantees identical word boundaries,
+ * signature rules, and inline-element handling across the two paths.
  */
-type Token = {
+export type Token = {
   text: string;
   /** Source text leaf properties to copy onto the emitted leaf. */
   props?: Record<string, unknown>;
@@ -475,7 +481,10 @@ type Token = {
   inline?: Descendant;
 };
 
-const tokenize = (children: Descendant[], wordBoundary: RegExp): Token[] => {
+export const tokenize = (
+  children: Descendant[],
+  wordBoundary: RegExp
+): Token[] => {
   // The boundary regex MUST have a capturing group so split() keeps the
   // separators. Wrap if necessary, and ensure the global flag is set.
   const flags = wordBoundary.flags.includes('g')
@@ -516,13 +525,16 @@ const tokenize = (children: Descendant[], wordBoundary: RegExp): Token[] => {
  *
  * op: -1 = delete from old, 0 = unchanged, 1 = insert into new
  */
-type TokenOp = {
+export type TokenOp = {
   op: -1 | 0 | 1;
   oldIdx?: number;
   newIdx?: number;
 };
 
-const diffTokens = (oldTokens: Token[], newTokens: Token[]): TokenOp[] => {
+export const diffTokens = (
+  oldTokens: Token[],
+  newTokens: Token[]
+): TokenOp[] => {
   // Build a token signature → char map. Identical tokens (same text + same
   // mark set + same inline reference) share a char so DMP treats them as
   // equal.
@@ -656,7 +668,7 @@ const emitMarkedChildren = ({
   return mergeAdjacentLeaves(emitted);
 };
 
-const mergeAdjacentLeaves = (nodes: Descendant[]): Descendant[] => {
+export const mergeAdjacentLeaves = (nodes: Descendant[]): Descendant[] => {
   if (nodes.length <= 1) return nodes;
   const result: Descendant[] = [];
 

@@ -1,0 +1,52 @@
+/*
+ * Diff-overlay rules for KaTeX output.
+ *
+ * KaTeX builds math as a nested grid of `display: inline-block` and
+ * `display: inline-table` elements (superscripts, fractions, integrals,
+ * and the like — they're laid out via CSS positioning, not text flow).
+ * That makes `text-decoration: line-through` the wrong tool: each
+ * inline-block descendant establishes its own line box and gets its OWN
+ * decoration line drawn across it. Applying the rule to `.katex` alone
+ * misses the descendants; applying it to `.katex *` produces stacked
+ * parallel lines, one per nested element.
+ *
+ * The trick is to draw the strike-through with a `background-image`
+ * linear-gradient on the outer `.katex` element. The gradient is a
+ * single 1px-tall horizontal band at the vertical midpoint that spans
+ * the full width of the math, regardless of how the inner inline-
+ * blocks are laid out. One continuous line, always, matching the 1px
+ * `text-decoration-thickness` we pin on prose so the visual stroke
+ * continues seamlessly between prose and math.
+ *
+ * We use `currentColor` for the line so it inherits the wrapper's
+ * `color` (which `diff-preview.tsx` sets to the appropriate red/amber
+ * tint). One palette source-of-truth in JS, no duplicate hex in CSS.
+ *
+ * Inserted math doesn't need a line — the green background tint plus
+ * the green text color set by the JS wrapper are enough.
+ */
+
+.katex-diff-delete .katex {
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(50% - 0.5px),
+    currentColor calc(50% - 0.5px),
+    currentColor calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.katex-diff-update .katex {
+  /* Dotted underline rendered as a 1px-tall repeating gradient pinned
+   * to the bottom of the .katex box. Pattern: 3px dot + 3px gap. */
+  background-image: repeating-linear-gradient(
+    to right,
+    currentColor 0 3px,
+    transparent 3px 6px
+  );
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+}

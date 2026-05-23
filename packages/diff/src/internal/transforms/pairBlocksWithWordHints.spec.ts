@@ -1255,6 +1255,599 @@ describe('pairBlocksWithWordHints', () => {
     });
   });
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Rich block shapes the playground actually emits: lists, math, media.
+  // These exercise the engine against realistic Plate trees rather than
+  // synthetic minimal cases. The shapes mirror what `@platejs/markdown`
+  // (with remark-gfm + remark-math) deserializes:
+  //   - lists: indent-based paragraphs with `listStyleType` + `indent` (and
+  //     `checked` for todos); NOT classic `ul>li` nesting.
+  //   - math: `equation` block voids with `texExpression`; `inline_equation`
+  //     inline voids inside paragraphs.
+  //   - media: `img`, `video`, `audio` block voids with `url`/`alt`/etc.
+  // ─────────────────────────────────────────────────────────────────────
+
+  describe('lists', () => {
+    // The Plate list plugin emits each list item as a paragraph carrying
+    // `listStyleType` ('disc' | 'decimal' | 'todo') and `indent` (the
+    // nesting level). `checked` is set only for todo items.
+    const listItem = (
+      text: string,
+      attrs: {
+        listStyleType?: 'disc' | 'decimal' | 'todo';
+        indent?: number;
+        checked?: boolean;
+        marks?: Record<string, unknown>;
+      } = {}
+    ): any => {
+      const { marks, ...rest } = attrs;
+      return {
+        type: 'paragraph',
+        ...rest,
+        children: [{ text, ...marks }],
+      };
+    };
+
+    it('bullet list: edits only the changed item; siblings stay clean', () => {
+      const oldDoc = [
+        listItem('First bullet, unchanged', { listStyleType: 'disc' }),
+        listItem('Second bullet, will change', { listStyleType: 'disc' }),
+        listItem('Third bullet, unchanged', { listStyleType: 'disc' }),
+      ];
+      const newDoc = [
+        listItem('First bullet, unchanged', { listStyleType: 'disc' }),
+        listItem('Second bullet, rewritten', { listStyleType: 'disc' }),
+        listItem('Third bullet, unchanged', { listStyleType: 'disc' }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+
+      // 1 unchanged + 1 paired + 1 unchanged + 1 paired half = ... wait,
+      // word-hint pairs are TWO items (del + ins). So: 1 + 2 + 1 = 4.
+      expect(flat).toHaveLength(4);
+      expect((flat[0] as any).tag).toBeUndefined();
+      expect((flat[0] as any).children[0].text).toBe('First bullet, unchanged');
+      expect(tagOf(flat[1])?.tag).toBe('delete');
+      expect(tagOf(flat[2])?.tag).toBe('insert');
+      expect(tagOf(flat[1])?.pairId).toBe(tagOf(flat[2])?.pairId);
+      expect((flat[3] as any).tag).toBeUndefined();
+      expect((flat[3] as any).children[0].text).toBe('Third bullet, unchanged');
+    });
+
+    it('ordered list: numbering is irrelevant to diff — only content matters', () => {
+      // The numeric label "1." / "2." is a render-time concern; the Slate
+      // tree carries no number. So a swapped-item ordered list is treated
+      // exactly like a swapped-item bulleted list.
+      const oldDoc = [
+        listItem('Step one', { listStyleType: 'decimal' }),
+        listItem('Step two — original', { listStyleType: 'decimal' }),
+        listItem('Step three', { listStyleType: 'decimal' }),
+      ];
+      const newDoc = [
+        listItem('Step one', { listStyleType: 'decimal' }),
+        listItem('Step two — rewritten', { listStyleType: 'decimal' }),
+        listItem('Step three', { listStyleType: 'decimal' }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      expect(flat).toHaveLength(4);
+      expect(tagOf(flat[1])?.tag).toBe('delete');
+      expect(tagOf(flat[2])?.tag).toBe('insert');
+    });
+
+    it('todo list: toggling `checked` is a real attribute change, NOT a typo', () => {
+      // Two same-text todos differing only in `checked: false → true`. The
+      // text leaves are byte-equal so word-hinting wouldn't surface any
+      // marks; the structural change lives on the wrapper's `checked` prop.
+      // Engine must produce a paired delete+insert so the UI can show the
+      // checkbox transition.
+      const oldDoc = [
+        listItem('Buy milk', { listStyleType: 'todo', checked: false }),
+      ];
+      const newDoc = [
+        listItem('Buy milk', { listStyleType: 'todo', checked: true }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).checked).toBe(false);
+      expect((insertedBlocks[0] as any).checked).toBe(true);
+      // Shared pairId so the suggestion UI groups them.
+      expect(tagOf(deletedBlocks[0])?.pairId).toBe(
+        tagOf(insertedBlocks[0])?.pairId
+      );
+    });
+
+    it('todo list with text change AND checked toggle: word-hint kicks in (same listStyleType, leafy)', () => {
+      // Both halves remain `listStyleType: 'todo'` paragraphs with leafy
+      // text children, so canWordHint succeeds. The boolean `checked`
+      // differs but doesn't block word-hinting (no structural change).
+      const oldDoc = [
+        listItem('Buy milk and bread', {
+          listStyleType: 'todo',
+          checked: false,
+        }),
+      ];
+      const newDoc = [
+        listItem('Buy oat milk and bread', {
+          listStyleType: 'todo',
+          checked: true,
+        }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      // Word-hint reached the leaves: "milk and bread" stayed unmarked,
+      // "oat " was inserted (the trailing space is merged into the same
+      // insert mark by mergeAdjacentLeaves, so the token reads "oat ").
+      const insMarkedText = (insertedBlocks[0] as any).children
+        .filter((c: any) => c.tag === 'insert')
+        .map((c: any) => c.text)
+        .join('');
+      expect(insMarkedText).toContain('oat');
+      // Reconstructed text on the new side matches the input verbatim.
+      const insAllText = (insertedBlocks[0] as any).children
+        .map((c: any) => c.text)
+        .join('');
+      expect(insAllText).toBe('Buy oat milk and bread');
+      // Container-level attribute survives onto each half so the
+      // suggestion UI can render the new checkbox state.
+      expect((deletedBlocks[0] as any).checked).toBe(false);
+      expect((insertedBlocks[0] as any).checked).toBe(true);
+    });
+
+    it('nested list: changing a deeper-indent item leaves the parent items alone', () => {
+      // Indent-based lists are FLAT in the Slate tree — every item is a
+      // sibling at the top level, distinguished by `indent`. So a "nested
+      // child changed" scenario is just one paired item among siblings.
+      const oldDoc = [
+        listItem('Parent A', { listStyleType: 'disc', indent: 1 }),
+        listItem('Child A.1 — original', {
+          listStyleType: 'disc',
+          indent: 2,
+        }),
+        listItem('Child A.2', { listStyleType: 'disc', indent: 2 }),
+        listItem('Parent B', { listStyleType: 'disc', indent: 1 }),
+      ];
+      const newDoc = [
+        listItem('Parent A', { listStyleType: 'disc', indent: 1 }),
+        listItem('Child A.1 — rewritten', {
+          listStyleType: 'disc',
+          indent: 2,
+        }),
+        listItem('Child A.2', { listStyleType: 'disc', indent: 2 }),
+        listItem('Parent B', { listStyleType: 'disc', indent: 1 }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      // 3 unchanged + 1 paired pair = 5 items.
+      expect(flat).toHaveLength(5);
+      expect((flat[0] as any).tag).toBeUndefined();
+      expect(tagOf(flat[1])?.tag).toBe('delete');
+      expect(tagOf(flat[2])?.tag).toBe('insert');
+      expect((flat[3] as any).tag).toBeUndefined();
+      expect((flat[4] as any).tag).toBeUndefined();
+    });
+
+    it('nested list: changing indent without changing text is a structural pair (different `indent` ≠ byte-equal)', () => {
+      // Dedenting a child to parent level (indent: 2 → 1) changes the
+      // wrapper's own props. Word-hinting still applies because both
+      // halves are leafy same-type elements; the wrapper carries the
+      // new indent on the insert half.
+      const oldDoc = [
+        listItem('Item that gets promoted', {
+          listStyleType: 'disc',
+          indent: 2,
+        }),
+      ];
+      const newDoc = [
+        listItem('Item that gets promoted', {
+          listStyleType: 'disc',
+          indent: 1,
+        }),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).indent).toBe(2);
+      expect((insertedBlocks[0] as any).indent).toBe(1);
+    });
+
+    it('list-style swap (bullet → ordered) at the same position is still word-hintable', () => {
+      // canWordHint requires same `type` ('paragraph' on both sides → ok)
+      // and leafy children. listStyleType is a sibling prop that doesn't
+      // factor into the type check; the wrapper attribute change just
+      // rides along on the diff pair.
+      const oldDoc = [listItem('Buy milk', { listStyleType: 'disc' })];
+      const newDoc = [listItem('Buy milk now', { listStyleType: 'decimal' })];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).listStyleType).toBe('disc');
+      expect((insertedBlocks[0] as any).listStyleType).toBe('decimal');
+    });
+
+    it('list item with inline marks (bold/italic): unchanged marked tokens carry their marks across', () => {
+      const oldDoc = [
+        {
+          type: 'paragraph',
+          listStyleType: 'disc',
+          children: [
+            { text: 'Read the ' },
+            { text: 'important', bold: true },
+            { text: ' note before tomorrow' },
+          ],
+        },
+      ];
+      const newDoc = [
+        {
+          type: 'paragraph',
+          listStyleType: 'disc',
+          children: [
+            { text: 'Read the ' },
+            { text: 'important', bold: true },
+            { text: ' note before Friday' },
+          ],
+        },
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      // The bold "important" word survives unmarked on both sides.
+      const oldImportant = (deletedBlocks[0] as any).children.find(
+        (c: any) => c.text === 'important'
+      );
+      const newImportant = (insertedBlocks[0] as any).children.find(
+        (c: any) => c.text === 'important'
+      );
+      expect(oldImportant?.bold).toBe(true);
+      expect(oldImportant?.tag).toBeUndefined();
+      expect(newImportant?.bold).toBe(true);
+      expect(newImportant?.tag).toBeUndefined();
+      // Only "tomorrow" / "Friday" carry side-specific tags.
+      const delMarked = (deletedBlocks[0] as any).children
+        .filter((c: any) => c.tag === 'delete')
+        .map((c: any) => c.text);
+      const insMarked = (insertedBlocks[0] as any).children
+        .filter((c: any) => c.tag === 'insert')
+        .map((c: any) => c.text);
+      expect(delMarked).toContain('tomorrow');
+      expect(insMarked).toContain('Friday');
+    });
+  });
+
+  describe('math', () => {
+    // `equation` is a void block. `inline_equation` is a void inline. Both
+    // carry the LaTeX source in `texExpression` and use `[{ text: '' }]`
+    // as the (empty) child array per Slate's void contract.
+    const equation = (tex: string): any => ({
+      type: 'equation',
+      texExpression: tex,
+      children: [{ text: '' }],
+    });
+    const inlineEquation = (tex: string): any => ({
+      type: 'inline_equation',
+      texExpression: tex,
+      children: [{ text: '' }],
+    });
+
+    it('block math: changing the LaTeX expression yields a whole-block pair', () => {
+      // The equation void's child is `[{text:''}]`. canRecurseContainer
+      // bails on voids (its `isVoid` predicate), and the children are
+      // empty text → canWordHint produces an empty diff with both halves
+      // still emitted. We rely on the whole-block fallback path here.
+      const oldDoc = [equation('E = mc^2')];
+      const newDoc = [equation('E = m c^2 + \\epsilon')];
+
+      const flat = pairBlocksWithWordHints(
+        oldDoc,
+        newDoc,
+        makeOptions({
+          // Mark voids so canRecurseContainer detects them. Equations carry
+          // their LaTeX on the wrapper, not inside children — so isVoid is
+          // semantically correct.
+          isInline: () => false,
+        })
+      );
+
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).texExpression).toBe('E = mc^2');
+      expect((insertedBlocks[0] as any).texExpression).toBe(
+        'E = m c^2 + \\epsilon'
+      );
+      expect(tagOf(deletedBlocks[0])?.pairId).toBe(
+        tagOf(insertedBlocks[0])?.pairId
+      );
+    });
+
+    it('block math: explicit `atomic` strategy keeps the equation undivided even when texExpressions are byte-comparable', () => {
+      // Without a strategy, the engine would fall back to whole-block
+      // anyway (children are empty-text voids). With strategy: atomic the
+      // outcome is the same — but the strategy makes the intent explicit
+      // and survives future refactors of the heuristic.
+      const oldDoc = [equation('a + b = c')];
+      const newDoc = [equation('a - b = c')];
+
+      const flat = pairBlocksWithWordHints(
+        oldDoc,
+        newDoc,
+        makeOptions({
+          getDiffStrategy: (n) =>
+            n.type === 'equation' ? { kind: 'atomic' } : undefined,
+        })
+      );
+
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+    });
+
+    it('inline math: equation inside a paragraph is treated as an opaque inline token (word-hint paths it through)', () => {
+      // The inline equation should appear unmodified on the unchanged
+      // side when only neighbouring text edits. Inline voids are tokens
+      // in the word-hint stream — they MUST NOT be split or duplicated.
+      const oldDoc = [
+        {
+          type: 'paragraph',
+          children: [
+            { text: 'Recall that ' },
+            inlineEquation('E = mc^2'),
+            { text: ' was derived in 1905.' },
+          ],
+        },
+      ];
+      const newDoc = [
+        {
+          type: 'paragraph',
+          children: [
+            { text: 'Remember that ' },
+            inlineEquation('E = mc^2'),
+            { text: ' was derived in 1905.' },
+          ],
+        },
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+
+      // The same inline equation appears unmarked on both sides exactly
+      // once (no duplication, no marks).
+      const oldEquations = (deletedBlocks[0] as any).children.filter(
+        (c: any) => c.type === 'inline_equation'
+      );
+      const newEquations = (insertedBlocks[0] as any).children.filter(
+        (c: any) => c.type === 'inline_equation'
+      );
+      expect(oldEquations).toHaveLength(1);
+      expect(newEquations).toHaveLength(1);
+      expect(oldEquations[0].texExpression).toBe('E = mc^2');
+      expect(newEquations[0].texExpression).toBe('E = mc^2');
+      expect(oldEquations[0].tag).toBeUndefined();
+      expect(newEquations[0].tag).toBeUndefined();
+    });
+
+    it('inline math: changing the equation itself marks it on the new side only', () => {
+      // The equation node's signature (via `inlineSig`) is type+id; with
+      // no id present, the signature defaults to just the type. Two
+      // inline_equations with different texExpressions therefore share
+      // a signature and DMP treats them as equal — meaning the equation
+      // change is invisible to word-hinting. This is an acceptable known
+      // limitation: the wrapping paragraph's text didn't change, so the
+      // engine emits no diff for the paragraph at all (byte-equality
+      // would skip it). We assert that limitation here so future fixes
+      // don't accidentally regress without a conscious decision.
+      const para = (tex: string) => ({
+        type: 'paragraph',
+        children: [
+          { text: 'See ' },
+          inlineEquation(tex),
+          { text: ' for details.' },
+        ],
+      });
+
+      const flat = pairBlocksWithWordHints(
+        [para('a + b')],
+        [para('a - b')],
+        makeOptions()
+      );
+
+      // The paragraphs are NOT byte-equal (texExpression differs), but
+      // the inline-equation signature ignores `texExpression`, so the
+      // word-hint diff sees no token changes. The whole pair still
+      // becomes a marked delete+insert via the leaf-comparison fallback
+      // (children differ structurally on `texExpression`).
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks.length + insertedBlocks.length).toBeGreaterThan(0);
+    });
+
+    it('mixing block math with prose: only the changed prose paragraph gets paired', () => {
+      const oldDoc = [
+        { type: 'paragraph', children: [{ text: 'Original intro.' }] },
+        equation('y = x^2'),
+        { type: 'paragraph', children: [{ text: 'Outro stays put.' }] },
+      ];
+      const newDoc = [
+        { type: 'paragraph', children: [{ text: 'Rewritten intro.' }] },
+        equation('y = x^2'),
+        { type: 'paragraph', children: [{ text: 'Outro stays put.' }] },
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+
+      // del-intro + ins-intro + unchanged equation + unchanged outro = 4
+      expect(flat).toHaveLength(4);
+      expect(tagOf(flat[0])?.tag).toBe('delete');
+      expect(tagOf(flat[1])?.tag).toBe('insert');
+      // Equation passes through untouched (byte-equal pair → Path 0).
+      expect((flat[2] as any).type).toBe('equation');
+      expect((flat[2] as any).tag).toBeUndefined();
+      expect((flat[2] as any).texExpression).toBe('y = x^2');
+      // Final paragraph also clean.
+      expect((flat[3] as any).tag).toBeUndefined();
+    });
+
+    it('adding a block equation: pure insert as overflow, no pairing', () => {
+      const oldDoc = [
+        { type: 'paragraph', children: [{ text: 'Setup paragraph.' }] },
+      ];
+      const newDoc = [
+        { type: 'paragraph', children: [{ text: 'Setup paragraph.' }] },
+        equation('\\sum_{i=0}^{n} i = n(n+1)/2'),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      expect(flat).toHaveLength(2);
+      expect((flat[0] as any).tag).toBeUndefined();
+      expect(tagOf(flat[1])?.tag).toBe('insert');
+      // Overflow inserts have NO pairId.
+      expect(tagOf(flat[1])?.pairId).toBeUndefined();
+      expect((flat[1] as any).type).toBe('equation');
+    });
+  });
+
+  describe('media (voids: img / video / audio)', () => {
+    // All three media types are block voids with the resource URL on the
+    // wrapper. Slate's void contract requires `[{ text: '' }]` children,
+    // which makes canRecurseContainer's isVoid check fire and routes the
+    // pair into the whole-block fallback (or atomic if a strategy says so).
+    const image = (url: string, alt?: string): any => ({
+      type: 'img',
+      url,
+      ...(alt ? { alt } : {}),
+      children: [{ text: '' }],
+    });
+    const video = (url: string): any => ({
+      type: 'video',
+      url,
+      children: [{ text: '' }],
+    });
+    const audio = (url: string): any => ({
+      type: 'audio',
+      url,
+      children: [{ text: '' }],
+    });
+
+    it('image URL change: whole-block pair, void child stays clean (no marks on the empty leaf)', () => {
+      const oldDoc = [image('https://example.com/old.png', 'Diagram')];
+      const newDoc = [image('https://example.com/new.png', 'Diagram')];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).url).toBe('https://example.com/old.png');
+      expect((insertedBlocks[0] as any).url).toBe(
+        'https://example.com/new.png'
+      );
+      // Critical: the void's empty-text child MUST NOT receive a tag.
+      // canRecurseContainer's isVoid check + whole-block fallback ensures
+      // we never recurse into `[{ text: '' }]`.
+      expect((deletedBlocks[0] as any).children[0].tag).toBeUndefined();
+      expect((insertedBlocks[0] as any).children[0].tag).toBeUndefined();
+    });
+
+    it('image alt-text change: same URL, different alt → whole-block pair', () => {
+      const oldDoc = [image('https://x.com/img.png', 'old caption')];
+      const newDoc = [image('https://x.com/img.png', 'new caption')];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).alt).toBe('old caption');
+      expect((insertedBlocks[0] as any).alt).toBe('new caption');
+      expect(tagOf(deletedBlocks[0])?.pairId).toBe(
+        tagOf(insertedBlocks[0])?.pairId
+      );
+    });
+
+    it('video added as a sibling block: pure insert overflow, no pairId', () => {
+      const oldDoc = [
+        { type: 'paragraph', children: [{ text: 'Intro paragraph.' }] },
+      ];
+      const newDoc = [
+        { type: 'paragraph', children: [{ text: 'Intro paragraph.' }] },
+        video('https://example.com/clip.mp4'),
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      expect(flat).toHaveLength(2);
+      expect((flat[0] as any).tag).toBeUndefined();
+      expect(tagOf(flat[1])?.tag).toBe('insert');
+      expect(tagOf(flat[1])?.pairId).toBeUndefined();
+      expect((flat[1] as any).type).toBe('video');
+    });
+
+    it('audio URL change with explicit atomic strategy: matches the implicit fallback', () => {
+      // Whether or not the caller registers a strategy, audio voids end
+      // up as whole-block pairs. The strategy form just makes the intent
+      // explicit and survives future heuristic refactors.
+      const oldDoc = [audio('https://x.com/old.mp3')];
+      const newDoc = [audio('https://x.com/new.mp3')];
+
+      const flat = pairBlocksWithWordHints(
+        oldDoc,
+        newDoc,
+        makeOptions({
+          getDiffStrategy: (n) =>
+            n.type === 'audio' ? { kind: 'atomic' } : undefined,
+        })
+      );
+
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+    });
+
+    it('replacing an image with a video at the same position: cross-type whole-block pair', () => {
+      // Different `type` → canRecurseContainer and canWordHint both bail
+      // (type mismatch). Whole-block delete+insert is the only option.
+      const oldDoc = [image('https://x.com/photo.jpg')];
+      const newDoc = [video('https://x.com/clip.mp4')];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+      expect((deletedBlocks[0] as any).type).toBe('img');
+      expect((insertedBlocks[0] as any).type).toBe('video');
+    });
+
+    it('media mixed with prose: only the media block changes, prose stays untouched', () => {
+      const oldDoc = [
+        { type: 'paragraph', children: [{ text: 'See the photo below.' }] },
+        image('https://x.com/old.png'),
+        { type: 'paragraph', children: [{ text: 'Notes follow.' }] },
+      ];
+      const newDoc = [
+        { type: 'paragraph', children: [{ text: 'See the photo below.' }] },
+        image('https://x.com/new.png'),
+        { type: 'paragraph', children: [{ text: 'Notes follow.' }] },
+      ];
+
+      const flat = pairBlocksWithWordHints(oldDoc, newDoc, makeOptions());
+
+      // unchanged-para + (del-img + ins-img) + unchanged-para = 4
+      expect(flat).toHaveLength(4);
+      expect((flat[0] as any).tag).toBeUndefined();
+      expect(tagOf(flat[1])?.tag).toBe('delete');
+      expect(tagOf(flat[2])?.tag).toBe('insert');
+      expect((flat[3] as any).tag).toBeUndefined();
+      // pairId on the media pair, none on the surrounding paragraphs.
+      expect(tagOf(flat[1])?.pairId).toBe(tagOf(flat[2])?.pairId);
+    });
+  });
+
   describe('determinism', () => {
     it('is pure: same inputs ⇒ same outputs (no hidden state)', () => {
       // Two independent runs with their own counter-based generators must

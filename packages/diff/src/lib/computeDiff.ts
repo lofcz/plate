@@ -7,6 +7,7 @@ import type { Descendant, EditorApi, TElement } from 'platejs';
 
 import type { DiffProps } from './types';
 
+import { groupRunsAndRehintWords } from '../internal/transforms/groupRunsAndRehintWords';
 import { transformDiffDescendants } from '../internal/transforms/transformDiffDescendants';
 import { dmp } from '../internal/utils/dmp';
 import { StringCharMapping } from '../internal/utils/string-char-mapping';
@@ -116,6 +117,49 @@ export type ComputeDiffOptions = {
    * a static registry maintained alongside the plugin definitions.
    */
   getDiffStrategy?: GetDiffStrategy;
+  /**
+   * Presentation transform: reorder contiguous runs of change blocks so all
+   * inserts (resp. deletes) are emitted together, matching `git diff`
+   * unified output. The leading side comes from `pairOrder`, so the engine's
+   * delete-first / insert-first contract is honoured.
+   *
+   * Default `false`: emit one interleaved pair at a time. The engine's
+   * per-pair output stays untouched for consumers (e.g. the suggestion
+   * plugin) that depend on adjacent pair halves.
+   *
+   * Block-level `pairId`s survive the reorder, so accept/reject grouping
+   * downstream still works — only the visual order changes. Runs are
+   * bounded by unchanged blocks; independent edits never merge.
+   *
+   * Only affects `granularity: 'block'`. Inline granularity has no run
+   * concept.
+   */
+  groupConsecutiveChanges?: boolean;
+  /**
+   * Presentation transform: re-compute leaf-level word marks at run scope
+   * instead of per pair. Each contiguous run of change blocks (bounded by
+   * unchanged blocks) is treated as ONE old body vs ONE new body; a single
+   * word-level diff is computed across the combined content; the resulting
+   * marks are projected back onto each block's leaves. Words common to
+   * old & new — even across block boundaries — survive as unchanged on
+   * both sides.
+   *
+   * Default `false`: keep the engine's per-pair word hints. The per-pair
+   * hints are correct for any single (delete, insert) pair viewed in
+   * isolation, but become misleading once the surrounding presentation
+   * groups multiple pairs into a single "before / after" block. Turn this
+   * on when you also enable `groupConsecutiveChanges`, or when downstream
+   * UI conceptually treats the run as a single change.
+   *
+   * Pure-insert and pure-delete runs are passed through verbatim (no
+   * comparable other side). Runs containing nested-block content (lists,
+   * tables, code blocks) are also passed through — those keep the engine's
+   * per-pair marks because run-scope concatenation across nested blocks is
+   * ill-defined.
+   *
+   * Only affects `granularity: 'block'`.
+   */
+  runScopeWordHints?: boolean;
 };
 
 export const computeDiff = (
@@ -138,14 +182,14 @@ export const computeDiff = (
 
   const diff = dmp.diff_main(m0, m1);
 
-  return transformDiffDescendants(diff, {
+  const transformOptions = {
     elementsAreRelated,
     getDeleteProps,
     getInsertProps,
     ignoreProps,
     isInline,
     stringCharMapping,
-    getUpdateProps: (node, properties, newProperties) => {
+    getUpdateProps: (node: Descendant, properties: any, newProperties: any) => {
       // Ignore the update if only ignored props have changed
       if (
         ignoreProps &&
@@ -156,7 +200,24 @@ export const computeDiff = (
       return getUpdateProps(node, properties, newProperties);
     },
     ...options,
-  });
+  };
+
+  const descendants = transformDiffDescendants(diff, transformOptions);
+
+  // Optional presentation pass. Both switches default off, preserving the
+  // engine's stable per-pair contract for downstream consumers (suggestion
+  // plugin, AI accept/reject UI). When either is set, the transform walks
+  // the output, identifies change runs, and applies reorder / rehint as
+  // requested. See `groupRunsAndRehintWords` for the contract.
+  if (
+    transformOptions.granularity === 'block' &&
+    (transformOptions.groupConsecutiveChanges ||
+      transformOptions.runScopeWordHints)
+  ) {
+    return groupRunsAndRehintWords(descendants, transformOptions);
+  }
+
+  return descendants;
 };
 
 export const defaultGetInsertProps = (
