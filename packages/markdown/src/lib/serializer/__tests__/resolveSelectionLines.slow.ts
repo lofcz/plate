@@ -1059,9 +1059,12 @@ describe('resolveSelectionByPath', () => {
       // flows through the extension-handler collection (the only path
       // that the wrapped-handler logic actually reads from).
       // Attach a toMarkdown extension by augmenting the unified processor
-      // data on the plugin's `attach` call.
-      const trailingNewlinePlugin: any = function () {
-        const data = (this as any).data();
+      // data on the plugin's `attach` call. Explicit `this: any` is needed
+      // for `strict: true` typechecking — unified passes the processor as
+      // `this`, but the plugin's `attach` signature isn't typed at the
+      // function-expression site.
+      const trailingNewlinePlugin: any = function (this: any) {
+        const data = this.data();
         data.toMarkdownExtensions ??= [];
         const list = data.toMarkdownExtensions;
         list.push({
