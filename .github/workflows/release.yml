@@ -143,8 +143,18 @@ jobs:
           publish: pnpm ci:release
           createGithubReleases: false
         env:
+          # changesets/action writes ~/.npmrc using NPM_TOKEN as the bootstrap
+          # auth credential. Without it `npm publish` exits with ENEEDAUTH
+          # before any OIDC exchange can happen. Trusted-publishing provenance
+          # (the signed Sigstore attestation, gated by `id-token: write` and
+          # the NPM_CONFIG_PROVENANCE flag below) layers on top of this auth
+          # — the two are orthogonal on npm CLI < 11.5.1. Once npm ≥ 11.5.1
+          # is in use AND every `@lofcz/*` package has a Trusted Publisher
+          # entry on npm.org, NPM_TOKEN can be dropped and the OIDC token
+          # itself becomes the publish credential.
           HOME: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.API_TOKEN_GITHUB || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Push package tags
