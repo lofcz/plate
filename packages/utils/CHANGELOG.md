@@ -1,5 +1,11 @@
 # @platejs/utils
 
+## 53.1.1
+
+### Patch Changes
+
+- Re-release after npm authentication was restored in the release workflow. The previous version bump landed on `main` but `npm publish` failed with `ENEEDAUTH` because `NPM_TOKEN` was not exposed to the publish step. No behavior changes in this bump — same artifacts as the previously unpublished versions.
+
 ## 53.0.5
 
 ### Patch Changes
