@@ -41,15 +41,10 @@
       "sourceType": "github",
       "computedHash": "0c74e2022d4b01170526cc5aabd386dd76f9a65e8b23df92a947bb52504e26b1"
     },
-    "dev-browser": {
-      "source": "sawyerhood/dev-browser",
-      "sourceType": "github",
-      "computedHash": "d50d11bbefdc1599d78900828dcb69d48e5091769d3f5ce10e06a60efe2405bf"
-    },
     "planning-with-files": {
       "source": "othmanadi/planning-with-files",
       "sourceType": "github",
-      "computedHash": "93522d6989e542f4670d9d7a347b2e0013c46935845d599a15fafd77643b9d42"
+      "computedHash": "1089883e49588888e2f674a534a24b88acd5df62ccf88275cd12015e9d66aff3"
     },
     "shadcn": {
       "source": "shadcn/ui",
