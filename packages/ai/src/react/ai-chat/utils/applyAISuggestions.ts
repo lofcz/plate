@@ -27,12 +27,24 @@ import {
 
 /**
  * Options the caller can use to opt into the block-level / new-above-old diff
- * presentation. They are forwarded verbatim to `diffToSuggestions`. Omitted
- * keys preserve the upstream default (inline char diff, delete-above-insert).
+ * presentation. Forwarded verbatim to `diffToSuggestions`, which in turn passes
+ * them to `computeDiff`. Omitted keys preserve the upstream default (inline
+ * char diff, delete-above-insert, no run-scope grouping).
+ *
+ * `groupConsecutiveChanges` + `runScopeWordHints` enable the git-diff-style
+ * presentation: consecutive change blocks are coalesced into a single run with
+ * all deletions above all insertions, and word-level highlighting is
+ * recomputed at the run scope rather than per pair. They only have an effect
+ * with `granularity: 'block'`.
  */
 export type ApplyAISuggestionsOptions = Pick<
   ComputeDiffOptions,
-  'granularity' | 'pairOrder' | 'wordBoundary' | 'generatePairId'
+  | 'generatePairId'
+  | 'granularity'
+  | 'groupConsecutiveChanges'
+  | 'pairOrder'
+  | 'runScopeWordHints'
+  | 'wordBoundary'
 >;
 
 export const applyAISuggestions = (

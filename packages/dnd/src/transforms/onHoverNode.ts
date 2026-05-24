@@ -62,13 +62,25 @@ export const onHoverNode = (
     }
 
     if (newDropTarget.line === 'top') {
-      const previousPath = PathApi.previous(editor.api.findPath(element)!);
+      // findPath can return undefined when the hovered element has been
+      // detached from the tree between the hover dispatch and its resolution
+      // (e.g. mid-drag deletion, reconcile race, or the element belongs to a
+      // foreign portal). Without this guard the `!` below masks a real
+      // possibility of `undefined` reaching `PathApi.previous`, which then
+      // crashes on `path.length`.
+      const elementPath = editor.api.findPath(element);
+
+      if (!elementPath) {
+        return editor.setOption(DndPlugin, 'dropTarget', newDropTarget);
+      }
+
+      const previousPath = PathApi.previous(elementPath);
 
       if (!previousPath) {
         return editor.setOption(DndPlugin, 'dropTarget', newDropTarget);
       }
 
-      const nextNode = NodeApi.get(editor, previousPath!);
+      const nextNode = NodeApi.get(editor, previousPath);
 
       editor.setOption(DndPlugin, 'dropTarget', {
         id: nextNode?.id as string,

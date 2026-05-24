@@ -213,6 +213,36 @@ describe('onHoverNode', () => {
     });
   });
 
+  it('falls back to the hovered node when findPath cannot resolve the element', () => {
+    // Repro for a real crash seen in product: when the hovered element has
+    // been detached from the tree between hover dispatch and resolution
+    // (mid-drag deletion, reconcile race, portaled foreign tree) findPath
+    // returns undefined. Without the guard added in this commit, the
+    // subsequent PathApi.previous(undefined) throws on `path.length` and
+    // the drag aborts. Now we just route to the hovered node's top edge
+    // and keep the drag alive.
+    editor.api.findPath = mock(() => {}) as any;
+
+    getDropPathMock.mockReturnValueOnce({
+      direction: 'top',
+      dragPath: [2],
+      to: [1],
+    });
+
+    onHoverNode(editor, {
+      dragItem,
+      element: hoverElement,
+      monitor,
+      nodeRef,
+    });
+
+    expect(previousPathMock).not.toHaveBeenCalled();
+    expect(editor.setOption).toHaveBeenCalledWith(DndPlugin, 'dropTarget', {
+      id: 'hover',
+      line: 'top',
+    });
+  });
+
   it('does not update the drop target when the editor is not over the drop zone', () => {
     getDropPathMock.mockReturnValueOnce({
       direction: 'bottom',

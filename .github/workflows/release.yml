@@ -123,6 +123,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          # `registry-url` makes setup-node drop a `~/.npmrc` with
+          # `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` plus
+          # `always-auth=true`. The placeholder is expanded by npm at
+          # invocation time, so the publish credential lives in env (not
+          # in a file) and npm CLI < 11.5.1 has a registry it can find
+          # without depending on changesets/action writing its own
+          # .npmrc.
+          registry-url: https://registry.npmjs.org
 
       - name: Monorepo install
         uses: ./.github/actions/pnpm-install
@@ -143,17 +151,30 @@ jobs:
           publish: pnpm ci:release
           createGithubReleases: false
         env:
-          # changesets/action writes ~/.npmrc using NPM_TOKEN as the bootstrap
-          # auth credential. Without it `npm publish` exits with ENEEDAUTH
-          # before any OIDC exchange can happen. Trusted-publishing provenance
-          # (the signed Sigstore attestation, gated by `id-token: write` and
-          # the NPM_CONFIG_PROVENANCE flag below) layers on top of this auth
-          # — the two are orthogonal on npm CLI < 11.5.1. Once npm ≥ 11.5.1
-          # is in use AND every `@lofcz/*` package has a Trusted Publisher
-          # entry on npm.org, NPM_TOKEN can be dropped and the OIDC token
-          # itself becomes the publish credential.
+          # Auth wiring layered for npm CLI 10.x (Node 22 default):
+          #   - NODE_AUTH_TOKEN: consumed by the `~/.npmrc` that
+          #     `actions/setup-node` wrote above (`${NODE_AUTH_TOKEN}`
+          #     placeholder). This is the actual credential the npm CLI
+          #     reads at publish time.
+          #   - NPM_TOKEN: belt-and-braces — changesets/action writes
+          #     its own `.npmrc` from this var when no .npmrc exists. Set
+          #     to the same secret so both code paths agree.
+          #   - NPM_CONFIG_PROVENANCE + `id-token: write` permission:
+          #     OIDC provenance attestation (signed Sigstore statement).
+          #     This is orthogonal to publish auth on npm < 11.5.1.
+          # IMPORTANT: the secret `NPM_TOKEN` MUST be an *Automation*
+          # access token. Classic publish tokens still require an OTP
+          # at publish time and trigger EOTP in CI even when 2FA is
+          # otherwise satisfied. Generate via npmjs.com → Access Tokens
+          # → Generate New Token → Automation.
+          # Future migration: once we ship npm ≥ 11.5.1 in CI AND every
+          # `@lofcz/*` package has a Trusted Publisher entry on npm.org,
+          # NPM_TOKEN + NODE_AUTH_TOKEN can be dropped — the OIDC token
+          # itself becomes the publish credential and no per-publish
+          # OTP is involved.
           HOME: ${{ github.workspace }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.API_TOKEN_GITHUB || secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
 
