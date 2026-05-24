@@ -21,8 +21,22 @@ test('release workflow uses the pruned GitHub Release path', async () => {
   assert.match(workflow, /publish:\s*pnpm ci:release/);
   assert.match(workflow, /id-token:\s*write/);
   assert.match(workflow, /NPM_CONFIG_PROVENANCE:\s*['"]true['"]/);
-  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN/);
-  assert.doesNotMatch(workflow, /^\s+NPM_TOKEN:/m);
+  // npm CLI 10.x (shipped with Node 22) cannot publish via OIDC alone — pure
+  // trusted publishing requires npm ≥ 11.5.1 *and* a Trusted Publisher entry
+  // for every @lofcz/* package on npm.org. Until both are true the workflow
+  // ships explicit token auth: NODE_AUTH_TOKEN consumed by the .npmrc that
+  // actions/setup-node writes, and NPM_TOKEN as the belt-and-braces fallback
+  // changesets/action uses when it writes its own .npmrc. Drop these two
+  // asserts only when the workflow is migrated to OIDC-only publishing.
+  assert.match(
+    workflow,
+    /NODE_AUTH_TOKEN:\s*\$\{\{\s*secrets\.NPM_TOKEN\s*\}\}/
+  );
+  assert.match(
+    workflow,
+    /^\s+NPM_TOKEN:\s*\$\{\{\s*secrets\.NPM_TOKEN\s*\}\}/m
+  );
+  assert.match(workflow, /registry-url:\s*https:\/\/registry\.npmjs\.org/);
   assert.match(workflow, /node tooling\/scripts\/published-package-tags\.mjs/);
   assert.match(workflow, /refs\/tags\/\$\{tag\}:refs\/tags\/\$\{tag\}/);
   assert.match(
