@@ -1,5 +1,15 @@
 # @platejs/diff
 
+## 53.1.3
+
+### Patch Changes
+
+- 246f8ea: `computeDiff` now honours `ignoreProps` at the char-mapping layer. Two nodes that differ only in an ignored property (e.g. fresh `id`s from `deserializeMd` on every parse) are recognised as the same node by DMP, instead of forcing the whole region into a delete+insert pair.
+
+  `groupConsecutiveChanges` and `runScopeWordHints` now work with suggestion-plugin consumers. The transform recognises both marker styles — the engine's `diffOperation` + `pairId` and the suggestion plugin's `suggestion` + `suggestion.id` — so `diffToSuggestions` callers get run grouping and run-scope word hints instead of silently dropping them. The leaf-cleanup pass also strips `suggestion`, `suggestion_<id>`, and `suggestionTransient` keys so the rehint doesn't bake stale marks into the rebuilt leaf.
+
+- 246f8ea: Fix `computeDiff` returning stale `ignoreProps` values on unchanged nodes. With `ignoreProps: ['id']` (or any other ignored prop), the engine kept the doc0 node identity for unchanged chars — so a node whose only difference was its `id` would silently revert to the old `id` in the output. `StringCharMapping.nodeToChar` now overwrites the entry with the latest occurrence, so doc1 wins for kept content while deletes and inserts stay correct.
+
 ## 53.1.1
 
 ### Patch Changes
