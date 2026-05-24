@@ -49,9 +49,22 @@ export class StringCharMapping {
     // `ignoreDeep` semantics the rest of the engine uses so transient
     // props (e.g. fresh ids from deserialisation) don't break structural
     // matching at the char-mapping layer.
-    for (const [n, c] of this._mappedNodes) {
-      if (isEqual(n, node, { ignoreDeep: this._ignoreProps })) {
-        return c;
+    //
+    // When an equivalent entry already exists, OVERWRITE its node reference
+    // with the latest occurrence. `nodesToString` is called doc0 first, then
+    // doc1, so this makes doc1's representation win for any node that exists
+    // in both docs. That matters for unchanged chars: the diff is presented
+    // as "doc1 with deletes/inserts marked", and downstream consumers
+    // (`stringToNodes` lookups for OP_UNCHANGED) expect doc1's version —
+    // otherwise a node whose only difference was an ignored prop (id,
+    // pairId, suggestion id, etc.) would silently revert to doc0's value
+    // in the output. Deletes still resolve to the correct doc0 node
+    // because they never match an existing entry; inserts get fresh chars
+    // by definition.
+    for (const entry of this._mappedNodes) {
+      if (isEqual(entry[0], node, { ignoreDeep: this._ignoreProps })) {
+        entry[0] = node;
+        return entry[1];
       }
     }
 

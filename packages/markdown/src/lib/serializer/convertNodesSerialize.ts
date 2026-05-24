@@ -94,6 +94,31 @@ export const convertNodesSerialize = (
   return mdastNodes;
 };
 
+/**
+ * Mirror the Slate `__sourceMapPath` annotation onto the produced mdast node.
+ *
+ * This breadcrumb lets `attachDescendantSources` (in
+ * `serializeMdWithSourceMap`) match mdast children back to their originating
+ * Slate child by *path* instead of by array position. Without it, any custom
+ * MDX serializer that injects, drops, or reorders mdast children would
+ * silently shift the source-map zipper and assign each Slate child the line
+ * range of a different mdast node.
+ *
+ * The property is a plain own-property on the mdast object — invisible to
+ * `mdast-util-to-markdown`, which only consumes the documented mdast fields.
+ */
+const tagWithSlatePath = (mdastNode: any, slateNode: any) => {
+  if (
+    mdastNode &&
+    typeof mdastNode === 'object' &&
+    Array.isArray(slateNode?.__sourceMapPath)
+  ) {
+    mdastNode.__sourceMapSlatePath = slateNode.__sourceMapPath;
+  }
+
+  return mdastNode;
+};
+
 export const buildMdastNode = (
   node: any,
   options: SerializeMdOptions,
@@ -119,10 +144,10 @@ export const buildMdastNode = (
     // If withBlockId is enabled and the node has an ID, wrap it
     // But only wrap if isBlock is true (top-level elements only)
     if (options.withBlockId && node.id && isBlock) {
-      return wrapWithBlockId(mdastNode, node.id);
+      return tagWithSlatePath(wrapWithBlockId(mdastNode, node.id), node);
     }
 
-    return mdastNode;
+    return tagWithSlatePath(mdastNode, node);
   }
 
   unreachable(node);

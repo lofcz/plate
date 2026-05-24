@@ -90,18 +90,26 @@ export function listToMdastTree(
       stackTop = indentStack.at(-1)!;
     }
 
-    // Create the current list item
+    // Create the current list item. Tag the inner paragraph with the source
+    // Slate path so `attachDescendantSources` can later match list items by
+    // path instead of by array position (see convertNodesSerialize for why).
+    const listItemParagraph: MdParagraph = {
+      children: convertNodesSerialize(
+        node.children,
+        options
+      ) as MdParagraph['children'],
+      type: 'paragraph',
+    };
+
+    if (Array.isArray((node as any).__sourceMapPath)) {
+      (listItemParagraph as any).__sourceMapSlatePath = (
+        node as any
+      ).__sourceMapPath;
+    }
+
     const listItem: MdListItem = {
       checked: null,
-      children: [
-        {
-          children: convertNodesSerialize(
-            node.children,
-            options
-          ) as MdParagraph['children'],
-          type: 'paragraph',
-        },
-      ],
+      children: [listItemParagraph],
       spread: options.spread ?? false,
       type: 'listItem',
     } as any;
@@ -166,18 +174,24 @@ function processListWithBlockIds(
       type: 'list',
     };
 
-    // Create the list item
+    // Create the list item (single-item list path)
+    const singleParagraph: MdParagraph = {
+      children: convertNodesSerialize(
+        node.children,
+        options
+      ) as MdParagraph['children'],
+      type: 'paragraph',
+    };
+
+    if (Array.isArray((node as any).__sourceMapPath)) {
+      (singleParagraph as any).__sourceMapSlatePath = (
+        node as any
+      ).__sourceMapPath;
+    }
+
     const listItem: MdListItem = {
       checked: null,
-      children: [
-        {
-          children: convertNodesSerialize(
-            node.children,
-            options
-          ) as MdParagraph['children'],
-          type: 'paragraph',
-        },
-      ],
+      children: [singleParagraph],
       spread: options.spread ?? false,
       type: 'listItem',
     } as any;

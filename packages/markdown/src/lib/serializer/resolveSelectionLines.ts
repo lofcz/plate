@@ -25,6 +25,14 @@ export type ResolveSelectionByPathResult = {
   endLine: number;
   extractedMarkdown: string;
   markdown: string;
+  /**
+   * `false` when neither endpoint of the selection mapped to any segment
+   * (e.g. stale paths after a concurrent edit). The line numbers in this
+   * case are placeholders (1, 1) and the extracted markdown is empty.
+   * Callers must check this flag before using the result; the previous
+   * silent default produced invalid line-1 references.
+   */
+  resolved: boolean;
   segments: MarkdownSourceMapSegment[];
   startLine: number;
 };
@@ -47,17 +55,60 @@ const MDX_TAG_RE = /<[a-zA-Z_][\w.-]*/;
 const isAncestorOrSelf = (a: number[], b: number[]): boolean =>
   a.length <= b.length && a.every((v, i) => b[i] === v);
 
-const comparePoints = (a: SelectionPoint, b: SelectionPoint): number => {
-  const len = Math.max(a.path.length, b.path.length);
+/**
+ * Order two Slate selection points in document order.
+ *
+ * Slate selection points come in two flavours that previously got compared
+ * incompatibly:
+ *
+ * - *Element-level*: `path` ends at an element, `offset` is the boundary
+ *   index between its children (0 = before the first child, N = after the
+ *   N-th child).
+ * - *Leaf-level*: `path` descends into a text leaf, `offset` is a character
+ *   index within that text.
+ *
+ * The previous implementation padded the shorter path with `0`s and then
+ * fell back to comparing offsets — which only works when both points are
+ * at the same depth. For mixed-depth points like `[3] offset 2`
+ * (≈ "before child 2 of [3]") vs `[3, 1] offset 5` (≈ "inside child 1 of
+ * [3]"), it returned the wrong order silently because the offsets are not
+ * commensurate.
+ *
+ * Fix: when the shorter point is element-level, expand it to the leaf-level
+ * coordinate space by treating its offset as the next path step ("before
+ * child `offset`"), then continue path comparison. Offsets are only
+ * compared when both points are at identical depth.
+ */
+export const comparePoints = (a: SelectionPoint, b: SelectionPoint): number => {
+  const aPath = a.path;
+  const bPath = b.path;
+  const aLen = aPath.length;
+  const bLen = bPath.length;
+  const common = Math.min(aLen, bLen);
 
-  for (let i = 0; i < len; i++) {
-    const av = a.path[i] ?? 0;
-    const bv = b.path[i] ?? 0;
-
-    if (av !== bv) return av - bv;
+  for (let i = 0; i < common; i++) {
+    if (aPath[i] !== bPath[i]) return aPath[i] - bPath[i];
   }
 
-  return a.offset - b.offset;
+  if (aLen === bLen) {
+    return a.offset - b.offset;
+  }
+
+  // One point is element-level (shorter path), the other descends deeper.
+  // Treat the element-level offset as the child index of its next step:
+  //   `{ path: [3], offset: 2 }` ≡ a boundary at child index 2 of [3].
+  // The deeper point has `path[common]` as its actual child index at that
+  // depth. Compare these — they live in the same coordinate space.
+  // When indices are equal, the element-level point is at the boundary
+  // *before* that child while the deeper point is strictly inside it, so
+  // the element-level one comes first.
+  if (aLen < bLen) {
+    if (a.offset !== bPath[common]) return a.offset - bPath[common];
+    return -1;
+  }
+
+  if (aPath[common] !== b.offset) return aPath[common] - b.offset;
+  return 1;
 };
 
 // -----------------------------------------------------------------------
@@ -70,7 +121,7 @@ const comparePoints = (a: SelectionPoint, b: SelectionPoint): number => {
  * 1. Ancestor-or-self: segment whose path is a prefix of `path` (most specific wins)
  * 2. First descendant: `path` is a prefix of segment's path (container selection)
  */
-const findStartSegment = (
+export const findStartSegment = (
   segments: MarkdownSourceMapSegment[],
   path: number[]
 ): MarkdownSourceMapSegment | null => {
@@ -96,10 +147,14 @@ const findStartSegment = (
 /**
  * Find the segment covering the end of a selection at `path`.
  *
- * Same as findStartSegment but for descendant matches picks the LAST one
- * (the container's last child segment).
+ * Same as findStartSegment but for descendant matches picks the segment
+ * with the LARGEST `endLine` (the container's deepest/latest child
+ * segment). The previous implementation returned the last segment by
+ * iteration order, which only happened to work because `allSegments` is
+ * sorted by path today — any caller passing an unsorted array would
+ * silently get the wrong range end.
  */
-const findEndSegment = (
+export const findEndSegment = (
   segments: MarkdownSourceMapSegment[],
   path: number[]
 ): MarkdownSourceMapSegment | null => {
@@ -115,13 +170,16 @@ const findEndSegment = (
 
   if (best) return best;
 
-  let last: MarkdownSourceMapSegment | null = null;
+  let latest: MarkdownSourceMapSegment | null = null;
 
   for (const seg of segments) {
-    if (isAncestorOrSelf(path, seg.path)) last = seg;
+    if (!isAncestorOrSelf(path, seg.path)) continue;
+    if (!latest || seg.endLine > latest.endLine) {
+      latest = seg;
+    }
   }
 
-  return last;
+  return latest;
 };
 
 // -----------------------------------------------------------------------
@@ -329,8 +387,15 @@ export const resolveSelectionByPath = (
       ? [selection.anchor, selection.focus]
       : [selection.focus, selection.anchor];
 
-  const startSeg = findStartSegment(segments, start.path);
-  const endSeg = findEndSegment(segments, end.path);
+  // Try leaf segments first for sub-line precision. If a leaf isn't available
+  // for the selection path (e.g. when a serializer fails to emit one), fall
+  // back to the full segment list which includes container blocks. This must
+  // never silently default to line 1 — that produces invalid quote refs.
+  const startSeg =
+    findStartSegment(segments, start.path) ??
+    findStartSegment(allSegments, start.path);
+  const endSeg =
+    findEndSegment(segments, end.path) ?? findEndSegment(allSegments, end.path);
 
   if (!startSeg && !endSeg) {
     return {
@@ -338,6 +403,7 @@ export const resolveSelectionByPath = (
       endLine: 1,
       extractedMarkdown: '',
       markdown,
+      resolved: false,
       segments,
       startLine: 1,
     };
@@ -411,6 +477,7 @@ export const resolveSelectionByPath = (
     endLine,
     extractedMarkdown,
     markdown,
+    resolved: true,
     segments,
     startLine,
   };

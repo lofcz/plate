@@ -169,6 +169,18 @@ const slateNodeKind = (
 
   if (SEGMENT_SKIP_TYPES.has(key)) return null;
 
+  // Inline elements (links, mentions, dates, etc.) occupy zero lines on
+  // their own — they live inside a paragraph/heading and the containing
+  // block already owns the line range. Emitting a separate `'block'`
+  // segment for them confuses line-range math and creates spurious
+  // selectable units. Trust the editor's `isInline` introspection.
+  try {
+    if (editor?.api?.isInline?.(node)) return null;
+  } catch {
+    // Defensive: editor.api.isInline can throw on partial editors used by
+    // some tests. Fall through to the catch-all.
+  }
+
   // Catch-all: any element node with children that isn't a known container.
   // Covers MDX components, callouts, toggles, equations, toc, date blocks,
   // and any future block type.
@@ -318,6 +330,23 @@ const attachListSources = (
   editor: SlateEditor,
   insideMdx: boolean
 ) => {
+  // Build a Slate-path → node lookup for tag-based matching. Each paragraph
+  // produced by `listToMdastTree` (and `listToMdastTreeWithSource`) is
+  // tagged with `__sourceMapSlatePath` so we can match it back to its
+  // originating Slate list paragraph without relying on iteration order.
+  const slateByPath = new Map<string, any>();
+
+  for (const item of slateListItems) {
+    if (Array.isArray((item as any)?.__sourceMapPath)) {
+      slateByPath.set(toPathKey((item as any).__sourceMapPath), item);
+    }
+  }
+
+  // Positional fallback used only when an mdast paragraph has no
+  // `__sourceMapSlatePath` tag (e.g. a custom serializer that builds its
+  // own listItem subtree). Advancing once per non-list child is safe today
+  // because every code path that calls `attachListSources` constructs
+  // exactly one paragraph per Slate list item.
   let slateIdx = 0;
 
   const walkList = (list: SourceMapNode) => {
@@ -330,15 +359,27 @@ const attachListSources = (
       for (const child of listItem.children) {
         if (child.type === 'list') {
           walkList(child);
-        } else if (slateIdx < slateListItems.length) {
-          // Match this mdast paragraph/block with the next flat Slate list item
-          const slateChild = slateListItems[slateIdx++];
-          const source = buildSource(slateChild, editor);
+          continue;
+        }
 
-          if (source) {
-            if (insideMdx) source.containsMdx = true;
-            attachSource(child, source);
-          }
+        const taggedPath = (child as any).__sourceMapSlatePath;
+        let slateChild: any = null;
+
+        if (Array.isArray(taggedPath)) {
+          slateChild = slateByPath.get(toPathKey(taggedPath)) ?? null;
+        }
+
+        if (!slateChild && slateIdx < slateListItems.length) {
+          slateChild = slateListItems[slateIdx++];
+        }
+
+        if (!slateChild) continue;
+
+        const source = buildSource(slateChild, editor);
+
+        if (source) {
+          if (insideMdx) source.containsMdx = true;
+          attachSource(child, source);
         }
       }
     }
@@ -346,6 +387,39 @@ const attachListSources = (
 
   walkList(mdastList);
 };
+
+/**
+ * Count the number of Slate list-paragraph slots a mdast list tree needs.
+ *
+ * Each non-`list` child of a `listItem` corresponds to exactly one Slate
+ * list paragraph; nested `list` nodes recurse. This lets us consume exactly
+ * the right slice of consecutive Slate list paragraphs for a given mdast
+ * list, instead of greedily swallowing every list-styled Slate sibling.
+ */
+const countMdastListSlots = (list: any): number => {
+  if (!list || !Array.isArray(list.children)) return 0;
+
+  let count = 0;
+
+  for (const listItem of list.children) {
+    if (listItem.type !== 'listItem' || !Array.isArray(listItem.children)) {
+      continue;
+    }
+
+    for (const child of listItem.children) {
+      if (child?.type === 'list') {
+        count += countMdastListSlots(child);
+      } else {
+        count += 1;
+      }
+    }
+  }
+
+  return count;
+};
+
+const pathsEqual = (a: SelectionPath, b: SelectionPath): boolean =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
 
 const attachDescendantSources = (
   mdastNode: SourceMapNode,
@@ -365,34 +439,15 @@ const attachDescendantSources = (
   const slateElements = slateChildren.filter(
     (c: any) => c?.type && Array.isArray(c.children)
   );
-  const mdastElements = mdastChildren.filter(
-    (c: any) => c.type && c.type !== 'text'
-  );
 
-  // Two-pointer walk: Slate has flat list paragraphs where mdast has nested
-  // list nodes. When we encounter a mdast `list`, consume the corresponding
-  // run of Slate list paragraphs (those with `listStyleType`).
-  let si = 0;
+  // Path-based matching is preferred whenever the mdast carries the
+  // `__sourceMapSlatePath` breadcrumb (planted by `buildMdastNode` and
+  // `listToMdastTree`). It survives custom MDX serializers that inject,
+  // drop, or reorder mdast children — the array-position zipper used to
+  // silently drift in those cases.
+  const consumedSlateIndices = new Set<number>();
 
-  for (const mdastChild of mdastElements) {
-    if (mdastChild.type === 'list') {
-      // Collect the contiguous run of Slate list paragraphs
-      const listRun: any[] = [];
-
-      while (si < slateElements.length && slateElements[si].listStyleType) {
-        listRun.push(slateElements[si]);
-        si++;
-      }
-
-      attachListSources(mdastChild, listRun, editor, insideMdx);
-      continue;
-    }
-
-    if (si >= slateElements.length) break;
-
-    const slateChild = slateElements[si];
-    si++;
-
+  const attachSingleByMdast = (mdastChild: any, slateChild: any) => {
     const isMdx = insideMdx || MDX_MDAST_TYPES.has(mdastChild.type ?? '');
     const source = buildSource(slateChild, editor);
 
@@ -406,6 +461,81 @@ const attachDescendantSources = (
     } else if (insideMdx || MDX_MDAST_TYPES.has(mdastChild.type ?? '')) {
       attachDescendantSources(mdastChild, slateChild, editor, isMdx);
     }
+  };
+
+  // Pass 1: match every mdast child that has a `__sourceMapSlatePath`
+  // breadcrumb to its tagged Slate child. Mark those Slate indices as
+  // consumed so the positional fallback below skips them.
+  for (const mdastChild of mdastChildren) {
+    if (!mdastChild || !mdastChild.type || mdastChild.type === 'text') {
+      continue;
+    }
+
+    const taggedPath = (mdastChild as any).__sourceMapSlatePath;
+    if (!Array.isArray(taggedPath)) continue;
+
+    const slateIdx = slateElements.findIndex(
+      (c: any) =>
+        Array.isArray(c.__sourceMapPath) &&
+        pathsEqual(c.__sourceMapPath, taggedPath)
+    );
+
+    if (slateIdx === -1) continue;
+
+    consumedSlateIndices.add(slateIdx);
+    attachSingleByMdast(mdastChild, slateElements[slateIdx]);
+  }
+
+  // Pass 2: handle mdast `list` wrappers (which have no path of their own)
+  // and any untagged mdast children. We walk Slate children in order and
+  // match them positionally to remaining untagged mdast nodes. Lists
+  // consume a contiguous run of list-styled Slate paragraphs equal to the
+  // number of paragraph slots inside their mdast subtree — see
+  // `countMdastListSlots`. Greedy consumption would starve every subsequent
+  // mdast list when alternating list styles split the Slate run into
+  // multiple mdast `list` nodes (e.g. ordered → bullet → ordered).
+  let si = 0;
+
+  const advanceToUnconsumed = () => {
+    while (si < slateElements.length && consumedSlateIndices.has(si)) {
+      si++;
+    }
+  };
+
+  for (const mdastChild of mdastChildren) {
+    if (!mdastChild || !mdastChild.type || mdastChild.type === 'text') {
+      continue;
+    }
+
+    // Already handled in pass 1
+    if (Array.isArray((mdastChild as any).__sourceMapSlatePath)) continue;
+
+    if (mdastChild.type === 'list') {
+      const slotsNeeded = countMdastListSlots(mdastChild);
+      const listRun: any[] = [];
+
+      for (let k = 0; k < slotsNeeded; k++) {
+        advanceToUnconsumed();
+        if (si >= slateElements.length) break;
+        if (!slateElements[si].listStyleType) break;
+
+        listRun.push(slateElements[si]);
+        consumedSlateIndices.add(si);
+        si++;
+      }
+
+      attachListSources(mdastChild, listRun, editor, insideMdx);
+      continue;
+    }
+
+    advanceToUnconsumed();
+    if (si >= slateElements.length) break;
+
+    const slateChild = slateElements[si];
+    consumedSlateIndices.add(si);
+    si++;
+
+    attachSingleByMdast(mdastChild, slateChild);
   }
 };
 
@@ -735,7 +865,14 @@ export const serializeMdWithSourceMap = (
 
       const source = node?.data?.sourceMap;
       if (source && emitted.trim()) {
-        const newlineCount = emitted.split(/\r?\n|\r/g).length - 1;
+        // Strip a trailing newline before counting lines. The standard
+        // mdast-util-to-markdown block handlers don't emit trailing
+        // newlines (block separation is added by the parent join logic),
+        // but custom serializers — particularly MDX wrappers — sometimes
+        // do. A trailing `\n` would inflate `endLine` by one and push the
+        // segment past its actual content onto a blank line.
+        const normalized = emitted.replace(/(?:\r?\n|\r)+$/g, '');
+        const newlineCount = normalized.split(/\r?\n|\r/g).length - 1;
         pushSegment(source, emitted, startLine, startLine + newlineCount);
       }
 

@@ -45,8 +45,22 @@ const PUNCTUATION_WORD_BOUNDARY = /([\s.,!?;:()[\]{}"'`]+)/u;
 export function DiffPlayground() {
   const [preset, setPreset] = useState(DIFF_PRESET_KEYS[0]);
   const [granularity, setGranularity] = useState<Granularity>('block');
-  const [pairOrder, setPairOrder] = useState<PairOrder>('insert-first');
+  // Default to git-style "deletions above additions". The new
+  // similarity-based block pairing in `pairBlocksWithWordHints` emits its
+  // own logical layout (paired blocks adjacent, lone inserts/deletes in
+  // their natural document order) and `delete-first` matches what
+  // production consumers render.
+  const [pairOrder, setPairOrder] = useState<PairOrder>('delete-first');
   const [punctuationBoundary, setPunctuationBoundary] = useState(false);
+  // Git-diff post-processing knobs.
+  // `groupConsecutive` is ON by default so the playground shows the same
+  // clean grouped layout production users get for "rewrite an existing
+  // block" edits.
+  // `runScopeWords` is OFF by default: it's a cross-block word-hint pass
+  // that's expensive on large grouped runs and only meaningful when you
+  // actually want to inspect that path — toggle it ON to compare.
+  const [groupConsecutive, setGroupConsecutive] = useState(true);
+  const [runScopeWords, setRunScopeWords] = useState(false);
 
   const [before, setBefore] = useState(DIFF_PRESETS[preset].before);
   const [after, setAfter] = useState(DIFF_PRESETS[preset].after);
@@ -98,15 +112,25 @@ export function DiffPlayground() {
         pairOrder,
         wordBoundary,
         generatePairId: () => `p${++pairCounter}`,
-        // Git-diff layout + run-scope word marks. The presentation we want
-        // in this playground IS the git-diff style — group all deletes
-        // then all inserts in a run, and treat each run as a single
-        // "before/after" body for the leaf word marks. See
-        // `groupRunsAndRehintWords` in @platejs/diff for the engine-side
-        // contract. Both default to false so production consumers (e.g.
-        // the suggestion plugin) keep the legacy per-pair output.
-        groupConsecutiveChanges: granularity === 'block',
-        runScopeWordHints: granularity === 'block',
+        // Git-diff layout for block granularity. Driven by the toolbar
+        // toggles so the playground can A/B compare:
+        //
+        //   - `groupConsecutiveChanges` reorders each contiguous run of
+        //     changed blocks so one side (per `pairOrder`) comes first.
+        //     Combined with the new similarity-based pairing in
+        //     `pairBlocksWithWordHints`, runs of paired blocks read as a
+        //     tight "all old → all new" hunk.
+        //
+        //   - `runScopeWordHints` then re-runs the word-level diff
+        //     symmetrically across the whole grouped run, so BOTH the
+        //     delete and insert halves get matching word-level marks
+        //     (otherwise the delete half is one big strikethrough while
+        //     the insert half has finer highlights — asymmetric & noisy).
+        //
+        // Both are forced OFF for `granularity === 'inline'` because the
+        // inline path already produces a single continuous text diff.
+        groupConsecutiveChanges: granularity === 'block' && groupConsecutive,
+        runScopeWordHints: granularity === 'block' && runScopeWords,
         // Declarative per-element strategies. Each MDX type owns its own
         // identity rules: see lesson-plan.tsx. Plain block types (p, h1,
         // blockquote, ...) return undefined here and continue to be
@@ -137,6 +161,8 @@ export function DiffPlayground() {
     granularity,
     pairOrder,
     punctuationBoundary,
+    groupConsecutive,
+    runScopeWords,
   ]);
 
   // Stats for the debug strip.
@@ -203,6 +229,10 @@ export function DiffPlayground() {
         onPairOrderChange={setPairOrder}
         punctuationBoundary={punctuationBoundary}
         onPunctuationBoundaryChange={setPunctuationBoundary}
+        groupConsecutive={groupConsecutive}
+        onGroupConsecutiveChange={setGroupConsecutive}
+        runScopeWords={runScopeWords}
+        onRunScopeWordsChange={setRunScopeWords}
         onReset={reset}
         stats={stats}
       />
@@ -320,6 +350,10 @@ function Toolbar({
   onPairOrderChange,
   punctuationBoundary,
   onPunctuationBoundaryChange,
+  groupConsecutive,
+  onGroupConsecutiveChange,
+  runScopeWords,
+  onRunScopeWordsChange,
   onReset,
   stats,
 }: {
@@ -331,6 +365,10 @@ function Toolbar({
   onPairOrderChange: (v: PairOrder) => void;
   punctuationBoundary: boolean;
   onPunctuationBoundaryChange: (v: boolean) => void;
+  groupConsecutive: boolean;
+  onGroupConsecutiveChange: (v: boolean) => void;
+  runScopeWords: boolean;
+  onRunScopeWordsChange: (v: boolean) => void;
   onReset: () => void;
   stats: {
     inserts: number;
@@ -405,6 +443,42 @@ function Toolbar({
           style={{ marginRight: 4 }}
         />
         punctuation-aware boundary
+      </label>
+
+      <label
+        style={{
+          fontSize: 12,
+          color: granularity === 'inline' ? '#9ca3af' : '#374151',
+          cursor: granularity === 'inline' ? 'not-allowed' : 'pointer',
+        }}
+        title="Reorder contiguous runs of changed blocks so one side comes first (git-diff layout)."
+      >
+        <input
+          type="checkbox"
+          disabled={granularity === 'inline'}
+          checked={groupConsecutive}
+          onChange={(e) => onGroupConsecutiveChange(e.target.checked)}
+          style={{ marginRight: 4 }}
+        />
+        group consecutive
+      </label>
+
+      <label
+        style={{
+          fontSize: 12,
+          color: granularity === 'inline' ? '#9ca3af' : '#374151',
+          cursor: granularity === 'inline' ? 'not-allowed' : 'pointer',
+        }}
+        title="Re-run word-level diff across the whole grouped run for symmetric leaf marks."
+      >
+        <input
+          type="checkbox"
+          disabled={granularity === 'inline'}
+          checked={runScopeWords}
+          onChange={(e) => onRunScopeWordsChange(e.target.checked)}
+          style={{ marginRight: 4 }}
+        />
+        run-scope word hints
       </label>
 
       <button type="button" onClick={onReset} style={btnStyle}>

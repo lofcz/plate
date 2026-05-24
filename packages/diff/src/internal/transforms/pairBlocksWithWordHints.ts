@@ -51,6 +51,7 @@ import type { ComputeDiffOptions, DiffStrategy } from '../../lib/computeDiff';
 
 import { dmp } from '../utils/dmp';
 import { isEqual } from '../utils/is-equal';
+import { StringCharMapping } from '../utils/string-char-mapping';
 
 const DEFAULT_WORD_BOUNDARY = /(\s+)/u;
 
@@ -81,99 +82,189 @@ export function pairBlocksWithWordHints(
     }
   };
 
-  const maxLen = Math.max(oldBlocks.length, newBlocks.length);
+  // === Phase 1: structural alignment via DMP ===
+  //
+  // Naive position pairing (old[i] vs new[i]) is correct ONLY when both
+  // halves come from a single DMP delete+insert chunk at the TOP level
+  // (where the engine already aligned everything else). The moment we
+  // recurse into a container whose children gained or lost a block in
+  // the middle, position pairing creates phantom "replace" pairs for
+  // every shifted block, and overflows the surviving copies as
+  // standalone inserts. Concretely: a list that went from
+  //   [A, B, C, D]
+  // to
+  //   [A, B, X, Y, C, D]
+  // would be paired as (A↔A)(B↔B)(C↔X)(D↔Y) + standalone-insert C, D —
+  // i.e. C and D show up TWICE (once as the "delete" half of a bogus
+  // replace, once as an overflow insert) even though they are unchanged.
+  //
+  // The fix: run DMP on the two arrays with the same `ignoreProps`-aware
+  // char mapping the top-level pass uses. Equal chunks pass through
+  // verbatim; consecutive delete+insert chunks are pair-by-position
+  // INSIDE the chunk (where position pairing IS correct because DMP has
+  // already aligned the unchanged neighbours away); lone delete/insert
+  // chunks emit as pure overflow.
+  const mapping = new StringCharMapping({ ignoreProps: options.ignoreProps });
+  const oldStr = mapping.nodesToString(oldBlocks);
+  const newStr = mapping.nodesToString(newBlocks);
+  const rawDiff = dmp.diff_main(oldStr, newStr);
+  // NOTE: do NOT call diff_cleanupSemantic here. It is designed for
+  // human-readable TEXT diffs and merges small equal runs (e.g. a single
+  // unchanged char surrounded by inserts/deletes) into the neighbouring
+  // change region. For STRUCTURAL block diff each char represents an
+  // entire Slate node, so collapsing a 1-char equal makes the engine
+  // treat an unchanged block as a replace pair — exactly the
+  // "phantom replace" bug this function was rewritten to avoid.
 
-  for (let i = 0; i < maxLen; i++) {
-    const oldBlock = oldBlocks[i];
-    const newBlock = newBlocks[i];
+  // === Phase 2: walk chunks, dispatch per-pair logic for replace regions ===
+  let oi = 0; // pointer into oldBlocks
+  let ni = 0; // pointer into newBlocks
 
-    if (oldBlock && newBlock) {
-      // 0. Identical pair: byte-for-byte equal (or only differing in
-      // ignored props such as `id`). Pass through the new side verbatim —
-      // no diff marks, no pairId. This matters during recursion: an
-      // unchanged child sibling between two CHANGED siblings must stay
-      // clean.
-      if (isEqual(oldBlock, newBlock, { ignoreDeep: options.ignoreProps })) {
-        out.push(newBlock);
+  for (let chunkIdx = 0; chunkIdx < rawDiff.length; chunkIdx++) {
+    const [op, val] = rawDiff[chunkIdx] as [number, string];
+
+    if (op === 0) {
+      // Equal modulo ignoreProps. Emit the NEW side verbatim so any
+      // non-ignored prop changes propagate (mirrors step 0 of the old
+      // per-pair flow). `val.length` counts how many nodes this equal
+      // chunk represents in the StringCharMapping encoding (1 BMP char
+      // per node — codes well below the surrogate range).
+      for (const _ of val) {
+        out.push(newBlocks[ni]);
+        oi++;
+        ni++;
+      }
+      continue;
+    }
+
+    if (op === -1) {
+      const nextChunk = rawDiff[chunkIdx + 1];
+      if (nextChunk && (nextChunk[0] as number) === 1) {
+        // Delete-followed-by-insert: a "replace region" in DMP-speak.
+        //
+        // Pair by POSITION within the region (delete[k] ↔ insert[k]),
+        // mirroring `git diff` line-pair semantics: the first removed
+        // line sits visually next to the first added line, the second
+        // next to the second, etc. Any overflow on either side becomes
+        // lone deletes / lone inserts. No similarity heuristic — the
+        // engine never tries to guess that delete[0] is "really" the
+        // edit of insert[2]; that would require semantic understanding
+        // we don't have.
+        const deletedNodes: Descendant[] = [];
+        for (const _ of val) {
+          deletedNodes.push(oldBlocks[oi++]);
+        }
+        const insertedNodes: Descendant[] = [];
+        const insertVal = nextChunk[1] as string;
+        for (const _ of insertVal) {
+          insertedNodes.push(newBlocks[ni++]);
+        }
+
+        const numDel = deletedNodes.length;
+        const numIns = insertedNodes.length;
+        const numPaired = Math.min(numDel, numIns);
+
+        // Walk inserts in NEW-document order. The first `numPaired`
+        // inserts are paired with the deletes at the same index;
+        // anything beyond emits as a lone insert AT its natural
+        // position (so trailing inserts read as appended additions,
+        // matching the test's "trailing new blocks as pure inserts"
+        // expectation and the way `git diff` shows extra `+` lines
+        // after the paired hunk).
+        for (let i = 0; i < numIns; i++) {
+          if (i < numPaired) {
+            handleReplacePair({
+              generatePairId,
+              newBlock: insertedNodes[i],
+              oldBlock: deletedNodes[i],
+              options,
+              out,
+              pushPair,
+            });
+          } else {
+            const node = insertedNodes[i];
+            out.push(attachProps(node, options.getInsertProps(node)));
+          }
+        }
+
+        // Sweep trailing deletes (when the old region was longer than
+        // the new region) AFTER the paired hunk. They land in the
+        // output as standalone `-` lines following the matched pairs —
+        // again the `git diff` convention. Putting them at the END
+        // (rather than the top of the hunk) keeps `deletedBlocks[0]`
+        // of the filter-by-tag projection equal to the PAIRED delete,
+        // which downstream tests and UI both rely on.
+        for (let d = numPaired; d < numDel; d++) {
+          const node = deletedNodes[d];
+          out.push(attachProps(node, options.getDeleteProps(node)));
+        }
+
+        chunkIdx++; // consume the paired insert chunk
         continue;
       }
 
-      // 1. Declarative strategy: plugin author has told the engine how to
-      // diff this element type. Takes precedence over heuristics.
-      const sharedStrategy = pickPairStrategy(
-        resolveStrategy(oldBlock, options),
-        resolveStrategy(newBlock, options)
-      );
-
-      if (sharedStrategy) {
-        if (sharedStrategy.kind === 'container') {
-          if (
-            ElementApi.isElement(oldBlock) &&
-            ElementApi.isElement(newBlock) &&
-            (oldBlock as TElement).type === (newBlock as TElement).type &&
-            containerIdentityMatches(
-              oldBlock as TElement,
-              newBlock as TElement,
-              sharedStrategy,
-              options
-            )
-          ) {
-            const recursed = pairBlocksWithWordHints(
-              (oldBlock as TElement).children,
-              (newBlock as TElement).children,
-              options
-            );
-            // Emit ONE wrapper unchanged. The plugin author declared the
-            // identity matches, so any non-identity own props on the new
-            // side propagate verbatim — that's the source-of-truth for the
-            // rendered diff.
-            out.push({
-              ...(newBlock as TElement),
-              children: recursed,
-            } as Descendant);
-            continue;
-          }
-          // Container identity changed (different name, type, etc.) —
-          // strategy says these are NOT the same wrapper. Whole-block.
-          const pairId = generatePairId();
-          pushPair(
-            attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
-            attachProps(newBlock, options.getInsertProps(newBlock, { pairId }))
-          );
-          continue;
-        }
-
-        if (
-          sharedStrategy.kind === 'prose' &&
-          ElementApi.isElement(oldBlock) &&
-          ElementApi.isElement(newBlock)
-        ) {
-          const pairId = generatePairId();
-          const { taggedOld, taggedNew } = applyWordHintsToPair(
-            oldBlock as TElement,
-            newBlock as TElement,
-            pairId,
-            options
-          );
-          pushPair(taggedOld, taggedNew);
-          continue;
-        }
-        // Prose strategy on a non-element half — silently fall through.
-
-        if (sharedStrategy.kind === 'atomic') {
-          const pairId = generatePairId();
-          pushPair(
-            attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
-            attachProps(newBlock, options.getInsertProps(newBlock, { pairId }))
-          );
-          continue;
-        }
+      // Lone delete.
+      for (const _ of val) {
+        const node = oldBlocks[oi++];
+        out.push(attachProps(node, options.getDeleteProps(node)));
       }
+      continue;
+    }
 
-      // 2. Structural-recursion heuristic: same wrapper, block-element
-      // children only. Acts as the implicit `container` strategy for
-      // elements the caller hasn't classified.
-      if (canRecurseContainer(oldBlock, newBlock, options)) {
+    if (op === 1) {
+      // Lone insert (didn't immediately follow a delete — already
+      // consumed in the paired case above).
+      for (const _ of val) {
+        const node = newBlocks[ni++];
+        out.push(attachProps(node, options.getInsertProps(node)));
+      }
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Per-pair decision tree for a single (deleted, inserted) replacement
+ * pair where the two halves are known to be unequal modulo
+ * `options.ignoreProps`. Implements steps 1-4 of the original
+ * pairBlocksWithWordHints flow:
+ *
+ *   1. Declarative strategy (container / prose / atomic).
+ *   2. Structural-recursion heuristic (same-type wrapper, block-only
+ *      children, identical own props).
+ *   3. Prose word-hinting (same-type, leafy children).
+ *   4. Whole-block fallback.
+ */
+function handleReplacePair(params: {
+  generatePairId: () => string;
+  newBlock: Descendant;
+  oldBlock: Descendant;
+  options: ComputeDiffOptions;
+  out: Descendant[];
+  pushPair: (d: Descendant, i: Descendant) => void;
+}): void {
+  const { generatePairId, newBlock, oldBlock, options, out, pushPair } = params;
+  // 1. Declarative strategy: plugin author has told the engine how to
+  // diff this element type. Takes precedence over heuristics.
+  const sharedStrategy = pickPairStrategy(
+    resolveStrategy(oldBlock, options),
+    resolveStrategy(newBlock, options)
+  );
+
+  if (sharedStrategy) {
+    if (sharedStrategy.kind === 'container') {
+      if (
+        ElementApi.isElement(oldBlock) &&
+        ElementApi.isElement(newBlock) &&
+        (oldBlock as TElement).type === (newBlock as TElement).type &&
+        containerIdentityMatches(
+          oldBlock as TElement,
+          newBlock as TElement,
+          sharedStrategy,
+          options
+        )
+      ) {
         const recursed = pairBlocksWithWordHints(
           (oldBlock as TElement).children,
           (newBlock as TElement).children,
@@ -183,42 +274,79 @@ export function pairBlocksWithWordHints(
           ...(newBlock as TElement),
           children: recursed,
         } as Descendant);
-        continue;
+        return;
       }
-
+      // Container identity changed — strategy says these are NOT the
+      // same wrapper. Whole-block.
       const pairId = generatePairId();
-
-      // 3. Prose word-hinting: same type, leafy children only.
-      if (canWordHint(oldBlock, newBlock, options.isInline)) {
-        const { taggedOld, taggedNew } = applyWordHintsToPair(
-          oldBlock as TElement,
-          newBlock as TElement,
-          pairId,
-          options
-        );
-        pushPair(taggedOld, taggedNew);
-        continue;
-      }
-
-      // 4. Whole-block fallback.
       pushPair(
         attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
         attachProps(newBlock, options.getInsertProps(newBlock, { pairId }))
       );
-      continue;
+      return;
     }
 
-    // Overflow — pure delete or pure insert, no pair binding.
-    if (oldBlock) {
-      out.push(attachProps(oldBlock, options.getDeleteProps(oldBlock)));
-      continue;
+    if (
+      sharedStrategy.kind === 'prose' &&
+      ElementApi.isElement(oldBlock) &&
+      ElementApi.isElement(newBlock)
+    ) {
+      const pairId = generatePairId();
+      const { taggedOld, taggedNew } = applyWordHintsToPair(
+        oldBlock as TElement,
+        newBlock as TElement,
+        pairId,
+        options
+      );
+      pushPair(taggedOld, taggedNew);
+      return;
     }
-    if (newBlock) {
-      out.push(attachProps(newBlock, options.getInsertProps(newBlock)));
+    // Prose strategy on a non-element half — silently fall through.
+
+    if (sharedStrategy.kind === 'atomic') {
+      const pairId = generatePairId();
+      pushPair(
+        attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
+        attachProps(newBlock, options.getInsertProps(newBlock, { pairId }))
+      );
+      return;
     }
   }
 
-  return out;
+  // 2. Structural-recursion heuristic: same wrapper, block-element
+  // children only.
+  if (canRecurseContainer(oldBlock, newBlock, options)) {
+    const recursed = pairBlocksWithWordHints(
+      (oldBlock as TElement).children,
+      (newBlock as TElement).children,
+      options
+    );
+    out.push({
+      ...(newBlock as TElement),
+      children: recursed,
+    } as Descendant);
+    return;
+  }
+
+  const pairId = generatePairId();
+
+  // 3. Prose word-hinting.
+  if (canWordHint(oldBlock, newBlock, options.isInline)) {
+    const { taggedOld, taggedNew } = applyWordHintsToPair(
+      oldBlock as TElement,
+      newBlock as TElement,
+      pairId,
+      options
+    );
+    pushPair(taggedOld, taggedNew);
+    return;
+  }
+
+  // 4. Whole-block fallback.
+  pushPair(
+    attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
+    attachProps(newBlock, options.getInsertProps(newBlock, { pairId }))
+  );
 }
 
 const attachProps = (node: Descendant, props: any): Descendant => ({
