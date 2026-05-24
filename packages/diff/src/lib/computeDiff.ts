@@ -175,7 +175,14 @@ export const computeDiff = (
     ...options
   }: Partial<ComputeDiffOptions> = {}
 ): Descendant[] => {
-  const stringCharMapping = new StringCharMapping();
+  // Honour `ignoreProps` at the char-mapping layer too. Without this, two
+  // nodes with identical content but different ignored props (e.g. fresh
+  // `id`s from `deserializeMd` on every parse) get mapped to different
+  // characters, which forces DMP to emit a delete+insert pair across the
+  // whole region. The downstream `transformDiffDescendants` already passes
+  // `ignoreProps` through to `isEqual` — this just makes the layers
+  // consistent.
+  const stringCharMapping = new StringCharMapping({ ignoreProps });
 
   const m0 = stringCharMapping.nodesToString(doc0);
   const m1 = stringCharMapping.nodesToString(doc1);

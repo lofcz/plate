@@ -63,6 +63,57 @@ import {
 
 const DEFAULT_WORD_BOUNDARY = /(\s+)/u;
 
+type DiffRole = 'insert' | 'delete' | 'update';
+
+/**
+ * Resolve the diff role of a node, supporting BOTH marker styles the engine
+ * emits depending on the caller's `getInsertProps` / `getDeleteProps`:
+ *
+ *   - Default markers (used when callers rely on `defaultGetInsertProps` /
+ *     `defaultGetDeleteProps`): `diffOperation: { type: 'insert' | 'delete'
+ *     | 'update' }`.
+ *
+ *   - Suggestion-plugin markers (used when `@platejs/suggestion`'s
+ *     `diffToSuggestions` is the consumer): the user props REPLACE
+ *     `diffOperation` with `suggestion: { id, type: 'insert' | 'remove' |
+ *     'update' }`. Note the `'remove'` ↔ `'delete'` rename.
+ *
+ * Without this dual-recognition, every consumer of suggestion props lost
+ * `groupConsecutiveChanges` / `runScopeWordHints` silently — `findRuns`
+ * would see no `diffOperation` markers and skip the whole transform.
+ */
+const getDiffRole = (node: Descendant): DiffRole | null => {
+  const op = (node as { diffOperation?: { type?: string } }).diffOperation;
+  if (op && typeof op === 'object') {
+    if (op.type === 'insert') return 'insert';
+    if (op.type === 'delete') return 'delete';
+    if (op.type === 'update') return 'update';
+  }
+  const sug = (node as { suggestion?: { type?: string } | boolean }).suggestion;
+  if (sug && typeof sug === 'object') {
+    if (sug.type === 'insert') return 'insert';
+    if (sug.type === 'remove') return 'delete';
+    if (sug.type === 'update') return 'update';
+  }
+  return null;
+};
+
+/**
+ * Resolve the `pairId` of a paired block, supporting both marker styles
+ * (see `getDiffRole`).
+ *   - Default props: top-level `pairId` property.
+ *   - Suggestion props: id lives in `suggestion.id`.
+ */
+const getPairId = (node: Descendant): string | undefined => {
+  const direct = (node as { pairId?: string }).pairId;
+  if (typeof direct === 'string') return direct;
+  const sug = (node as { suggestion?: { id?: string } }).suggestion;
+  if (sug && typeof sug === 'object' && typeof sug.id === 'string') {
+    return sug.id;
+  }
+  return;
+};
+
 export type RunScopeTransformOptions = {
   /**
    * Reorder contiguous runs of change blocks so all of one side appears
@@ -123,7 +174,7 @@ const recurseIntoUnchangedContainer = (
   if (!ElementApi.isElement(node)) return node;
   // Self-changed: children are inline tokens / leaves carrying word marks.
   // Reordering them would scramble within-paragraph inline diffs.
-  if ((node as any).diffOperation) return node;
+  if (getDiffRole(node) !== null) return node;
   const children = (node as TElement).children;
   if (!isBlockList(children, options)) return node;
   const newChildren = transformLevel(children, options);
@@ -151,7 +202,7 @@ const findRuns = (nodes: Descendant[]): Run[] => {
   let runStart = -1;
   let runNodes: Descendant[] = [];
   for (let i = 0; i < nodes.length; i++) {
-    if ((nodes[i] as any).diffOperation) {
+    if (getDiffRole(nodes[i]) !== null) {
       if (runStart === -1) runStart = i;
       runNodes.push(nodes[i]);
     } else if (runStart !== -1) {
@@ -181,7 +232,7 @@ const transformRun = (
   const deletes: Descendant[] = [];
   const updates: Descendant[] = [];
   for (const n of runNodes) {
-    const t = (n as any).diffOperation?.type;
+    const t = getDiffRole(n);
     if (t === 'insert') inserts.push(n);
     else if (t === 'delete') deletes.push(n);
     else if (t === 'update') updates.push(n);
@@ -213,7 +264,7 @@ const transformRun = (
     // caller's `pairOrder` is honoured. Updates sit in the middle —
     // they're neither pure insert nor pure delete and we don't want them
     // colliding with either side's block.
-    const firstType = (runNodes[0] as any).diffOperation?.type;
+    const firstType = getDiffRole(runNodes[0]);
     if (firstType === 'insert') {
       return [...rehintedInserts, ...updates, ...rehintedDeletes];
     }
@@ -312,25 +363,27 @@ const stripLeafDiffMarks = (node: Descendant): Descendant => {
   return { ...el, children: cleanedChildren } as Descendant;
 };
 
+/**
+ * Drop both the default-engine leaf marks (`diff`, `diffOperation`,
+ * `pairId`) AND any suggestion-plugin leaf marks (`suggestion`, every
+ * `suggestion_<id>` data key, `suggestionTransient`). The rehint about to
+ * run will re-emit fresh per-token props for the chosen side; keeping
+ * stale marks here would either bake them into the token signature
+ * (polluting the diff input) or leave dead keys on the rebuilt leaf.
+ */
 const cleanLeaf = (child: Descendant): Descendant => {
-  if (TextApi.isText(child)) {
-    const {
-      diff: _drop1,
-      diffOperation: _drop2,
-      pairId: _drop3,
-      ...clean
-    } = child as TText & Record<string, unknown>;
-    return clean as TText;
+  const source = child as unknown as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(source)) {
+    if (key === 'diff') continue;
+    if (key === 'diffOperation') continue;
+    if (key === 'pairId') continue;
+    if (key === 'suggestion') continue;
+    if (key === 'suggestionTransient') continue;
+    if (key.startsWith('suggestion_')) continue;
+    out[key] = source[key];
   }
-  // Inline element: strip top-level diff props the engine may have set
-  // on it (e.g. a deleted mention inside a paired pair).
-  const {
-    diff: _drop1,
-    diffOperation: _drop2,
-    pairId: _drop3,
-    ...clean
-  } = child as Record<string, unknown>;
-  return clean as Descendant;
+  return out as Descendant;
 };
 
 type Stream = { tokens: Token[]; blockIndices: number[] };
@@ -388,7 +441,9 @@ const emitPerBlockChildren = ({
     const token = tokens[idx];
     const blockIdx = blockIndices[idx];
     const bucket = buckets[blockIdx];
-    const pairId = (blocks[blockIdx] as any).pairId as string | undefined;
+    // `pairId` may live in either of two places depending on the caller's
+    // prop transforms — see `getPairId` for the dual-source resolution.
+    const pairId = getPairId(blocks[blockIdx]);
     const ctx: DiffPropsContext | undefined = pairId ? { pairId } : undefined;
 
     if (token.inline) {
