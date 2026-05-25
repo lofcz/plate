@@ -1,5 +1,5 @@
 ---
-"@platejs/markdown": patch
+"@lofcz/platejs-markdown": patch
 ---
 
 Fix critical source-map bug: blocks whose body was filtered out by
