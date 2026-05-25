@@ -18,6 +18,22 @@ describe('parseAttributes', () => {
       label: 'plain-text',
     });
   });
+
+  it('drops MDX boolean attributes (null value) so they do not pollute the props object', () => {
+    // remark-mdx parses `<tag attr>` as `{ name: 'attr', value: null }`.
+    // Previously this was added as `props.attr = null`, which then went
+    // out on the next serialize as `<tag attr="null">` and back in as
+    // `props.attr = 'null'` — a self-amplifying round-trip leak. Skip
+    // them at parse time.
+    const attributes = [
+      { name: 'boolFlag', value: null },
+      { name: 'realValue', value: '42' },
+    ];
+
+    expect(parseAttributes(attributes as any)).toEqual({
+      realValue: 42,
+    });
+  });
 });
 
 describe('propsToAttributes', () => {
