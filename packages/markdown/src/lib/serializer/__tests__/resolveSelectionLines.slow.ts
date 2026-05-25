@@ -1130,4 +1130,330 @@ describe('resolveSelectionByPath', () => {
       expect(result.markdown).toBeTruthy();
     });
   });
+
+  // #9: When a host app configures `disallowedNodes` to drop text marks
+  // (e.g. `disallowedNodes: ['suggestion']` for an AI-review overlay),
+  // a block whose every text leaf carries that mark serializes to an
+  // empty body. Previously the handler wrap gated `pushSegment` on
+  // `emitted.trim()`, so these blocks produced NO segment at all.
+  // `findStartSegment` / `findEndSegment` then walked up the ancestor
+  // chain in `allSegments` and returned the surrounding MDX container —
+  // typically dozens of lines wide. The user's quote chip ended up
+  // advertising a vast line range for a single-bullet selection.
+  //
+  // Plate must emit a 1-line segment for every block the serializer
+  // visits, regardless of whether the filtered body is empty. The tests
+  // below pin this invariant against multiple real-world AI-overlay
+  // shapes that exercise the path through both the standard
+  // `convertNodesWithSource` and the custom-MDX `attachDescendantSources`
+  // paths.
+  describe('disallowedNodes filter on text marks (issue #9)', () => {
+    const makeEditorWithSuggestionFilter = (value: any[]) => {
+      const editor = createSlateEditor({
+        plugins: [
+          BaseParagraphPlugin,
+          BaseH1Plugin,
+          BaseH2Plugin,
+          BaseH3Plugin,
+          BaseBlockquotePlugin,
+          BaseHorizontalRulePlugin,
+          BaseCodeBlockPlugin,
+          BaseCodeLinePlugin,
+          BaseCodeSyntaxPlugin,
+          BaseBoldPlugin,
+          BaseItalicPlugin,
+          BaseUnderlinePlugin,
+          BaseCodePlugin,
+          BaseStrikethroughPlugin,
+          BaseSubscriptPlugin,
+          BaseSuperscriptPlugin,
+          BaseHighlightPlugin,
+          BaseKbdPlugin,
+          BaseListPlugin,
+          BaseLinkPlugin,
+          BaseTablePlugin,
+          BaseTableRowPlugin,
+          BaseTableCellPlugin,
+          ActivityPlugin,
+          MarkdownPlugin.configure({
+            options: {
+              // Match what a host AI-review app does: drop suggestion
+              // and comment marks entirely from serialized markdown so
+              // the user never sees the overlay's transient annotations
+              // in their persisted document.
+              disallowedNodes: [KEYS.suggestion, KEYS.comment],
+              remarkPlugins: [remarkMath, remarkGfm, remarkMdx, remarkMention],
+              rules: activityMdRules,
+            },
+          }),
+        ],
+      } as any);
+      editor.children = value;
+      return editor;
+    };
+
+    it('emits a leaf segment for a paragraph whose only text leaf is filtered out', () => {
+      // Standalone paragraph with one suggestion-marked leaf — the
+      // entire body of the paragraph is dropped by `disallowedNodes`.
+      const editor = makeEditorWithSuggestionFilter([
+        { type: 'p', children: [{ text: 'Before' }] },
+        {
+          type: 'p',
+          children: [{ text: 'inserted line', suggestion: true } as any],
+        },
+        { type: 'p', children: [{ text: 'After' }] },
+      ]);
+
+      const result = resolveSelectionByPath(editor, sel([1, 0], 0, [1, 0], 5));
+
+      // Must resolve, must not span the whole document.
+      expect(result.resolved).toBe(true);
+      expect(result.startLine).toBeGreaterThan(1);
+
+      // The "Before" paragraph and "After" paragraph each get their own
+      // line. The filtered-empty paragraph sits between them and its
+      // segment must isolate exactly that empty band.
+      const beforeSeg = result.segments.find((s) => s.text === 'Before');
+      const afterSeg = result.segments.find((s) => s.text === 'After');
+      const emptySeg = result.segments.find(
+        (s) => s.path.length === 1 && s.path[0] === 1
+      );
+
+      expect(beforeSeg).toBeDefined();
+      expect(afterSeg).toBeDefined();
+      expect(emptySeg).toBeDefined();
+
+      // The empty segment must sit strictly between the two siblings —
+      // not on the same line as either, and not spanning both.
+      expect(emptySeg!.startLine).toBeGreaterThan(beforeSeg!.endLine);
+      expect(emptySeg!.endLine).toBeLessThan(afterSeg!.startLine);
+      expect(emptySeg!.endLine - emptySeg!.startLine).toBe(0);
+    });
+
+    it('emits a leaf segment for a list item whose only text leaf is filtered out', () => {
+      // Mixed list: one normal bullet, one bullet that's purely an AI
+      // insertion (entire body suggestion-marked). The empty bullet
+      // must still have its own narrow segment.
+      const editor = makeEditorWithSuggestionFilter([
+        {
+          type: 'p',
+          listStyleType: 'disc',
+          indent: 1,
+          children: [{ text: 'Kept bullet' }],
+        } as any,
+        {
+          type: 'p',
+          listStyleType: 'disc',
+          indent: 1,
+          children: [{ text: 'AI-suggested bullet', suggestion: true } as any],
+        } as any,
+        {
+          type: 'p',
+          listStyleType: 'disc',
+          indent: 1,
+          children: [{ text: 'Another kept bullet' }],
+        } as any,
+      ]);
+
+      const keptSelection = resolveSelectionByPath(
+        editor,
+        sel([1, 0], 0, [1, 0], 0)
+      );
+
+      expect(keptSelection.resolved).toBe(true);
+
+      const segByPath = (path: number[]) =>
+        keptSelection.segments.find(
+          (s) =>
+            s.path.length === path.length &&
+            s.path.every((v, i) => path[i] === v)
+        );
+
+      const top = segByPath([0]);
+      const middle = segByPath([1]);
+      const bottom = segByPath([2]);
+
+      expect(top).toBeDefined();
+      expect(middle).toBeDefined();
+      expect(bottom).toBeDefined();
+
+      // Each bullet is a 1-line block and they must sit on consecutive
+      // monotonically-increasing lines.
+      expect(middle!.startLine).toBeGreaterThan(top!.endLine);
+      expect(bottom!.startLine).toBeGreaterThan(middle!.endLine);
+      expect(middle!.endLine - middle!.startLine).toBe(0);
+    });
+
+    it('selection inside a filtered-empty paragraph inside an MDX container does NOT expand to the whole container', () => {
+      // Reproduces the production bug verbatim. An MDX `<activity>`
+      // container holds a mix of original paragraphs/bullets and AI
+      // suggestion paragraphs/bullets. Selecting one of the suggestion
+      // blocks (whose body is filtered out) must resolve to a tight
+      // line range, NOT the whole `<activity>` span (which previously
+      // produced a "Zlomky (36-58)" chip for a 1-line selection).
+      const editor = makeEditorWithSuggestionFilter([
+        {
+          type: 'lesson_activity',
+          name: 'Dilema',
+          duration: '5',
+          children: [
+            { type: 'p', children: [{ text: 'Intro paragraph' }] },
+            { type: 'p', children: [{ text: 'Second paragraph' }] },
+            // [0, 2]: paragraph with a mix of kept + remove-suggested
+            // text. The visible (kept) part is the segment text.
+            {
+              type: 'p',
+              children: [
+                { text: 'Kept content. ' },
+                { text: 'Removed continuation', suggestion: true } as any,
+              ],
+            },
+            // [0, 3]: bullet that is ENTIRELY a remove suggestion.
+            {
+              type: 'p',
+              listStyleType: 'disc',
+              indent: 1,
+              children: [{ text: 'Removed bullet', suggestion: true } as any],
+            } as any,
+            // [0, 4]: bullet with kept + remove split.
+            {
+              type: 'p',
+              listStyleType: 'disc',
+              indent: 1,
+              children: [
+                { text: 'Bullet kept ' },
+                { text: 'tail removed', suggestion: true } as any,
+              ],
+            } as any,
+            // [0, 5]: a paragraph that is ENTIRELY an insert suggestion.
+            {
+              type: 'p',
+              children: [{ text: 'New paragraph', suggestion: true } as any],
+            },
+            // [0, 6]: a bullet that is ENTIRELY an insert suggestion.
+            {
+              type: 'p',
+              listStyleType: 'disc',
+              indent: 1,
+              children: [
+                { text: 'Inserted bullet A', suggestion: true } as any,
+              ],
+            } as any,
+            // [0, 7]: another inserted bullet.
+            {
+              type: 'p',
+              listStyleType: 'disc',
+              indent: 1,
+              children: [
+                { text: 'Inserted bullet B', suggestion: true } as any,
+              ],
+            } as any,
+            { type: 'p', children: [{ text: 'Closing paragraph' }] },
+          ],
+        },
+      ]);
+
+      const {
+        serializeMdWithSourceMap,
+      } = require('../serializeMdWithSourceMap');
+      const { allSegments } = serializeMdWithSourceMap(editor);
+
+      // The lesson_activity is at editor.children[0], so its container
+      // segment lives at Slate path `[0]`. It must be there, and it
+      // must be wider than a single block so the "is it the container?"
+      // assertion below is meaningful.
+      const containerSeg = allSegments.find(
+        (s: any) => s.path.length === 1 && s.path[0] === 0
+      );
+      expect(containerSeg).toBeDefined();
+      const containerSpan = containerSeg!.endLine - containerSeg!.startLine;
+      expect(containerSpan).toBeGreaterThan(5);
+
+      // Selection 1: entirely inside `[0, 5]` (filtered-empty paragraph).
+      // The bug returned the container span (the whole activity).
+      const insidePara = resolveSelectionByPath(
+        editor,
+        sel([0, 5, 0], 0, [0, 5, 0], 5)
+      );
+
+      expect(insidePara.resolved).toBe(true);
+      // Must be a tight (single-line) range, not the container span.
+      expect(insidePara.endLine - insidePara.startLine).toBeLessThan(
+        containerSpan
+      );
+      // Must NOT include any of the visible neighbours.
+      expect(insidePara.extractedMarkdown).not.toContain('Intro paragraph');
+      expect(insidePara.extractedMarkdown).not.toContain('Closing paragraph');
+      expect(insidePara.extractedMarkdown).not.toContain('Bullet kept');
+
+      // Selection 2: across two consecutive filtered-empty bullets.
+      // The bug returned the container span here as well; a 2-bullet
+      // selection must end up tighter than the whole activity.
+      const acrossBullets = resolveSelectionByPath(
+        editor,
+        sel([0, 6, 0], 0, [0, 7, 0], 3)
+      );
+
+      expect(acrossBullets.resolved).toBe(true);
+      expect(acrossBullets.endLine - acrossBullets.startLine).toBeLessThan(
+        containerSpan
+      );
+      expect(acrossBullets.extractedMarkdown).not.toContain('Intro paragraph');
+      expect(acrossBullets.extractedMarkdown).not.toContain(
+        'Closing paragraph'
+      );
+    });
+
+    it('cross-selection from a filtered-empty block into a populated sibling stays tight', () => {
+      // Anchors on a filtered-empty paragraph, focus on the next
+      // visible bullet. The previous behaviour treated the empty
+      // paragraph as "no anchor" and snapped startLine to the container.
+      const editor = makeEditorWithSuggestionFilter([
+        {
+          type: 'lesson_activity',
+          name: 'Test',
+          duration: '5',
+          children: [
+            { type: 'p', children: [{ text: 'Opener' }] },
+            {
+              type: 'p',
+              children: [
+                { text: 'Vanishing paragraph', suggestion: true } as any,
+              ],
+            },
+            {
+              type: 'p',
+              listStyleType: 'disc',
+              indent: 1,
+              children: [{ text: 'Visible bullet' }],
+            } as any,
+            { type: 'p', children: [{ text: 'Closer' }] },
+          ],
+        },
+      ]);
+
+      const {
+        serializeMdWithSourceMap,
+      } = require('../serializeMdWithSourceMap');
+      const { allSegments } = serializeMdWithSourceMap(editor);
+
+      const containerSeg = allSegments.find(
+        (s: any) => s.path.length === 1 && s.path[0] === 0
+      );
+      expect(containerSeg).toBeDefined();
+      const containerSpan = containerSeg!.endLine - containerSeg!.startLine;
+      expect(containerSpan).toBeGreaterThan(3);
+
+      const result = resolveSelectionByPath(
+        editor,
+        sel([0, 1, 0], 0, [0, 2, 0], 14)
+      );
+
+      expect(result.resolved).toBe(true);
+      expect(result.endLine - result.startLine).toBeLessThan(containerSpan);
+      expect(result.extractedMarkdown).toContain('Visible bullet');
+      expect(result.extractedMarkdown).not.toContain('Opener');
+      expect(result.extractedMarkdown).not.toContain('Closer');
+    });
+  });
 });

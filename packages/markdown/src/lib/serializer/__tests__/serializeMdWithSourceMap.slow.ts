@@ -2126,3 +2126,159 @@ describe('tables inside custom containers', () => {
     expect(extracted).toContain('Val 1');
   });
 });
+
+// ---------------------------------------------------------------------------
+// disallowedNodes filter — every block must still produce a leaf segment
+// even when its entire body is dropped (issue #9). See
+// resolveSelectionLines.slow.ts for the matching selection-resolution
+// regressions; this suite locks the *source-map* layer directly.
+// ---------------------------------------------------------------------------
+
+describe('disallowedNodes filter on text marks (issue #9)', () => {
+  // Build an editor identical to `createTestEditor` but with the
+  // `suggestion` mark on the disallowedNodes list. Mirrors what an AI
+  // overlay host configures so the persisted markdown never includes
+  // transient suggestion annotations.
+  const makeEditorWithSuggestionFilter = async (value: any[]) => {
+    // Lazy-load the shared editor builder bits so we don't pull the
+    // whole plugin graph for plain `serializeMd` tests.
+    const [
+      { createSlateEditor, BaseParagraphPlugin, KEYS },
+      { BaseListPlugin },
+      basicNodes,
+      remark,
+      { remarkMdx, remarkMention },
+    ] = await Promise.all([
+      import('platejs'),
+      import('@platejs/list'),
+      import('@platejs/basic-nodes'),
+      // remark-* are CommonJS and dynamic-imported just once.
+      Promise.all([import('remark-gfm'), import('remark-math')]).then(
+        ([gfm, math]) => ({
+          remarkGfm: (gfm as any).default ?? gfm,
+          remarkMath: (math as any).default ?? math,
+        })
+      ),
+      import('../../plugins'),
+    ]);
+
+    const editor = createSlateEditor({
+      plugins: [
+        BaseParagraphPlugin,
+        (basicNodes as any).BaseBoldPlugin,
+        (basicNodes as any).BaseItalicPlugin,
+        BaseListPlugin,
+        MarkdownPlugin.configure({
+          options: {
+            disallowedNodes: [KEYS.suggestion, KEYS.comment],
+            remarkPlugins: [
+              (remark as any).remarkMath,
+              (remark as any).remarkGfm,
+              remarkMdx,
+              remarkMention,
+            ],
+          },
+        }),
+      ],
+    } as any);
+    editor.children = value;
+    return editor;
+  };
+
+  it('emits a 1-line segment for a paragraph filtered to empty', async () => {
+    const editor = await makeEditorWithSuggestionFilter([
+      { type: 'p', children: [{ text: 'Above' }] },
+      // Body entirely composed of a suggestion-marked leaf: filtered out
+      // completely before mdast emission.
+      {
+        type: 'p',
+        children: [{ text: 'invisible', suggestion: true } as any],
+      },
+      { type: 'p', children: [{ text: 'Below' }] },
+    ]);
+
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+
+    // All three paragraphs must have leaf segments — even the middle
+    // one whose body collapsed to nothing in the markdown output.
+    const paraSegs = segsOf(segments, 'paragraph');
+    expect(paraSegs.length).toBe(3);
+
+    // Identify segments by Slate path (position) — `text` carries the
+    // unfiltered Slate text, which includes suggestion content even
+    // when the markdown body was dropped.
+    const byPath = (pathHead: number) =>
+      paraSegs.find((s) => s.path.length === 1 && s.path[0] === pathHead)!;
+
+    const above = byPath(0);
+    const empty = byPath(1);
+    const below = byPath(2);
+
+    expect(above).toBeDefined();
+    expect(empty).toBeDefined();
+    expect(below).toBeDefined();
+
+    // Each is a single-line block.
+    expect(above.endLine - above.startLine).toBe(0);
+    expect(empty.endLine - empty.startLine).toBe(0);
+    expect(below.endLine - below.startLine).toBe(0);
+
+    // The empty segment is wedged strictly between its visible
+    // neighbours — proves the fallback to a wide ancestor segment
+    // never happens for the filtered-empty middle block.
+    expect(empty.startLine).toBeGreaterThan(above.endLine);
+    expect(empty.endLine).toBeLessThan(below.startLine);
+
+    // The empty body must not have leaked into the markdown.
+    const lines = markdown.split('\n');
+    expect(lines[empty.startLine - 1]).not.toContain('invisible');
+  });
+
+  it('emits a 1-line segment for a bullet filtered to empty', async () => {
+    const editor = await makeEditorWithSuggestionFilter([
+      {
+        type: 'p',
+        listStyleType: 'disc',
+        indent: 1,
+        children: [{ text: 'Bullet one' }],
+      } as any,
+      // Pure-suggestion bullet — body entirely filtered out from md.
+      {
+        type: 'p',
+        listStyleType: 'disc',
+        indent: 1,
+        children: [{ text: 'gone', suggestion: true } as any],
+      } as any,
+      {
+        type: 'p',
+        listStyleType: 'disc',
+        indent: 1,
+        children: [{ text: 'Bullet three' }],
+      } as any,
+    ]);
+
+    const { segments, markdown } = serializeMdWithSourceMap(editor);
+    const items = segsOf(segments, 'list_item');
+
+    expect(items.length).toBe(3);
+
+    const byPath = (pathHead: number) =>
+      items.find((s) => s.path.length === 1 && s.path[0] === pathHead)!;
+
+    const top = byPath(0);
+    const middle = byPath(1);
+    const bottom = byPath(2);
+
+    expect(top).toBeDefined();
+    expect(middle).toBeDefined();
+    expect(bottom).toBeDefined();
+
+    expect(middle.endLine - middle.startLine).toBe(0);
+    expect(middle.startLine).toBeGreaterThan(top.endLine);
+    expect(middle.endLine).toBeLessThan(bottom.startLine);
+
+    // The filtered text must not leak into the rendered list.
+    const lines = markdown.split('\n');
+    expect(lines[middle.startLine - 1]).not.toContain('gone');
+  });
+});

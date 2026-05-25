@@ -864,13 +864,27 @@ export const serializeMdWithSourceMap = (
       const emitted: string = handler(node, parent, state, info);
 
       const source = node?.data?.sourceMap;
-      if (source && emitted.trim()) {
+      if (source) {
         // Strip a trailing newline before counting lines. The standard
         // mdast-util-to-markdown block handlers don't emit trailing
         // newlines (block separation is added by the parent join logic),
         // but custom serializers — particularly MDX wrappers — sometimes
         // do. A trailing `\n` would inflate `endLine` by one and push the
         // segment past its actual content onto a blank line.
+        //
+        // NOTE: we intentionally DO NOT gate this push on `emitted.trim()`.
+        // Block-level nodes (paragraphs, list items, table cells, etc.) may
+        // serialize to empty content under user-provided `disallowedNodes`
+        // filters — for example, a `<suggestion>`-wrapped paragraph that
+        // is the *only* content of its block has all its text dropped
+        // when `disallowedNodes: ['suggestion']` is configured. Skipping
+        // the segment for those blocks left selections inside them with
+        // no resolvable leaf, forcing `resolveSelectionByPath` to fall
+        // back to the nearest ancestor segment — typically the *whole
+        // surrounding container* (e.g. an entire lesson_activity). The
+        // user's quote chip then advertises a line range vastly wider
+        // than what they actually selected. Emitting a 1-line segment at
+        // the empty block's actual position keeps that fallback tight.
         const normalized = emitted.replace(/(?:\r?\n|\r)+$/g, '');
         const newlineCount = normalized.split(/\r?\n|\r/g).length - 1;
         pushSegment(source, emitted, startLine, startLine + newlineCount);
