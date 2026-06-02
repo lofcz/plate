@@ -1,7 +1,10 @@
+minimumReleaseAge: 10080
+
 packages:
   - "apps/*"
   - "packages/*"
   - "packages/udecode/*"
+
 patchedDependencies:
   slate-dom@0.124.1: patches/slate-dom@0.124.1.patch
 # pnpm 10 blocks lifecycle scripts by default. `bun`'s postinstall downloads
@@ -10,3 +13,5 @@ patchedDependencies:
 # the script fails with "Bun's postinstall script was not run."
 onlyBuiltDependencies:
   - bun
+
+trustPolicy: no-downgrade

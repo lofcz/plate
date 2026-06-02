@@ -1,5 +1,5 @@
 ---
-"@platejs/slate": patch
+"@lofcz/platejs-slate": patch
 ---
 
 Updated `slate-hyperscript`.

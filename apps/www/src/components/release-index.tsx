@@ -9,17 +9,16 @@ import remarkGfm from 'remark-gfm';
 
 import { CodeBlock } from '@/components/ui/codeblock';
 import releaseIndexData from '@/generated/release-index.json';
+import {
+  formatReleaseDate,
+  getCurrentReleaseMajorGroups,
+  getReleaseAnchor,
+  getReleaseMajorAnchor,
+  getReleaseMajorGroups,
+  type ReleaseMajorGroup,
+  type ReleaseIndexRelease,
+} from '@/lib/releases';
 import { cn } from '@/lib/utils';
-
-export type ReleaseIndexRelease = {
-  content: string;
-  date: string;
-  packageTag?: string;
-  tag: string;
-  title: string;
-  url: string;
-  versionPackagePrUrl?: string;
-};
 
 export type ReleaseIndexMessage = ReleaseIndexRelease & {
   expandable: boolean;
@@ -37,15 +36,26 @@ const releaseHeadingLabels: Record<string, string> = {
 
 export function ReleaseIndex({
   className,
-  releases = releaseIndexData,
+  releases,
+  showMajorHeadings = false,
 }: HTMLAttributes<HTMLDivElement> & {
   releases?: ReleaseIndexRelease[];
+  showMajorHeadings?: boolean;
 }) {
-  const messages = releases.map((release) => ({
+  const releaseList =
+    releases ??
+    getCurrentReleaseMajorGroups(
+      releaseIndexData as ReleaseIndexRelease[]
+    ).flatMap((group) => group.releases);
+  const messages = releaseList.map((release) => ({
     ...release,
     date: formatReleaseDate(release.date),
     expandable: getContentLineCount(release.content) > expandableLineThreshold,
   }));
+  const messageGroups: ReleaseMajorGroup<ReleaseIndexMessage>[] =
+    showMajorHeadings
+      ? getReleaseMajorGroups(messages)
+      : [{ major: '', releases: messages }];
 
   if (messages.length === 0) {
     return (
@@ -74,24 +84,17 @@ export function ReleaseIndex({
   return (
     <section
       aria-label="Releases"
-      className={cn('not-prose relative my-8 flex flex-col', className)}
+      className={cn('not-prose relative mt-6 flex flex-col', className)}
     >
       <ReleaseSeparator className="top-0" />
 
-      {messages.map((release) => (
-        <ReleaseRow key={release.tag} release={release} />
+      {messageGroups.map((group) => (
+        <ReleaseMajorSection
+          key={group.major || 'releases'}
+          group={group}
+          showHeading={showMajorHeadings}
+        />
       ))}
-
-      <div className="py-12">
-        <a
-          className="font-mono text-muted-foreground text-xs underline decoration-dashed underline-offset-4 transition-colors hover:text-foreground"
-          href={githubReleasesUrl}
-          rel="noreferrer"
-          target="_blank"
-        >
-          View all releases on GitHub
-        </a>
-      </div>
     </section>
   );
 }
@@ -100,9 +103,56 @@ function getContentLineCount(content: string) {
   return content.split('\n').filter((line) => line.trim().length > 0).length;
 }
 
-function ReleaseRow({ release }: { release: ReleaseIndexMessage }) {
+function ReleaseMajorSection({
+  group,
+  showHeading,
+}: {
+  group: ReleaseMajorGroup<ReleaseIndexMessage>;
+  showHeading: boolean;
+}) {
   return (
-    <article className="group relative pt-12 pb-10 first:pt-8">
+    <div>
+      {showHeading && group.major ? (
+        <header
+          className="scroll-mt-24 pt-10 pb-1"
+          id={getReleaseMajorAnchor(group.major)}
+        >
+          <h2 className="font-heading font-semibold text-2xl tracking-tight">
+            v{group.major}
+          </h2>
+          <p className="mt-1 text-muted-foreground text-sm">
+            {group.releases.length}{' '}
+            {group.releases.length === 1 ? 'release' : 'releases'}
+          </p>
+        </header>
+      ) : null}
+
+      {group.releases.map((release, index) => (
+        <ReleaseRow
+          key={release.tag}
+          release={release}
+          isFirst={!showHeading && index === 0}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ReleaseRow({
+  isFirst = false,
+  release,
+}: {
+  isFirst?: boolean;
+  release: ReleaseIndexMessage;
+}) {
+  return (
+    <article
+      className={cn(
+        'group relative scroll-mt-24 pt-10 pb-8',
+        isFirst && 'pt-6'
+      )}
+      id={getReleaseAnchor(release)}
+    >
       <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-2">
         <a
           className="font-heading font-medium text-2xl text-foreground tracking-tight transition-colors hover:text-foreground/75"
@@ -202,7 +252,7 @@ function MarkdownContent({ content }: { content: string }) {
   return (
     <ReactMarkdown
       components={{
-        a: ({ className, ...props }) => (
+        a: ({ children, className, ...props }) => (
           <a
             className={cn(
               'font-medium text-foreground underline decoration-dashed underline-offset-4 transition-colors hover:text-primary',
@@ -211,7 +261,9 @@ function MarkdownContent({ content }: { content: string }) {
             rel="noreferrer"
             target="_blank"
             {...props}
-          />
+          >
+            {children}
+          </a>
         ),
         blockquote: ({ className, ...props }) => (
           <blockquote
@@ -265,7 +317,10 @@ function MarkdownContent({ content }: { content: string }) {
         ),
         li: ({ className, ...props }) => (
           <li
-            className={cn('text-muted-foreground text-sm leading-7', className)}
+            className={cn(
+              'mt-2 text-muted-foreground text-sm leading-7',
+              className
+            )}
             {...props}
           />
         ),
@@ -334,10 +389,7 @@ function MarkdownContent({ content }: { content: string }) {
         ),
         ul: ({ className, ...props }) => (
           <ul
-            className={cn(
-              'my-3 space-y-1.5 [&>li]:relative [&>li]:pl-5 [&>li]:before:absolute [&>li]:before:left-0 [&>li]:before:text-muted-foreground [&>li]:before:content-["-"]',
-              className
-            )}
+            className={cn('my-4 ml-6 list-disc space-y-1.5', className)}
             {...props}
           />
         ),
@@ -347,15 +399,6 @@ function MarkdownContent({ content }: { content: string }) {
       {content}
     </ReactMarkdown>
   );
-}
-
-function formatReleaseDate(date: string) {
-  return new Intl.DateTimeFormat('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-    year: 'numeric',
-  }).format(new Date(date));
 }
 
 function formatReleaseHeading(children: ReactNode) {

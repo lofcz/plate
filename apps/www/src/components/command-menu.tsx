@@ -1,300 +1,203 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 
-import type { NavItemWithChildren, SidebarNavItem } from '@/types/nav';
+import type { MainNavItem } from '@/types/nav';
 import type { DialogProps } from '@radix-ui/react-dialog';
-
-import { Command } from 'cmdk';
-import { castArray } from 'lodash';
-import { Circle, File, Laptop, Moon, SunMedium } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { docsConfig } from '@/config/docs';
+import {
+  preloadSidebarNav,
+  useLazySidebarNav,
+} from '@/hooks/use-lazy-sidebar-nav';
+import { useLocale } from '@/hooks/useLocale';
 import { cn } from '@/lib/utils';
 
-export function CommandItems({
-  idx = 0,
-  item,
-  parentKey = '',
-  parentTitle = '',
-  runCommand,
-}: {
-  item: NavItemWithChildren;
-  runCommand: any;
-  idx?: number;
-  parentKey?: string;
-  parentTitle?: string;
+let commandMenuDialogPromise:
+  | Promise<typeof import('./command-menu-dialog')>
+  | undefined;
+
+function loadCommandMenuDialog() {
+  commandMenuDialogPromise ??= import('./command-menu-dialog');
+
+  return commandMenuDialogPromise;
+}
+
+const LazyCommandMenuDialog = dynamic(
+  () => loadCommandMenuDialog().then((module) => module.CommandMenuDialog),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+
+const i18n = {
+  cn: {
+    searchDocumentation: '搜索文档...',
+    searchShort: '搜索...',
+  },
+  en: {
+    searchDocumentation: 'Search documentation...',
+    searchShort: 'Search...',
+  },
+};
+
+export function CommandMenu({
+  navItems,
+  ...props
+}: Omit<DialogProps, 'onOpenChange' | 'open'> & {
+  navItems: MainNavItem[];
 }) {
-  const router = useRouter();
-  const itemKey = `${parentKey}-${item.href ?? item.title}-${idx}`;
-
-  // Invisible characters to make items unique across groups
-  const invisibleSuffixes: Record<string, string> = {
-    'group-API': '\uFEFF', // Zero Width No-Break Space
-    'group-Examples': '\u2060', // Word Joiner
-    'group-Getting Started': '\u200B', // Zero Width Space
-    'group-Guides': '\u061C', // Arabic Letter Mark
-    'group-Installation': '\u200C', // Zero Width Non-Joiner
-    'group-Migration': '\u180E', // Mongolian Vowel Separator
-    'group-Plugins': '\u200D', // Zero Width Joiner
-  };
-
-  // Dirty hack to make items unique across groups, fallback to combining different characters
-  const getInvisibleSuffix = (key: string) => {
-    if (invisibleSuffixes[key]) return invisibleSuffixes[key];
-    // Generate a unique invisible character combination for unknown groups
-    const hash = key
-      .split('')
-      .reduce((a, b) => Math.trunc((a << 5) - a + (b.codePointAt(0) ?? 0)), 0);
-    const suffixIndex = Math.abs(hash) % 7;
-    const fallbackSuffixes = [
-      '\u200B',
-      '\u200C',
-      '\u200D',
-      '\u2060',
-      '\uFEFF',
-      '\u061C',
-      '\u180E',
-    ];
-    return fallbackSuffixes[suffixIndex];
-  };
-
-  const invisibleSuffix = getInvisibleSuffix(parentKey);
-
-  // Extract keywords from the item, including labels and parent title
-  const { keywords = [] } = item;
-  const allKeywords = [
-    ...keywords,
-    ...castArray(item.label),
-    ...(parentTitle ? [parentTitle] : []),
-  ].filter(Boolean);
-
-  return (
-    <React.Fragment key={itemKey}>
-      {item.href && (
-        <CommandItem
-          onSelect={() => {
-            runCommand(() => router.push(item.href as string));
-          }}
-          keywords={allKeywords}
-        >
-          <div className="flex items-center justify-center">
-            <Circle className="size-3" />
-          </div>
-          {item.title}
-          {invisibleSuffix}
-        </CommandItem>
-      )}
-      {item.headings?.map((heading, headingIdx) => (
-        <CommandItem
-          key={`${itemKey}-heading-${headingIdx}`}
-          onSelect={() => {
-            runCommand(() =>
-              router.push(
-                (item.href +
-                  '#' +
-                  heading.replaceAll(' ', '').toLowerCase()) as string
-              )
-            );
-          }}
-          keywords={allKeywords}
-        >
-          <div className="flex items-center justify-center">
-            <Circle className="size-3" />
-          </div>
-          {item.title} – {heading}
-          {invisibleSuffix}
-        </CommandItem>
-      ))}
-      {item.items?.map((child, childIdx) => (
-        <CommandItems
-          key={`${itemKey}-child-${childIdx}`}
-          idx={childIdx}
-          item={child}
-          parentKey={itemKey}
-          parentTitle={item.title}
-          runCommand={runCommand}
-        />
-      ))}
-    </React.Fragment>
-  );
-}
-
-export function CommandMenuGroup({
-  runCommand,
-  ...group
-}: {
-  runCommand: any;
-} & SidebarNavItem) {
-  return (
-    <CommandGroup heading={group.title}>
-      {group.items?.map((navItem, navIdx) => (
-        <CommandItems
-          key={`group-${group.title}-${navIdx}`}
-          idx={navIdx}
-          item={navItem}
-          parentKey={`group-${group.title}`}
-          parentTitle={group.title}
-          runCommand={runCommand}
-        />
-      ))}
-    </CommandGroup>
-  );
-}
-
-export function CommandMenu({ ...props }: DialogProps) {
-  const router = useRouter();
+  const locale = useLocale();
+  const content = i18n[locale as keyof typeof i18n];
   const [open, setOpen] = React.useState(false);
-  const { setTheme } = useTheme();
+  const [isDialogReady, setIsDialogReady] = React.useState(false);
+  const [shouldRenderDialog, setShouldRenderDialog] = React.useState(false);
+  const openRef = React.useRef(open);
+  const { sidebarNav } = useLazySidebarNav(locale, shouldRenderDialog);
 
   React.useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
-        if (
-          (e.target instanceof HTMLElement && e.target.isContentEditable) ||
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement ||
-          e.target instanceof HTMLSelectElement
-        ) {
-          return;
-        }
+    openRef.current = open;
+  }, [open]);
 
-        e.preventDefault();
-        setOpen((_open) => !_open);
+  const warmCommandMenu = React.useCallback(() => {
+    void loadCommandMenuDialog().then(() => {
+      setIsDialogReady(true);
+      setShouldRenderDialog(true);
+    });
+    preloadSidebarNav(locale);
+  }, [locale]);
+
+  React.useEffect(() => {
+    const scheduleIdle =
+      window.requestIdleCallback ??
+      ((callback: IdleRequestCallback) =>
+        window.setTimeout(
+          () =>
+            callback({
+              didTimeout: false,
+              timeRemaining: () => 0,
+            }),
+          1500
+        ));
+    const cancelIdle =
+      window.cancelIdleCallback ??
+      ((handle: number) => window.clearTimeout(handle));
+    const handle = scheduleIdle(warmCommandMenu, { timeout: 3000 });
+
+    return () => cancelIdle(handle);
+  }, [warmCommandMenu]);
+
+  const updateOpen = React.useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen) {
+        warmCommandMenu();
+        setShouldRenderDialog(true);
       }
+
+      setOpen(nextOpen);
+    },
+    [warmCommandMenu]
+  );
+
+  React.useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      if (
+        !(
+          (event.key === 'k' && (event.metaKey || event.ctrlKey)) ||
+          event.key === '/'
+        )
+      ) {
+        return;
+      }
+
+      if (
+        (event.target instanceof HTMLElement &&
+          event.target.isContentEditable) ||
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      updateOpen(!openRef.current);
     };
 
     document.addEventListener('keydown', down);
 
     return () => document.removeEventListener('keydown', down);
-  }, []);
-
-  const runCommand = React.useCallback((command: () => unknown) => {
-    setOpen(false);
-    command();
-  }, []);
+  }, [updateOpen]);
 
   return (
     <>
       <Button
+        data-command-menu-trigger
         variant="outline"
         className={cn(
-          'relative flex h-8 w-full items-center justify-start rounded-[0.5rem] bg-muted/50 font-normal text-muted-foreground text-sm shadow-none sm:pr-12 md:w-40 lg:w-56 xl:w-64'
+          'relative h-8 w-full justify-start rounded-lg border-none bg-muted pl-3 text-foreground shadow-none transition-colors hover:bg-muted/50 md:w-48 lg:w-40 xl:w-64 dark:bg-card'
         )}
-        onClick={() => setOpen(true)}
+        onClick={() => updateOpen(true)}
+        onFocus={warmCommandMenu}
+        onPointerDown={warmCommandMenu}
+        onPointerEnter={warmCommandMenu}
         {...props}
       >
-        <span className="hidden lg:inline-flex">Search documentation...</span>
-        <span className="inline-flex lg:hidden">Search...</span>
-        <kbd className="pointer-events-none absolute top-[0.3rem] right-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium font-mono text-[10px] opacity-100 sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        <span className="hidden xl:inline-flex">
+          {content.searchDocumentation}
+        </span>
+        <span className="inline-flex xl:hidden">{content.searchShort}</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {shouldRenderDialog ? (
+        isDialogReady ? (
+          <LazyCommandMenuDialog
+            navItems={navItems}
+            open={open}
+            sidebarNav={sidebarNav}
+            onOpenChange={updateOpen}
+          />
+        ) : (
+          <CommandMenuLoadingDialog open={open} onOpenChange={updateOpen} />
+        )
+      ) : null}
+    </>
+  );
+}
+
+function CommandMenuLoadingDialog({
+  onOpenChange,
+  open,
+}: {
+  onOpenChange: NonNullable<DialogProps['onOpenChange']>;
+  open: boolean;
+}) {
+  const locale = useLocale();
+  const content = i18n[locale as keyof typeof i18n];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="top-[15%]! max-w-[calc(100%-2rem)] translate-y-0! overflow-hidden rounded-xl border-none bg-clip-padding p-2 pb-11 shadow-2xl ring-4 ring-neutral-200/80 sm:max-w-lg dark:bg-neutral-900 dark:ring-neutral-800 [&>button]:hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Search</DialogTitle>
+          <DialogDescription>Search documentation.</DialogDescription>
         </DialogHeader>
-
-        <DialogContent className="overflow-hidden p-0">
-          <Command
-            className="**:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
-            filter={(value, search, keywords) => {
-              const searchValue = search.toLowerCase();
-              if (
-                value.toLowerCase().includes(searchValue) ||
-                keywords?.some((keyword) =>
-                  keyword.toLowerCase().includes(searchValue)
-                )
-              ) {
-                return 1;
-              }
-              return 0;
-            }}
-          >
-            <CommandInput placeholder="Type a command or search..." />
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandList>
-              <CommandGroup heading="Links">
-                {docsConfig.mainNav
-                  .filter((navitem) => !navitem.external)
-                  .map((navItem) => (
-                    <CommandItem
-                      key={navItem.href}
-                      onSelect={() => {
-                        runCommand(() => router.push(navItem.href as string));
-                      }}
-                    >
-                      <File />
-                      {navItem.title}
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
-              {docsConfig.sidebarNav.map((group) => {
-                if (group.title === 'API') return null;
-
-                return (
-                  <CommandMenuGroup
-                    key={`${group.title}:sidebar`}
-                    runCommand={runCommand}
-                    {...group}
-                  />
-                );
-              })}
-
-              <CommandGroup heading="Theme">
-                <CommandItem
-                  onSelect={() => runCommand(() => setTheme('light'))}
-                >
-                  <SunMedium />
-                  Light
-                </CommandItem>
-                <CommandItem
-                  onSelect={() => runCommand(() => setTheme('dark'))}
-                >
-                  <Moon />
-                  Dark
-                </CommandItem>
-                <CommandItem
-                  onSelect={() => runCommand(() => setTheme('system'))}
-                >
-                  <Laptop />
-                  System
-                </CommandItem>
-              </CommandGroup>
-
-              {docsConfig.sidebarNav.map((group) => {
-                // API is last
-                if (group.title !== 'API') return null;
-
-                return (
-                  <CommandMenuGroup
-                    key={group.title}
-                    runCommand={runCommand}
-                    {...group}
-                  />
-                );
-              })}
-            </CommandList>
-          </Command>
-        </DialogContent>
-      </Dialog>
-    </>
+        <div className="flex h-9 items-center rounded-md border border-input bg-input/50 px-3 text-muted-foreground text-sm">
+          {content.searchDocumentation}
+        </div>
+        <div className="flex min-h-80 items-center justify-center text-muted-foreground text-sm">
+          Loading...
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
