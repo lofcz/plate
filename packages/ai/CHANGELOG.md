@@ -56,6 +56,18 @@
   All changes are additive and the default behavior is unchanged — callers
   that don't set `granularity` get byte-for-byte the same output as before.
 
+## 53.0.9
+
+### Patch Changes
+
+- Updated `@platejs/table`.
+
+## 53.0.7
+
+### Patch Changes
+
+- Updated `@platejs/table`.
+
 ## 53.0.4
 
 ### Patch Changes
