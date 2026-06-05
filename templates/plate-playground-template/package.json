@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.124",
+    "@ai-sdk/gateway": "^3.0.125",
     "@ai-sdk/react": "3",
     "@ariakit/react": "^0.4.29",
     "@emoji-mart/data": "1.2.1",
