@@ -11,5 +11,3 @@ patchedDependencies:
 # the script fails with "Bun's postinstall script was not run."
 onlyBuiltDependencies:
   - bun
-
-trustPolicy: no-downgrade
