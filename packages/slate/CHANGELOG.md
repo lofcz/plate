@@ -1,5 +1,11 @@
 # @platejs/slate
 
+## 53.1.7
+
+### Patch Changes
+
+- 231b986: Updated `slate-hyperscript`.
+
 ## 53.1.1
 
 ### Patch Changes
