@@ -1,5 +1,3 @@
-minimumReleaseAge: 10080
-
 packages:
   - "apps/*"
   - "packages/*"
