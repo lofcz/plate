@@ -1,5 +1,5 @@
 ---
-'@platejs/docx-io': minor
+'@lofcz/platejs-docx-io': minor
 ---
 
 Forward two dropped options in `exportToDocx`:
