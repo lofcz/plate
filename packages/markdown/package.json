@@ -59,6 +59,7 @@
   "devDependencies": {
     "@plate/scripts": "workspace:*",
     "@platejs/footnote": "workspace:@lofcz/platejs-footnote@*",
+    "@platejs/table": "workspace:@lofcz/platejs-table@*",
     "platejs": "workspace:@lofcz/platejs@*",
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",

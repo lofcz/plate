@@ -16,6 +16,21 @@ Major source:
 - decision to make: pending
 - decision criteria: pending
 
+First checkpoint:
+- Before implementation or broad exploration, copy every explicit prompt
+  requirement into this plan as checkable checkpoints: scope, non-goals,
+  timing/duration, stop conditions, deliverables, final handoff sections,
+  verification surface, and success criteria.
+- Do not continue into implementation until this extraction is complete or
+  explicitly marked N/A with reason.
+
+Timed checkpoint:
+- requested duration: pending
+- semantics: pending
+- initial confidence score: pending
+- improvement loop: pending
+- final score / loop closure: pending
+
 Completion threshold:
 - TODO: Define the decision, proposal, benchmark, architecture, or migration done state.
 
@@ -43,6 +58,8 @@ Completion rule:
 Start Gates:
 | Gate | Applies | Evidence |
 |------|---------|----------|
+| Prompt requirements captured before work | pending | pending |
+| Timed checkpoint parsed | pending | pending |
 | Active goal checked or created | pending | pending |
 | Source of truth read before analysis | pending | pending |
 | Decision criteria stated | pending | pending |
@@ -50,7 +67,14 @@ Start Gates:
 | External research decision recorded | pending | pending |
 
 Work Checklist:
+- [ ] First checkpoint complete: every explicit prompt requirement, scope
+      boundary, timing constraint, stop condition, deliverable, final handoff
+      section, verification surface, and success criterion is copied into this
+      plan as checkable checkpoints before implementation.
 - [ ] Current state is mapped before proposing a new architecture, migration, benchmark, or plan.
+- [ ] If a duration was requested, it is recorded as minimum active work unless
+      explicitly marked hard stop; when no better metric exists, initial and
+      final confidence scores are recorded.
 - [ ] Existing repo patterns and prior decisions are recorded before external research.
 - [ ] Options, recommendation, tradeoffs, blast radius, and rejection reasons are recorded.
 - [ ] Facts, inference, and recommendation are separated.
@@ -63,7 +87,17 @@ Completion Gates:
 | Source audit complete | pending | Record repo evidence and external evidence | pending |
 | Review / pressure pass | pending | Record review lens or N/A | pending |
 | Autoreview | pending | Review final artifact against objective, criteria, constraints, and newest user request | pending |
+| Timed checkpoint | pending | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | pending |
 | Goal plan complete | yes | Run `node .agents/skills/autogoal/scripts/check-complete.mjs {{PLAN_PATH}}` | pending |
+
+Phase / pass table:
+| Phase | Status | Evidence | Next |
+|-------|--------|----------|------|
+| Intake and source read | in_progress | created plan | research / analysis |
+| Current-state map | pending | | options |
+| Options and recommendation | pending | | review |
+| Review / pressure pass | pending | | closeout |
+| Closeout | pending | | final response |
 
 Findings:
 - None yet.
@@ -73,3 +107,18 @@ Decisions and tradeoffs:
 
 Timeline:
 - {{CREATED_AT}}: plan created.
+
+Verification evidence:
+- Pending.
+
+Reboot status:
+| Question | Answer |
+|----------|--------|
+| Where am I? | Intake and source read |
+| Where am I going? | Research / analysis, options, review, closeout |
+| What is the goal? | TODO: Fill from Objective |
+| What have I learned? | See Findings |
+| What have I done? | See Timeline |
+
+Open risks:
+- Pending.

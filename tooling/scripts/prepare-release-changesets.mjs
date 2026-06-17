@@ -189,7 +189,9 @@ async function getManualChangesetPaths() {
 }
 
 function getChangesetStatus() {
-  const cmd = `pnpm exec changeset status --output=${statusOutputPath}`;
+  // Build args via getChangesetStatusArgs (adds --since support) but invoke
+  // through a shell string so `pnpm` resolves to pnpm.cmd on Windows.
+  const cmd = `pnpm ${getChangesetStatusArgs().join(' ')}`;
   const result = spawnSync(cmd, {
     cwd: repoRoot,
     encoding: 'utf8',
@@ -207,6 +209,20 @@ function getChangesetStatus() {
   }
 
   return JSON.parse(result.stdout || readFileSyncUtf8(statusOutputPath));
+}
+
+export function getChangesetStatusArgs({
+  env = process.env,
+  outputPath = statusOutputPath,
+} = {}) {
+  const args = ['exec', 'changeset', 'status', `--output=${outputPath}`];
+  const since = env.PLATE_CHANGESET_STATUS_BASE ?? env.GITHUB_REF_NAME;
+
+  if (since) {
+    args.push(`--since=${since}`);
+  }
+
+  return args;
 }
 
 async function listDirectories(parentDirectory) {
