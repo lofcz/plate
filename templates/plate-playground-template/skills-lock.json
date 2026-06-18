@@ -4,7 +4,7 @@
     "autogoal": {
       "source": "udecode/dotai",
       "sourceType": "github",
-      "computedHash": "b39af211b4e83be092b60f376eac2b58aad58089d904a73058d33f36610ad93a"
+      "computedHash": "4a9e75ae168c8bef7d9b6555551356b281b729c35dfd75faf1d54d3b22eac347"
     },
     "autoreview": {
       "source": "openclaw/agent-skills",
