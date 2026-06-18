@@ -1,5 +1,11 @@
 # @platejs/dnd
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Clear stale drag drop indicators when dragging from a block into editor whitespace
+
 ## 53.1.2
 
 ### Patch Changes

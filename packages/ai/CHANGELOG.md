@@ -1,5 +1,11 @@
 # @platejs/ai
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Fix streaming Markdown serialization corrupting text nodes that contain embedded line breaks
+
 ## 53.1.2
 
 ### Patch Changes

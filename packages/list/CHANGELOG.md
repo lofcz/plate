@@ -1,5 +1,11 @@
 # @platejs/list
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Fix ordered list numbering continuing from numbered headings
+
 ## 53.1.3
 
 ### Patch Changes

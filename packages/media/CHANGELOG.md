@@ -1,5 +1,11 @@
 # @platejs/media
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Reject unsafe serialized iframe URLs when rendering media embeds
+
 ## 53.1.4
 
 ### Patch Changes
