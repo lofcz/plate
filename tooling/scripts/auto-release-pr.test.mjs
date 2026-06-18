@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import test from 'node:test';
+import { expect, test } from 'bun:test';
 
 import {
   AUTO_RELEASE_END,
@@ -15,50 +14,46 @@ import {
 } from './auto-release-pr.mjs';
 
 test('uses repo-neutral auto-release markers', () => {
-  assert.equal(AUTO_RELEASE_START, '<!-- auto-release:start -->');
-  assert.equal(AUTO_RELEASE_END, '<!-- auto-release:end -->');
+  expect(AUTO_RELEASE_START).toBe('<!-- auto-release:start -->');
+  expect(AUTO_RELEASE_END).toBe('<!-- auto-release:end -->');
 });
 
 test('detects real changeset files', () => {
-  assert.equal(hasChangesetFile(['.changeset/media-redos.md']), true);
-  assert.equal(
-    hasChangesetFile(['.changeset/README.md', 'packages/media/src/index.ts']),
-    false
-  );
-  assert.equal(
+  expect(hasChangesetFile(['.changeset/media-redos.md'])).toBe(true);
+  expect(
+    hasChangesetFile(['.changeset/README.md', 'packages/media/src/index.ts'])
+  ).toBe(false);
+  expect(
     isChangesetFile({
       filename: '.changeset/media-redos.md',
       status: 'removed',
-    }),
-    false
-  );
+    })
+  ).toBe(false);
 });
 
 test('detects Version packages release PR titles', () => {
-  assert.equal(isVersionPackagesTitle('[Release] Version packages'), true);
-  assert.equal(isVersionPackagesTitle('chore: Version Packages'), true);
-  assert.equal(isVersionPackagesTitle('Fix media parser'), false);
+  expect(isVersionPackagesTitle('[Release] Version packages')).toBe(true);
+  expect(isVersionPackagesTitle('chore: Version Packages')).toBe(true);
+  expect(isVersionPackagesTitle('Fix media parser')).toBe(false);
 });
 
 test('does not manage auto-release blocks on Version packages PRs', () => {
-  assert.equal(
+  expect(
     shouldManageAutoReleaseBlock({
       files: ['.changeset/media-redos.md'],
       title: '[Release] Version packages',
-    }),
-    false
-  );
-  assert.equal(
+    })
+  ).toBe(false);
+  expect(
     shouldManageAutoReleaseBlock({
       files: ['.changeset/media-redos.md'],
       title: 'Fix media parser',
-    }),
-    true
-  );
+    })
+  ).toBe(true);
 });
 
 test('detects the highest changeset release type from PR file patches', () => {
-  assert.equal(
+  expect(
     getChangesetReleaseType([
       {
         filename: '.changeset/media-redos.md',
@@ -69,11 +64,10 @@ test('detects the highest changeset release type from PR file patches', () => {
 +
 +Fix parser`,
       },
-    ]),
-    'patch'
-  );
+    ])
+  ).toBe('patch');
 
-  assert.equal(
+  expect(
     getChangesetReleaseType([
       {
         filename: '.changeset/media-redos.md',
@@ -91,11 +85,10 @@ test('detects the highest changeset release type from PR file patches', () => {
 +---
 +Add API`,
       },
-    ]),
-    'minor'
-  );
+    ])
+  ).toBe('minor');
 
-  assert.equal(
+  expect(
     getChangesetReleaseType([
       {
         filename: '.changeset/core-break.md',
@@ -113,9 +106,8 @@ test('detects the highest changeset release type from PR file patches', () => {
 +---
 +Fix parser`,
       },
-    ]),
-    'major'
-  );
+    ])
+  ).toBe('major');
 });
 
 test('adds a checked auto-release block to patch-only changeset PRs', () => {
@@ -124,8 +116,7 @@ test('adds a checked auto-release block to patch-only changeset PRs', () => {
     hasChangeset: true,
   });
 
-  assert.equal(
-    body,
+  expect(body).toBe(
     `${AUTO_RELEASE_START}
 - [x] Auto release
 ${AUTO_RELEASE_END}
@@ -137,7 +128,7 @@ Fix media parser.
 });
 
 test('validates changeset filenames and frontmatter entries', () => {
-  assert.deepEqual(
+  expect(
     getChangesetValidationErrors([
       {
         filename: '.changeset/media-redos.md',
@@ -149,11 +140,10 @@ test('validates changeset filenames and frontmatter entries', () => {
 +
 +Fix parser`,
       },
-    ]),
-    []
-  );
+    ])
+  ).toEqual([]);
 
-  assert.deepEqual(
+  expect(
     getChangesetValidationErrors([
       {
         filename: '.changeset/Media_Redos.md',
@@ -164,23 +154,21 @@ test('validates changeset filenames and frontmatter entries', () => {
 +
 +Fix parser`,
       },
-    ]),
-    [
-      '.changeset/Media_Redos.md has an invalid filename. Use lowercase letters, digits, and hyphens.',
-      '.changeset/Media_Redos.md has invalid entry "\\"@platejs/media\\": feature". Expected \'"package-name": patch|minor|major|none\'.',
-    ]
-  );
+    ])
+  ).toEqual([
+    '.changeset/Media_Redos.md has an invalid filename. Use lowercase letters, digits, and hyphens.',
+    '.changeset/Media_Redos.md has invalid entry "\\"@platejs/media\\": feature". Expected \'"package-name": patch|minor|major|none\'.',
+  ]);
 
-  assert.deepEqual(
+  expect(
     getChangesetValidationErrors([
       {
         filename: '.changeset/media-redos.md',
         patch: `@@ -0,0 +1,2 @@
 +Fix parser`,
       },
-    ]),
-    ['.changeset/media-redos.md is missing YAML frontmatter.']
-  );
+    ])
+  ).toEqual(['.changeset/media-redos.md is missing YAML frontmatter.']);
 });
 
 test('adds an unchecked auto-release block to minor or major changeset PRs', () => {
@@ -189,7 +177,7 @@ test('adds an unchecked auto-release block to minor or major changeset PRs', () 
     hasChangeset: true,
   });
 
-  assert.match(body, /- \[ \] Auto release/);
+  expect(body).toMatch(/- \[ \] Auto release/);
 });
 
 test('preserves a checked auto-release block', () => {
@@ -200,8 +188,8 @@ ${AUTO_RELEASE_END}
 
   const nextBody = upsertAutoReleaseBlock(body, { hasChangeset: true });
 
-  assert.equal(isAutoReleaseChecked(nextBody), true);
-  assert.match(nextBody, /- \[x\] Auto release/);
+  expect(isAutoReleaseChecked(nextBody)).toBe(true);
+  expect(nextBody).toMatch(/- \[x\] Auto release/);
 });
 
 test('removes the auto-release block when a PR has no changeset', () => {
@@ -213,14 +201,13 @@ ${AUTO_RELEASE_START}
 ${AUTO_RELEASE_END}
 `;
 
-  assert.equal(
-    upsertAutoReleaseBlock(body, { hasChangeset: false }),
+  expect(upsertAutoReleaseBlock(body, { hasChangeset: false })).toBe(
     '## Summary\nDocs only.'
   );
 });
 
 test('only treats the managed checkbox as release intent', () => {
-  assert.equal(isAutoReleaseChecked('- [x] Auto release'), false);
+  expect(isAutoReleaseChecked('- [x] Auto release')).toBe(false);
 });
 
 test('keeps old checked blocks checked while rewriting the label', () => {
@@ -234,8 +221,8 @@ Fix media parser.
 
   const nextBody = upsertAutoReleaseBlock(body, { hasChangeset: true });
 
-  assert.match(nextBody, /- \[x\] Auto release/);
-  assert.doesNotMatch(nextBody, /Version Packages/);
+  expect(nextBody).toMatch(/- \[x\] Auto release/);
+  expect(nextBody).not.toMatch(/Version Packages/);
 });
 
 test('rewrites old managed markers to the repo-neutral markers', () => {
@@ -249,7 +236,7 @@ Fix media parser.
 
   const nextBody = upsertAutoReleaseBlock(body, { hasChangeset: true });
 
-  assert.match(nextBody, /^<!-- auto-release:start -->/);
-  assert.doesNotMatch(nextBody, /plate:auto-release/);
-  assert.match(nextBody, /- \[x\] Auto release/);
+  expect(nextBody).toMatch(/^<!-- auto-release:start -->/);
+  expect(nextBody).not.toMatch(/plate:auto-release/);
+  expect(nextBody).toMatch(/- \[x\] Auto release/);
 });
