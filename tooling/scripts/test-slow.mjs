@@ -41,6 +41,9 @@ const TESTSUITES_OPEN_RE = /^<testsuites\b[^>]*>\s*/u;
 const TESTSUITES_CLOSE_RE = /\s*<\/testsuites>\s*$/u;
 const TRAILING_SLASH_RE = /\/$/;
 const LOCAL_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'];
+// Slow specs (React-heavy AI chat flows, etc.) need more headroom than bun's
+// 5s default. Callers can still override with an explicit --timeout.
+const DEFAULT_SLOW_TIMEOUT_MS = 20_000;
 
 const rawArgs = process.argv.slice(2);
 const bunArgs = [];
@@ -76,6 +79,12 @@ for (let i = 0; i < rawArgs.length; i++) {
   }
 
   pathFilters.push(arg);
+}
+
+if (
+  !bunArgs.some((arg) => arg === '--timeout' || arg.startsWith('--timeout='))
+) {
+  bunArgs.push('--timeout', String(DEFAULT_SLOW_TIMEOUT_MS));
 }
 
 const allSlowFiles = globSync(TEST_SLOW_FILE_PATTERNS, {
