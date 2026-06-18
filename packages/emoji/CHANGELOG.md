@@ -1,5 +1,11 @@
 # @platejs/emoji
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Fix emoji category navigation showing empty category panes
+
 ## 53.1.7
 
 ### Patch Changes
@@ -7,6 +13,7 @@
 - [#5024](https://github.com/udecode/plate/pull/5024) by [@zbeyens](https://github.com/zbeyens) – Fix emoji category navigation showing empty category panes.
 
 ## 53.0.0
+
 ## 52.3.6
 
 ### Patch Changes

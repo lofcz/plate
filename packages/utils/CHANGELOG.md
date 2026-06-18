@@ -1,5 +1,11 @@
 # @platejs/utils
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Show the block placeholder on the first block of a pristine empty editor and add a `className` option
+
 ## 53.1.1
 
 ### Patch Changes

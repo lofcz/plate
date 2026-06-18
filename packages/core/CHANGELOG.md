@@ -1,5 +1,11 @@
 # @platejs/core
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Improve large-document performance: render text and leaf decorations as components, treat the node id as a metadata prop, and refine plugin resolution
+
 ## 53.1.8
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @platejs/yjs
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Add built-in IndexedDB provider support for offline persistence
+
 ## 53.2.0
 
 ### Minor Changes
@@ -7,6 +13,7 @@
 - [#5027](https://github.com/udecode/plate/pull/5027) by [@zbeyens](https://github.com/zbeyens) – Add built-in IndexedDB provider support.
 
 ## 53.0.0
+
 ## 52.3.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 53.2.1
+
+### Patch Changes
+
+- 6ac5c51: Improve Markdown deserialization of incomplete MDX and table content
+
 ## 53.1.5
 
 ### Patch Changes
