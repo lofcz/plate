@@ -34,6 +34,9 @@ importers:
       '@platejs/basic-styles':
         specifier: workspace:@lofcz/platejs-basic-styles@*
         version: link:packages/basic-styles
+      '@platejs/callout':
+        specifier: workspace:@lofcz/platejs-callout@*
+        version: link:packages/callout
       '@platejs/code-block':
         specifier: workspace:@lofcz/platejs-code-block@*
         version: link:packages/code-block
