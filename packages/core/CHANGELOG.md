@@ -1,5 +1,17 @@
 # @platejs/core
 
+## 53.2.4
+
+### Patch Changes
+
+- [#5046](https://github.com/udecode/plate/pull/5046) by [@zbeyens](https://github.com/zbeyens) – Keep dependent Plate packages aligned with core patch releases.
+
+## 53.2.3
+
+### Patch Changes
+
+- [#5041](https://github.com/udecode/plate/pull/5041) by [@delijah](https://github.com/delijah) – Unset `_id` instead of setting it to `undefined` when inserting a node
+
 ## 53.2.1
 
 ### Patch Changes

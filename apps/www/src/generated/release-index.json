@@ -1,7 +1,7 @@
 [
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/d142cfb5b9358d97b3ec67448e7e00be41f067a4/packages/plate/CHANGELOG.md",
-    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.2.2...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.2.2...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
+    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.2.4...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.2.4...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
     "contributors": [
       {
         "url": "https://github.com/felixfeng33",
@@ -15,6 +15,44 @@
     "type": "major",
     "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5033",
     "url": "https://github.com/udecode/plate/releases/tag/v54.0.0-beta.0"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/2204a0c75870d3b61b7a5ade07a2a2fa99826e69/packages/plate/CHANGELOG.md",
+    "content": "`@platejs/core`\n\n### Bug Fixes\n\n- Keep dependent Plate packages aligned with core patch releases. ([#5046](https://github.com/udecode/plate/pull/5046))\n\n`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/utils`.\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`.\n\n[`v53.2.3...v53.2.4`](https://github.com/udecode/plate/compare/v53.2.3...v53.2.4) · By [@zbeyens](https://github.com/zbeyens)",
+    "contributors": [
+      {
+        "url": "https://github.com/zbeyens",
+        "username": "@zbeyens"
+      }
+    ],
+    "date": "2026-06-27",
+    "packageTag": "platejs@53.2.4",
+    "tag": "v53.2.4",
+    "title": "v53.2.4",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5047",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.2.4"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/f2c187c95fb7e4010e49b2ecb7becc5f22ae8b1b/packages/core/CHANGELOG.md",
+    "content": "`@platejs/core`\n\n### Bug Fixes\n\n- Unset `_id` instead of setting it to `undefined` when inserting a node ([#5041](https://github.com/udecode/plate/pull/5041))\n\n`@platejs/suggestion`\n\n### Bug Fixes\n\n- Fix block removal suggestions missing `userId` metadata ([#5042](https://github.com/udecode/plate/pull/5042))\n\n[`v53.2.2...v53.2.3`](https://github.com/udecode/plate/compare/v53.2.2...v53.2.3) · By [@delijah](https://github.com/delijah), [@bbyiringiro](https://github.com/bbyiringiro)",
+    "contributors": [
+      {
+        "url": "https://github.com/delijah",
+        "username": "@delijah"
+      },
+      {
+        "url": "https://github.com/bbyiringiro",
+        "username": "@bbyiringiro"
+      }
+    ],
+    "date": "2026-06-27",
+    "packageTag": "@platejs/core@53.2.3",
+    "tag": "v53.2.3",
+    "title": "v53.2.3",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5044",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.2.3"
   },
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/1ea6fcb03d5daa068a346b1b12719b4b2ad0b053/packages/ai/CHANGELOG.md",
