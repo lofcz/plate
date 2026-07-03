@@ -1,7 +1,7 @@
 [
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/d142cfb5b9358d97b3ec67448e7e00be41f067a4/packages/plate/CHANGELOG.md",
-    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.2.4...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.2.4...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
+    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.1...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.1...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
     "contributors": [
       {
         "url": "https://github.com/felixfeng33",
@@ -15,6 +15,30 @@
     "type": "major",
     "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5033",
     "url": "https://github.com/udecode/plate/releases/tag/v54.0.0-beta.0"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/4d792e09bec9a8692d22877a176fa2de9eb0e8df/packages/link/CHANGELOG.md",
+    "content": "`@platejs/link`\n\n### Bug Fixes\n\n- [`df0996f810d69f1d6660dbeac2a4cceda1d5e6dd`](https://github.com/udecode/plate/commit/df0996f810d69f1d6660dbeac2a4cceda1d5e6dd) – Fix Floating Link: ignore the Safari + Japanese IME composition-commit Enter (`keyCode === 229`, where `isComposing` is false) so it no longer submits the link mid-composition. Mirrors the Enter guard already used in `cmdk`.\n\n[`v53.3.0...v53.3.1`](https://github.com/udecode/plate/compare/v53.3.0...v53.3.1)",
+    "contributors": [],
+    "date": "2026-06-30",
+    "packageTag": "@platejs/link@53.3.1",
+    "tag": "v53.3.1",
+    "title": "v53.3.1",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5051",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.1"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/11a7c19f61d8880f64b51efd92c4cc661828573f/packages/ai/CHANGELOG.md",
+    "content": "`@platejs/ai`\n\n### Features\n\n- [`34fdca42f73e7dd30d94db31058c28662dbb9212`](https://github.com/udecode/plate/commit/34fdca42f73e7dd30d94db31058c28662dbb9212) – Support AI SDK v7 chat helper types.\n\n[`v53.2.4...v53.3.0`](https://github.com/udecode/plate/compare/v53.2.4...v53.3.0)",
+    "contributors": [],
+    "date": "2026-06-30",
+    "packageTag": "@platejs/ai@53.3.0",
+    "tag": "v53.3.0",
+    "title": "v53.3.0",
+    "type": "minor",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5050",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.0"
   },
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/2204a0c75870d3b61b7a5ade07a2a2fa99826e69/packages/plate/CHANGELOG.md",

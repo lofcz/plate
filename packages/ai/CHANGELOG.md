@@ -1,10 +1,22 @@
 # @platejs/ai
 
-## 53.2.1
+## 53.3.0
+
+### Minor Changes
+
+- [`34fdca42f73e7dd30d94db31058c28662dbb9212`](https://github.com/udecode/plate/commit/34fdca42f73e7dd30d94db31058c28662dbb9212) – Support AI SDK v7 chat helper types.
+
+## 53.2.2
 
 ### Patch Changes
 
 - 6ac5c51: Fix streaming Markdown serialization corrupting text nodes that contain embedded line breaks
+
+## 53.2.1
+
+### Patch Changes
+
+- Re-release after npm authentication was restored in the release workflow. The previous version bump landed on `main` but `npm publish` failed with `ENEEDAUTH` because `NPM_TOKEN` was not exposed to the publish step. No behavior changes in this bump — same artifacts as the previously unpublished versions.
 
 ## 53.1.2
 
