@@ -12,6 +12,12 @@
 
 - Re-release after npm authentication was restored in the release workflow. The previous version bump landed on `main` but `npm publish` failed with `ENEEDAUTH` because `NPM_TOKEN` was not exposed to the publish step. No behavior changes in this bump — same artifacts as the previously unpublished versions.
 
+## 53.3.3
+
+### Patch Changes
+
+- [`279fdae`](https://github.com/udecode/plate/commit/279fdae77739b0c549dc2c6d9c65b4512c62d9ce) by [@github-actions[bot]](https://github.com/github-actions%5Bbot%5D) – Updated `slate`, `slate-dom`, `slate-react`.
+
 ## 53.0.7
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 [
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/d142cfb5b9358d97b3ec67448e7e00be41f067a4/packages/plate/CHANGELOG.md",
-    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.2...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.2...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
+    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.3...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.3...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
     "contributors": [
       {
         "url": "https://github.com/felixfeng33",
@@ -15,6 +15,27 @@
     "type": "major",
     "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5033",
     "url": "https://github.com/udecode/plate/releases/tag/v54.0.0-beta.0"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/357c964f6b34faefd2588030c6fdee435a1dbe84/packages/plate/CHANGELOG.md",
+    "content": "`@platejs/ai`\n\n### Bug Fixes\n\n- Updated `@platejs/markdown`.\n\n`@platejs/markdown`\n\n### Bug Fixes\n\n- Keep custom inline elements inside a table cell's paragraph when deserializing markdown. The cell deserializer recognised only `inlineEquation` as inline, so any other custom inline element was hoisted out of the paragraph and became its sibling. The cell serializer then separated those siblings with `<br/>`, and a second round trip turned that into a newline — silently destroying the element. The check now asks the editor whether the node is inline, which is the same answer the plugin configuration already holds. ([#5068](https://github.com/udecode/plate/pull/5068))\n\n`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`, `@platejs/utils`.\n\n`@platejs/slate`\n\n### Bug Fixes\n\n- Updated `slate`, `slate-dom`, `slate-react`. ([`279fdae`](https://github.com/udecode/plate/commit/279fdae77739b0c549dc2c6d9c65b4512c62d9ce))\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`.\n\n[`v53.3.2...v53.3.3`](https://github.com/udecode/plate/compare/v53.3.2...v53.3.3) · By [@WilliamPeralta](https://github.com/WilliamPeralta), [@github-actions[bot]](https://github.com/github-actions%5Bbot%5D)",
+    "contributors": [
+      {
+        "url": "https://github.com/WilliamPeralta",
+        "username": "@WilliamPeralta"
+      },
+      {
+        "url": "https://github.com/github-actions%5Bbot%5D",
+        "username": "@github-actions[bot]"
+      }
+    ],
+    "date": "2026-08-04",
+    "packageTag": "platejs@53.3.3",
+    "tag": "v53.3.3",
+    "title": "v53.3.3",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5055",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.3"
   },
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/71ea3916f76068a074f6312c45831278893d7b4b/packages/docx-io/CHANGELOG.md",
