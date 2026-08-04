@@ -94,6 +94,7 @@ export const withNormalizeTable: OverrideEditor<TableConfig> = ({
                 return;
               }
             }
+          }
           if (path.length === 1) {
             const isLastBlock = path[0] === editor.children.length - 1;
 
