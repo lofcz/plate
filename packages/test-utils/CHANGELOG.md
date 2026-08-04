@@ -1,5 +1,11 @@
 # @platejs/test-utils
 
+## 53.3.4
+
+### Patch Changes
+
+- f928777: Sync upstream v53.3.3 into the `@lofcz/*` release line. Includes the markdown fix that keeps custom inline elements inside table cell paragraphs when deserializing, plus accumulated core/slate/utils updates from upstream.
+
 ## 53.3.3
 
 ## 53.1.1
