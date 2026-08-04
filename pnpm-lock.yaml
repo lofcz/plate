@@ -222,7 +222,7 @@ importers:
         version: 6.0.1
       slate-test-utils:
         specifier: 1.3.2
-        version: 1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1))(slate@0.124.1)
+        version: 1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0))(slate@0.126.0)
       tailwind-merge:
         specifier: 3.3.1
         version: 3.3.1
@@ -583,7 +583,7 @@ importers:
         version: 1.2.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@slate-yjs/react':
         specifier: 1.1.0
-        version: 1.1.0(@slate-yjs/core@1.0.2(slate@0.124.1)(yjs@13.6.29))(react@19.2.4)(slate-react@0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1))(slate@0.124.1)(yjs@13.6.29)
+        version: 1.1.0(@slate-yjs/core@1.0.2(slate@0.126.0)(yjs@13.6.29))(react@19.2.4)(slate-react@0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0))(slate@0.126.0)(yjs@13.6.29)
       '@tabler/icons-react':
         specifier: 3.34.0
         version: 3.34.0(react@19.2.4)
@@ -747,8 +747,8 @@ importers:
         specifier: 1.0.8
         version: 1.0.8
       slate:
-        specifier: 0.124.1
-        version: 0.124.1
+        specifier: 0.126.0
+        version: 0.126.0
       sonner:
         specifier: 2.0.5
         version: 2.0.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1114,17 +1114,17 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.4)
       slate:
-        specifier: 0.124.1
-        version: 0.124.1
+        specifier: 0.126.0
+        version: 0.126.0
       slate-dom:
-        specifier: 0.124.1
-        version: 0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1)
+        specifier: 0.126.0
+        version: 0.126.0(slate@0.126.0)
       slate-hyperscript:
         specifier: 0.125.0
-        version: 0.125.0(slate@0.124.1)
+        version: 0.125.0(slate@0.126.0)
       slate-react:
-        specifier: 0.124.2
-        version: 0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1)
+        specifier: 0.126.0
+        version: 0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0)
       use-deep-compare:
         specifier: ^1.3.0
         version: 1.3.0(react@19.2.4)
@@ -1699,11 +1699,11 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       slate:
-        specifier: 0.124.1
-        version: 0.124.1
+        specifier: 0.126.0
+        version: 0.126.0
       slate-dom:
-        specifier: 0.124.1
-        version: 0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1)
+        specifier: 0.126.0
+        version: 0.126.0(slate@0.126.0)
     devDependencies:
       '@plate/scripts':
         specifier: workspace:*
@@ -1785,11 +1785,11 @@ importers:
         specifier: workspace:@lofcz/platejs-slate@*
         version: link:../slate
       slate:
-        specifier: 0.124.1
-        version: 0.124.1
+        specifier: 0.126.0
+        version: 0.126.0
       slate-hyperscript:
         specifier: 0.125.0
-        version: 0.125.0(slate@0.124.1)
+        version: 0.125.0(slate@0.126.0)
     devDependencies:
       '@plate/scripts':
         specifier: workspace:*
@@ -1963,7 +1963,7 @@ importers:
     dependencies:
       '@slate-yjs/core':
         specifier: ^1.0.2
-        version: 1.0.2(slate@0.124.1)(yjs@13.6.29)
+        version: 1.0.2(slate@0.126.0)(yjs@13.6.29)
       react-compiler-runtime:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.4)
@@ -9919,8 +9919,8 @@ packages:
     resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
     engines: {node: '>=12'}
 
-  slate-dom@0.124.1:
-    resolution: {integrity: sha512-D3yVibjLZM4Oj4MmXxOEXbjrlf4wJez3OvGABBNYrAP7gXb0d96tKNtWZ0hGm/5y84idw/LHjZ7W1uTYqFR9rQ==}
+  slate-dom@0.126.0:
+    resolution: {integrity: sha512-FdRlaKh0xksnymiRiv8/8c6dYhybwTg1QJIjmvEyeOUKHfdJI55YA4gGKv4vQj4ZKklau2aHY6uX/npJu5jYMA==}
     peerDependencies:
       slate: '>=0.121.0'
 
@@ -9934,8 +9934,8 @@ packages:
     peerDependencies:
       slate: '>=0.114.3'
 
-  slate-react@0.124.2:
-    resolution: {integrity: sha512-2B6ZZX5qKYeISNaQ9cDuvvp0tWydnHUPuGxyVJZfjD+W00X34dGaAF/5ZyVMZt/O//sf0Glbgd7+NBHRWjiA7Q==}
+  slate-react@0.126.0:
+    resolution: {integrity: sha512-pQEu2X25mj539jWK/GpwNEdfE/gwqRccDwQaf4UeoABX3+cLaDls8CIyT8lASGRHyphqkgGW7pUxWOCBGC2hqA==}
     peerDependencies:
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
@@ -9953,8 +9953,8 @@ packages:
       slate-history: '>=0.66.0'
       slate-react: '>=0.70.0'
 
-  slate@0.124.1:
-    resolution: {integrity: sha512-ii7DwezgvbLAyKtHBIunjTR1kzbNfYLCUKLMzJELlbTZkvHzX4DzN7HKIwcakf6dPxO6AoeT/P7kHOcyTym/hA==}
+  slate@0.126.0:
+    resolution: {integrity: sha512-vajsZXY28Uxrg0odEChRIicg3QE9VbYLVLln+8Je4yIg/T7UJqj+WHK1236RL7i7CM/6/lnqPmA19n4Na1shgA==}
 
   slice-ansi@5.0.0:
     resolution: {integrity: sha512-FC+lgizVPfie0kkhqUScwRu1O/lF6NOgJmlCgK+/LYxDCTk8sGelYaHDhFcDN+Sn3Cv+3VSa4Byeo+IMCzpMgQ==}
@@ -14003,18 +14003,18 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@slate-yjs/core@1.0.2(slate@0.124.1)(yjs@13.6.29)':
+  '@slate-yjs/core@1.0.2(slate@0.126.0)(yjs@13.6.29)':
     dependencies:
-      slate: 0.124.1
+      slate: 0.126.0
       y-protocols: 1.0.7(yjs@13.6.29)
       yjs: 13.6.29
 
-  '@slate-yjs/react@1.1.0(@slate-yjs/core@1.0.2(slate@0.124.1)(yjs@13.6.29))(react@19.2.4)(slate-react@0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1))(slate@0.124.1)(yjs@13.6.29)':
+  '@slate-yjs/react@1.1.0(@slate-yjs/core@1.0.2(slate@0.126.0)(yjs@13.6.29))(react@19.2.4)(slate-react@0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0))(slate@0.126.0)(yjs@13.6.29)':
     dependencies:
-      '@slate-yjs/core': 1.0.2(slate@0.124.1)(yjs@13.6.29)
+      '@slate-yjs/core': 1.0.2(slate@0.126.0)(yjs@13.6.29)
       react: 19.2.4
-      slate: 0.124.1
-      slate-react: 0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1)
+      slate: 0.126.0
+      slate-react: 0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0)
       use-sync-external-store: 1.6.0(react@19.2.4)
       y-protocols: 1.0.7(yjs@13.6.29)
       yjs: 13.6.29
@@ -19916,7 +19916,7 @@ snapshots:
 
   slash@4.0.0: {}
 
-  slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1):
+  slate-dom@0.126.0(slate@0.126.0):
     dependencies:
       '@juggle/resize-observer': 3.4.0
       direction: 1.0.4
@@ -19924,19 +19924,14 @@ snapshots:
       is-plain-object: 5.0.0
       lodash: 4.17.23
       scroll-into-view-if-needed: 3.1.0
-      slate: 0.124.1
+      slate: 0.126.0
       tiny-invariant: 1.3.1
 
-  slate-hyperscript@0.100.0(slate@0.124.1):
+  slate-hyperscript@0.125.0(slate@0.126.0):
     dependencies:
-      is-plain-object: 5.0.0
-      slate: 0.124.1
+      slate: 0.126.0
 
-  slate-hyperscript@0.125.0(slate@0.124.1):
-    dependencies:
-      slate: 0.124.1
-
-  slate-react@0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1):
+  slate-react@0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0):
     dependencies:
       '@juggle/resize-observer': 3.4.0
       direction: 1.0.4
@@ -19945,11 +19940,11 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       scroll-into-view-if-needed: 3.1.0
-      slate: 0.124.1
-      slate-dom: 0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1)
+      slate: 0.126.0
+      slate-dom: 0.126.0(slate@0.126.0)
       tiny-invariant: 1.3.1
 
-  slate-test-utils@1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1))(slate@0.124.1):
+  slate-test-utils@1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0))(slate@0.126.0):
     dependencies:
       '@testing-library/jest-dom': 6.6.3
       '@testing-library/react': 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -19958,10 +19953,10 @@ snapshots:
       lodash.clonedeep: 4.5.0
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      slate: 0.124.1
-      slate-react: 0.124.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.124.1(patch_hash=2f23b5e3a3ed8cccb3e57c12e4bf74d71e5481342999ed50fce8b0869637dcca)(slate@0.124.1))(slate@0.124.1)
+      slate: 0.126.0
+      slate-react: 0.126.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.0))(slate@0.126.0)
 
-  slate@0.124.1: {}
+  slate@0.126.0: {}
 
   slice-ansi@5.0.0:
     dependencies:

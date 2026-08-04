@@ -1,7 +1,7 @@
 [
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/d142cfb5b9358d97b3ec67448e7e00be41f067a4/packages/plate/CHANGELOG.md",
-    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.1...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.1...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
+    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.2...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.2...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
     "contributors": [
       {
         "url": "https://github.com/felixfeng33",
@@ -15,6 +15,23 @@
     "type": "major",
     "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5033",
     "url": "https://github.com/udecode/plate/releases/tag/v54.0.0-beta.0"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/71ea3916f76068a074f6312c45831278893d7b4b/packages/docx-io/CHANGELOG.md",
+    "content": "`@platejs/docx-io`\n\n### Bug Fixes\n\n- Skip remote image URLs by default during DOCX export. ([#5053](https://github.com/udecode/plate/pull/5053))\n\n  **Migration:** Convert trusted remote images to data URIs before calling `htmlToDocxBlob`, or pass `allowRemoteImages: true` only when the HTML source is trusted.\n\n[`v53.3.1...v53.3.2`](https://github.com/udecode/plate/compare/v53.3.1...v53.3.2) · By [@zbeyens](https://github.com/zbeyens)",
+    "contributors": [
+      {
+        "url": "https://github.com/zbeyens",
+        "username": "@zbeyens"
+      }
+    ],
+    "date": "2026-07-03",
+    "packageTag": "@platejs/docx-io@53.3.2",
+    "tag": "v53.3.2",
+    "title": "v53.3.2",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5054",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.2"
   },
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/4d792e09bec9a8692d22877a176fa2de9eb0e8df/packages/link/CHANGELOG.md",
