@@ -8,9 +8,16 @@ import type { UnknownObject } from '@udecode/utils';
 export interface TCalloutElement extends TElement {
   backgroundColor?: string;
   icon?: string;
+  /**
+   * Callout kind. Serialized to MDX as GFM-style `type="…"` (e.g.
+   * `<callout type="tip">`). Includes GitHub alert names (`note` / `tip` /
+   * `important` / `warning` / `caution`) plus a few Plate extras.
+   */
   variant?:
     | (string & {})
+    | 'caution'
     | 'error'
+    | 'important'
     | 'info'
     | 'note'
     | 'success'

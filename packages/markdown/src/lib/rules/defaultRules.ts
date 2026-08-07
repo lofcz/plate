@@ -233,18 +233,43 @@ export const defaultRules: MdRules = {
     }),
   },
   callout: {
+    // GFM-style alerts use a `type` attribute (`tip` / `note` / `warning` /
+    // `important` / `caution`). Plate stores that as `variant` so it does not
+    // clobber the element discriminator (`type: 'callout'`). Spreading MDX
+    // attrs after setting `type` would turn `<callout type="tip">` into a
+    // broken `type: 'tip'` node — pull `type` out explicitly.
     deserialize: (mdastNode, deco, options) => {
-      const props = parseAttributes(mdastNode.attributes);
+      const {
+        type: calloutType,
+        variant,
+        ...rest
+      } = parseAttributes(mdastNode.attributes);
+
+      const normalize = (value: unknown): string | undefined => {
+        if (typeof value !== 'string') return;
+        const trimmed = value.trim().toLowerCase();
+        return trimmed.length > 0 ? trimmed : undefined;
+      };
+
+      // Prefer GFM `type`; fall back to legacy `variant`.
+      const resolvedVariant = normalize(calloutType) ?? normalize(variant);
+
       return {
         children: convertChildrenDeserialize(mdastNode.children, deco, options),
         type: getPluginType(options.editor!, KEYS.callout),
-        ...props,
+        ...(resolvedVariant ? { variant: resolvedVariant } : {}),
+        ...rest,
       };
     },
     serialize(slateNode, options): MdMdxJsxFlowElement {
-      const { children, type, ...rest } = slateNode;
+      const { children, type: _type, variant, ...rest } = slateNode;
+      const attrs: Record<string, unknown> = { ...rest };
+      // Emit GFM-style `type` (not legacy `variant`) when a variant is set.
+      if (typeof variant === 'string' && variant.length > 0) {
+        attrs.type = variant;
+      }
       return {
-        attributes: propsToAttributes(rest),
+        attributes: propsToAttributes(attrs),
         children: convertNodesSerialize(children, options) as any,
         name: 'callout',
         type: 'mdxJsxFlowElement',
