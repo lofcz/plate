@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 53.3.5
+
+### Patch Changes
+
+- de048e8: Support GFM-style `<callout type="tip|note|warning|important|caution">` in markdown (de)serialization. MDX `type` maps to the callout `variant` so it no longer clobbers the Plate element type; serialize emits `type=` instead of legacy `variant=`.
+
 ## 53.3.4
 
 ### Patch Changes
