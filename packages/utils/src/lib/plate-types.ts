@@ -59,6 +59,10 @@ export interface TEquationElement extends TElement {
   texExpression: string;
 }
 
+export interface TSmilesElement extends TElement {
+  smiles: string;
+}
+
 export interface TImageElement extends TMediaElement {
   initialHeight?: number;
   initialWidth?: number;
@@ -309,6 +313,7 @@ export type TNodeMap = {
   p: TElement;
   search_highlight: TText & { search_highlight: true };
   slash_input: TComboboxInputElement;
+  smiles: TSmilesElement;
   strikethrough: TText & { strikethrough: true };
   subscript: TText & { subscript: true };
   suggestion: TSuggestionText;

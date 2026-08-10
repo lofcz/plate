@@ -45,6 +45,7 @@ export const NODES = {
   p: 'p',
   searchHighlight: 'search_highlight',
   slashInput: 'slash_input',
+  smiles: 'smiles',
   strikethrough: 'strikethrough',
   sub: 'subscript',
   suggestion: 'suggestion',

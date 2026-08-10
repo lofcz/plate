@@ -1704,6 +1704,19 @@ importers:
         specifier: workspace:*
         version: link:../plate-scripts
 
+  packages/smiles:
+    dependencies:
+      react-compiler-runtime:
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.4)
+    devDependencies:
+      '@plate/scripts':
+        specifier: workspace:*
+        version: link:../plate-scripts
+      platejs:
+        specifier: workspace:@lofcz/platejs@*
+        version: link:../plate
+
   packages/suggestion:
     dependencies:
       '@platejs/diff':
