@@ -51,18 +51,6 @@ export function transformDiffDescendants(
     deleteBuffer = [];
   };
 
-  // Cursors into the two source docs. `computeDiff` maps doc0 then doc1 into
-  // a shared char space; an OP_UNCHANGED chunk of length N consumes the next
-  // N nodes from BOTH docs (they are positionally aligned by DMP). We track
-  // both cursors so a structural pairing (same char, byte-UNEQUAL nodes) can
-  // recover the new-side node by position rather than relying on
-  // `stringToNodes`, which only ever resolves the old side. The source docs
-  // are attached to the mapping by `computeDiff`.
-  let doc0Cursor = 0;
-  let doc1Cursor = 0;
-  const doc0 = stringCharMapping.sourceDoc0 ?? [];
-  const doc1 = stringCharMapping.sourceDoc1 ?? [];
-
   const insertNode = (node: Descendant) =>
     insertBuffer.push({
       ...node,
@@ -93,36 +81,10 @@ export function transformDiffDescendants(
 
     switch (op) {
       case OP_UNCHANGED: {
-        // Advance both cursors by the chunk length: an unchanged run
-        // consumes the next `val.length` nodes from BOTH docs.
-        const len = val.length;
-        const newSlice = doc1.slice(doc1Cursor, doc1Cursor + len);
-        const oldSlice = doc0.slice(doc0Cursor, doc0Cursor + len);
-
-        // Structural pairing: when the chunk's char sequence contains a
-        // byte-UNEQUAL (old, new) pair kept on the same char by structural
-        // identity, `stringToNodes` only resolved the OLD side. Routing the
-        // run through `pairBlocksWithWordHints` lets the per-element
-        // strategy reconcile the pair (granular prop update + child
-        // recursion) instead of silently emitting the pre-edit nodes.
-        const hasStructuralPair =
-          typeof stringCharMapping.structuralOldForChar === 'function' &&
-          val
-            .split('')
-            .some(
-              (c) => stringCharMapping.structuralOldForChar(c) !== undefined
-            );
-
-        if (granularity === 'block' && hasStructuralPair) {
-          const paired = pairBlocksWithWordHints(oldSlice, newSlice, options);
-          flushBuffers();
-          children.push(...paired);
-        } else {
-          passThroughNodes(...nodes);
-        }
-
-        doc0Cursor += len;
-        doc1Cursor += len;
+        // Unchanged chars are byte-equal (modulo ignoreProps) by
+        // construction — the char mapping is a strict bijection — so the
+        // resolved nodes pass through verbatim.
+        passThroughNodes(...nodes);
         // Move to the next diff chunk
         i += 1;
         continue;
@@ -133,7 +95,6 @@ export function transformDiffDescendants(
         if (i < diff.length - 1 && diff[i + 1][0] === OP_INSERT) {
           // Value of the next chunk (to be inserted)
           const nextVal = diff[i + 1][1];
-          const nextLen = nextVal.length;
           // Convert next value to nodes
           const nextNodes = stringCharMapping.stringToNodes(nextVal);
 
@@ -143,8 +104,6 @@ export function transformDiffDescendants(
            */
           if (isEqual(nodes, nextNodes, { ignoreDeep: ignoreProps })) {
             passThroughNodes(...nextNodes);
-            doc0Cursor += val.length;
-            doc1Cursor += nextLen;
             // Consume two diff chunks (delete and insert)
             i += 2;
 
@@ -166,8 +125,6 @@ export function transformDiffDescendants(
             );
             flushBuffers();
             children.push(...pairedBlocks);
-            doc0Cursor += val.length;
-            doc1Cursor += nextLen;
             i += 2;
             continue;
           }
@@ -177,8 +134,6 @@ export function transformDiffDescendants(
             passThroughNodes(...transformDiffTexts(nodes, nextNodes, options));
             // Consume two diff chunks (delete and insert)
             i += 2;
-            doc0Cursor += val.length;
-            doc1Cursor += nextLen;
 
             continue;
           }
@@ -208,8 +163,6 @@ export function transformDiffDescendants(
             }
           });
           i += 2; // This consumed two entries from the diff array.
-          doc0Cursor += val.length;
-          doc1Cursor += nextLen;
 
           continue;
         }
@@ -217,7 +170,6 @@ export function transformDiffDescendants(
         for (const node of nodes) {
           deleteNode(node);
         }
-        doc0Cursor += val.length;
 
         i += 1; // Consumes only one entry from diff array.
 
@@ -228,7 +180,6 @@ export function transformDiffDescendants(
         for (const node of nodes) {
           insertNode(node);
         }
-        doc1Cursor += val.length;
 
         i += 1;
 

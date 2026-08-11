@@ -2071,6 +2071,126 @@ describe('computeDiff (block granularity)', () => {
     expect(ops).not.toContain('insert');
   });
 
+  it('end-to-end: twin-bodied activities do not cross-pair or duplicate (structural-alias regression)', () => {
+    // Regression for the "unrelated changes + duplicated section" bug.
+    // A document contains TWO activities with different names but
+    // IDENTICAL bodies (data-level duplication, e.g. an authoring mistake
+    // or a previously-accepted broken diff). The edit deletes one child
+    // block inside the FIRST activity only.
+    //
+    // The earlier structural-key char aliasing mapped both activities to
+    // the SAME DMP char (updateProps excluded name/duration from the key),
+    // which (a) made `stringToNodes` resolve both chars to the first
+    // activity — duplicating its body over the second — and (b) paired
+    // old-activity-1 with new-activity-2, manufacturing a spurious
+    // name/duration "update" (rename) on the untouched twin.
+    //
+    // Contract: activity 1 gets the child delete; activity 2 passes
+    // through byte-identical; NO update op appears anywhere.
+    const body = (calloutText: string | null) => [
+      { type: 'p', children: [{ text: 'shared body paragraph' }] },
+      ...(calloutText === null
+        ? []
+        : [
+            {
+              type: 'callout',
+              children: [{ type: 'p', children: [{ text: calloutText }] }],
+            },
+          ]),
+    ];
+    const oldDoc = [
+      {
+        type: 'phase',
+        phaseType: 'main',
+        children: [
+          {
+            type: 'activity',
+            duration: '15',
+            name: 'First',
+            children: body('tip'),
+          },
+          {
+            type: 'activity',
+            duration: '10',
+            name: 'Second',
+            children: body('tip'),
+          },
+        ],
+      },
+    ];
+    const newDoc = [
+      {
+        type: 'phase',
+        phaseType: 'main',
+        children: [
+          {
+            type: 'activity',
+            duration: '15',
+            name: 'First',
+            children: body(null),
+          },
+          {
+            type: 'activity',
+            duration: '10',
+            name: 'Second',
+            children: body('tip'),
+          },
+        ],
+      },
+    ];
+
+    const result = computeDiff(oldDoc, newDoc, {
+      ...blockOptions(),
+      getDiffStrategy: (node) => {
+        if (node.type === 'phase') {
+          return { kind: 'container', identityProps: ['phaseType'] };
+        }
+        if (node.type === 'activity') {
+          return { kind: 'container', updateProps: ['name', 'duration'] };
+        }
+        if (node.type === 'callout') {
+          return { kind: 'container' };
+        }
+        return;
+      },
+    });
+
+    expect(result).toHaveLength(1);
+    const phase = result[0] as any;
+    expect(phase.diffOperation).toBeUndefined();
+    expect(phase.children).toHaveLength(2);
+
+    const [first, second] = phase.children;
+
+    // First activity: unchanged wrapper, callout child deleted inside.
+    expect(first.name).toBe('First');
+    expect(first.duration).toBe('15');
+    expect(first.diffOperation).toBeUndefined();
+    const firstOps = first.children.map((c: any) => c.diffOperation?.type);
+    expect(firstOps).toContain('delete');
+
+    // Second activity: fully untouched — keeps its name, duration, AND its
+    // callout; carries no diff op of any kind.
+    expect(second.name).toBe('Second');
+    expect(second.duration).toBe('10');
+    expect(second.diffOperation).toBeUndefined();
+    expect(second.children.some((c: any) => c.type === 'callout')).toBe(true);
+    for (const child of second.children) {
+      expect(child.diffOperation).toBeUndefined();
+    }
+
+    // No update (rename) anywhere in the tree.
+    const ops: string[] = [];
+    const walk = (nodes: any[]) => {
+      for (const n of nodes) {
+        if (n.diffOperation?.type) ops.push(n.diffOperation.type);
+        if (Array.isArray(n.children)) walk(n.children);
+      }
+    };
+    walk(result as any[]);
+    expect(ops).not.toContain('update');
+  });
+
   it('still falls back to whole-block when the wrapper itself changes (attribute edit)', () => {
     // `<phase name="A">` vs `<phase name="B">`. The wrapper own-prop
     // changed, so structural recursion must NOT swallow it. Whole-block

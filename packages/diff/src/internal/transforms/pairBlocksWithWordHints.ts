@@ -105,7 +105,6 @@ export function pairBlocksWithWordHints(
   // already aligned the unchanged neighbours away); lone delete/insert
   // chunks emit as pure overflow.
   const mapping = new StringCharMapping({
-    getStructuralKey: options.getStructuralKey,
     ignoreProps: options.ignoreProps,
   });
   const oldStr = mapping.nodesToString(oldBlocks);
@@ -127,38 +126,12 @@ export function pairBlocksWithWordHints(
     const [op, val] = rawDiff[chunkIdx] as [number, string];
 
     if (op === 0) {
-      // Equal modulo ignoreProps — OR a structural-identity pair (same
-      // char because two blocks share a structural key). `val.length`
-      // counts how many nodes this equal chunk represents in the
-      // StringCharMapping encoding (1 BMP char per node — codes well below
-      // the surrogate range).
-      for (const ch of val) {
-        const newBlock = newBlocks[ni];
-
-        // Recover the doc0 half of a structural pairing. When the char map
-        // kept a byte-UNEQUAL (old, new) pair on the same char, it records
-        // the doc0 node in `structuralOldForChar`; the new side is the
-        // current `newBlock` by position. This does NOT rely on oi/ni
-        // index alignment (which can drift across an equal chunk), so a
-        // renamed block still reaches the per-element strategy with BOTH
-        // halves even when its position shifted.
-        const structuralOld = mapping.structuralOldForChar(ch);
-
-        if (structuralOld !== undefined) {
-          handleReplacePair({
-            generatePairId,
-            newBlock,
-            oldBlock: structuralOld,
-            options,
-            out,
-            pushPair,
-          });
-        } else {
-          // Byte-equal modulo ignoreProps: emit the NEW side verbatim so any
-          // non-ignored prop changes propagate (mirrors step 0 of the old
-          // per-pair flow).
-          out.push(newBlock);
-        }
+      // Equal modulo ignoreProps. Emit the NEW side verbatim so any
+      // ignored-prop changes (ids etc.) propagate. `val.length` counts how
+      // many nodes this equal chunk represents in the StringCharMapping
+      // encoding (1 BMP char per node).
+      for (const _ of val) {
+        out.push(newBlocks[ni]);
         oi++;
         ni++;
       }
