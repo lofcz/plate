@@ -1983,6 +1983,94 @@ describe('computeDiff (block granularity)', () => {
     expect(phase.children[1].pairId).toBeUndefined();
   });
 
+  it('end-to-end: renaming an activity marks a granular update, the parent phase is NOT replaced', () => {
+    // Full regression for the reported bug. Committed phase has one
+    // activity; the working copy renames it and changes its duration. The
+    // diff strategy declares name/duration as updateProps, so:
+    //   - the phase wrapper stays ONE unchanged block (no delete+insert),
+    //   - the activity wrapper stays ONE block carrying an update mark,
+    //   - no delete/insert ops appear anywhere in the tree.
+    const oldDoc = [
+      {
+        type: 'phase',
+        phaseType: 'main',
+        children: [
+          {
+            type: 'activity',
+            duration: '10',
+            name: 'Old name',
+            children: [{ type: 'p', children: [{ text: 'body' }] }],
+          },
+        ],
+      },
+    ];
+    const newDoc = [
+      {
+        type: 'phase',
+        phaseType: 'main',
+        children: [
+          {
+            type: 'activity',
+            duration: '20',
+            name: 'New name',
+            children: [{ type: 'p', children: [{ text: 'body' }] }],
+          },
+        ],
+      },
+    ];
+
+    let captured: any = null;
+    const result = computeDiff(oldDoc, newDoc, {
+      ...blockOptions(),
+      getDiffStrategy: (node) => {
+        if (node.type === 'phase') {
+          return { kind: 'container', identityProps: ['phaseType'] };
+        }
+        if (node.type === 'activity') {
+          return { kind: 'container', updateProps: ['name', 'duration'] };
+        }
+        return;
+      },
+      getUpdateProps: (_node, properties, newProperties) => {
+        captured = { newProperties, properties };
+        return {
+          diff: true,
+          diffOperation: { newProperties, properties, type: 'update' as const },
+        };
+      },
+    });
+
+    // ONE top-level phase (unchanged wrapper).
+    expect(result).toHaveLength(1);
+    const phase = result[0] as any;
+    expect(phase.type).toBe('phase');
+    expect(phase.diffOperation).toBeUndefined();
+
+    // Its single activity carries the update mark with the new props, and
+    // is NOT a delete/insert pair.
+    expect(phase.children).toHaveLength(1);
+    const activity = phase.children[0];
+    expect(activity.diffOperation?.type).toBe('update');
+    expect(activity.name).toBe('New name');
+    expect(activity.duration).toBe('20');
+    expect(captured).toEqual({
+      newProperties: { duration: '20', name: 'New name' },
+      properties: { duration: '10', name: 'Old name' },
+    });
+
+    // No delete/insert ops anywhere.
+    const ops: string[] = [];
+    const walk = (nodes: any[]) => {
+      for (const n of nodes) {
+        if (n.diffOperation?.type) ops.push(n.diffOperation.type);
+        if (Array.isArray(n.children)) walk(n.children);
+      }
+    };
+    walk(result as any[]);
+    expect(ops).not.toContain('delete');
+    expect(ops).not.toContain('insert');
+  });
+
   it('still falls back to whole-block when the wrapper itself changes (attribute edit)', () => {
     // `<phase name="A">` vs `<phase name="B">`. The wrapper own-prop
     // changed, so structural recursion must NOT swallow it. Whole-block

@@ -137,6 +137,92 @@ describe('rejectSuggestion', () => {
     expect(editor.children).toEqual(output.children);
   });
 
+  it('reject block-element update suggestion restores old props, clears flag', () => {
+    // Regression for the diff engine's element-level update path (renaming
+    // an MDX `<activity>`): the block element carries the NEW prop values
+    // plus an `update` suggestion holding both sides. Reject must restore
+    // the OLD props and strip the suggestion metadata.
+    const updateData = {
+      id: '1',
+      createdAt: Date.now(),
+      newProperties: { duration: '20', name: 'New name' },
+      properties: { duration: '10', name: 'Old name' },
+      type: 'update',
+      userId: 'testId',
+    };
+
+    const input = {
+      children: [
+        {
+          type: 'activity',
+          name: 'New name',
+          duration: '20',
+          suggestion: updateData,
+          suggestionTransient: true,
+          children: [{ type: 'p', children: [{ text: 'body' }] }],
+        },
+      ],
+    };
+
+    const editor = createSlateEditor({
+      plugins: [suggestionPlugin],
+      value: input.children as any,
+    });
+
+    rejectSuggestion(editor, {
+      keyId: 'suggestion_1',
+      suggestionId: '1',
+    } as any);
+
+    const activity = editor.children[0] as any;
+    expect(activity.name).toBe('Old name');
+    expect(activity.duration).toBe('10');
+    expect(activity.suggestion).toBeUndefined();
+    expect(activity.suggestionTransient).toBeUndefined();
+    expect(activity.children[0].children[0].text).toBe('body');
+  });
+
+  it('reject block-element update suggestion unsets newly-added props', () => {
+    // A prop that did NOT exist before the update (absent from
+    // `properties`) must be REMOVED on reject, not set to undefined-as-a-
+    // value. Here `duration` is brand new.
+    const updateData = {
+      id: '1',
+      createdAt: Date.now(),
+      newProperties: { duration: '20', name: 'New name' },
+      properties: { name: 'Old name' },
+      type: 'update',
+      userId: 'testId',
+    };
+
+    const input = {
+      children: [
+        {
+          type: 'activity',
+          name: 'New name',
+          duration: '20',
+          suggestion: updateData,
+          children: [{ type: 'p', children: [{ text: 'body' }] }],
+        },
+      ],
+    };
+
+    const editor = createSlateEditor({
+      plugins: [suggestionPlugin],
+      value: input.children as any,
+    });
+
+    rejectSuggestion(editor, {
+      keyId: 'suggestion_1',
+      suggestionId: '1',
+    } as any);
+
+    const activity = editor.children[0] as any;
+    expect(activity.name).toBe('Old name');
+    expect('duration' in activity).toBe(false);
+    expect(activity.suggestion).toBeUndefined();
+  });
+
   it('restores falsy removed properties from update suggestions', () => {
     const updateData = {
       createdAt: Date.now(),

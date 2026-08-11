@@ -104,7 +104,10 @@ export function pairBlocksWithWordHints(
   // INSIDE the chunk (where position pairing IS correct because DMP has
   // already aligned the unchanged neighbours away); lone delete/insert
   // chunks emit as pure overflow.
-  const mapping = new StringCharMapping({ ignoreProps: options.ignoreProps });
+  const mapping = new StringCharMapping({
+    getStructuralKey: options.getStructuralKey,
+    ignoreProps: options.ignoreProps,
+  });
   const oldStr = mapping.nodesToString(oldBlocks);
   const newStr = mapping.nodesToString(newBlocks);
   const rawDiff = dmp.diff_main(oldStr, newStr);
@@ -124,13 +127,38 @@ export function pairBlocksWithWordHints(
     const [op, val] = rawDiff[chunkIdx] as [number, string];
 
     if (op === 0) {
-      // Equal modulo ignoreProps. Emit the NEW side verbatim so any
-      // non-ignored prop changes propagate (mirrors step 0 of the old
-      // per-pair flow). `val.length` counts how many nodes this equal
-      // chunk represents in the StringCharMapping encoding (1 BMP char
-      // per node — codes well below the surrogate range).
-      for (const _ of val) {
-        out.push(newBlocks[ni]);
+      // Equal modulo ignoreProps — OR a structural-identity pair (same
+      // char because two blocks share a structural key). `val.length`
+      // counts how many nodes this equal chunk represents in the
+      // StringCharMapping encoding (1 BMP char per node — codes well below
+      // the surrogate range).
+      for (const ch of val) {
+        const newBlock = newBlocks[ni];
+
+        // Recover the doc0 half of a structural pairing. When the char map
+        // kept a byte-UNEQUAL (old, new) pair on the same char, it records
+        // the doc0 node in `structuralOldForChar`; the new side is the
+        // current `newBlock` by position. This does NOT rely on oi/ni
+        // index alignment (which can drift across an equal chunk), so a
+        // renamed block still reaches the per-element strategy with BOTH
+        // halves even when its position shifted.
+        const structuralOld = mapping.structuralOldForChar(ch);
+
+        if (structuralOld !== undefined) {
+          handleReplacePair({
+            generatePairId,
+            newBlock,
+            oldBlock: structuralOld,
+            options,
+            out,
+            pushPair,
+          });
+        } else {
+          // Byte-equal modulo ignoreProps: emit the NEW side verbatim so any
+          // non-ignored prop changes propagate (mirrors step 0 of the old
+          // per-pair flow).
+          out.push(newBlock);
+        }
         oi++;
         ni++;
       }
@@ -257,27 +285,61 @@ function handleReplacePair(params: {
       if (
         ElementApi.isElement(oldBlock) &&
         ElementApi.isElement(newBlock) &&
-        (oldBlock as TElement).type === (newBlock as TElement).type &&
-        containerIdentityMatches(
+        (oldBlock as TElement).type === (newBlock as TElement).type
+      ) {
+        const identityMatch = containerIdentityMatches(
           oldBlock as TElement,
           newBlock as TElement,
           sharedStrategy,
           options
-        )
-      ) {
-        const recursed = pairBlocksWithWordHints(
-          (oldBlock as TElement).children,
-          (newBlock as TElement).children,
-          options
         );
-        out.push({
-          ...(newBlock as TElement),
-          children: recursed,
-        } as Descendant);
-        return;
+
+        // Updatable-prop relaxation: when identity technically mismatched
+        // but ONLY because of props the strategy declared updatable, treat
+        // it as the same wrapper. Mark the wrapper with a granular
+        // `suggestionUpdate` (via `getUpdateProps`) listing just those
+        // changed props, and recurse into children as usual. The parent
+        // container then recurses normally instead of cascading the whole
+        // subtree into delete+insert.
+        const updateDiff = identityMatch
+          ? null
+          : computeUpdatablePropDiff(
+              oldBlock as TElement,
+              newBlock as TElement,
+              sharedStrategy,
+              options
+            );
+
+        if (identityMatch || updateDiff) {
+          const recursed = pairBlocksWithWordHints(
+            (oldBlock as TElement).children,
+            (newBlock as TElement).children,
+            options
+          );
+          const wrapper = {
+            ...(newBlock as TElement),
+            children: recursed,
+          } as Descendant;
+
+          if (updateDiff && Object.keys(updateDiff.newProperties).length > 0) {
+            out.push(
+              attachProps(
+                wrapper,
+                options.getUpdateProps(
+                  newBlock,
+                  updateDiff.properties,
+                  updateDiff.newProperties
+                )
+              )
+            );
+          } else {
+            out.push(wrapper);
+          }
+          return;
+        }
       }
-      // Container identity changed — strategy says these are NOT the
-      // same wrapper. Whole-block.
+      // Container identity changed in a non-updatable prop — strategy says
+      // these are NOT the same wrapper. Whole-block.
       const pairId = generatePairId();
       pushPair(
         attachProps(oldBlock, options.getDeleteProps(oldBlock, { pairId })),
@@ -385,11 +447,24 @@ const pickPairStrategy = (
     const oldProps = oldStrategy.identityProps;
     const newProps = (newStrategy as { identityProps?: string[] })
       .identityProps;
+    // Carry updateProps through regardless of the identityProps merge —
+    // they're what lets a prop-only change stay a granular update instead
+    // of a whole-block replace. Dropping them here silently disabled the
+    // updatable-prop relaxation whenever a container omitted identityProps.
+    const oldUpdate = oldStrategy.updateProps ?? [];
+    const newUpdate =
+      (newStrategy as { updateProps?: string[] }).updateProps ?? [];
+    const mergedUpdate = Array.from(new Set([...oldUpdate, ...newUpdate]));
+
     if (!oldProps || !newProps) {
-      return { kind: 'container' };
+      return mergedUpdate.length > 0
+        ? { kind: 'container', updateProps: mergedUpdate }
+        : { kind: 'container' };
     }
     const merged = Array.from(new Set([...oldProps, ...newProps]));
-    return { kind: 'container', identityProps: merged };
+    return mergedUpdate.length > 0
+      ? { kind: 'container', identityProps: merged, updateProps: mergedUpdate }
+      : { kind: 'container', identityProps: merged };
   }
   return newStrategy;
 };
@@ -426,6 +501,61 @@ const containerIdentityMatches = (
     ignoreShallow: ['children'],
     ignoreDeep: options.ignoreProps,
   });
+};
+
+/**
+ * When a container's declared `identityProps` DON'T all match, decide
+ * whether the difference is confined to props the strategy declared
+ * `updateProps` (allowed to change without breaking identity). If so,
+ * return the old/new property subsets for a granular update mark;
+ * otherwise return `null` (the wrapper is genuinely a different block).
+ *
+ * Both `identityProps` and `updateProps` are compared. Any differing key
+ * must live in `updateProps`; identity props must still match (if any of
+ * those differ, the wrapper is different). Props not mentioned in either
+ * list are ignored for identity purposes.
+ */
+const computeUpdatablePropDiff = (
+  oldEl: TElement,
+  newEl: TElement,
+  strategy: DiffStrategy & { kind: 'container' },
+  options: ComputeDiffOptions
+): {
+  newProperties: Record<string, unknown>;
+  properties: Record<string, unknown>;
+} | null => {
+  const updateProps = strategy.updateProps;
+  if (!updateProps || updateProps.length === 0) return null;
+
+  const a = oldEl as Record<string, unknown>;
+  const b = newEl as Record<string, unknown>;
+
+  const propsEqual = (av: unknown, bv: unknown): boolean => {
+    if (typeof av === 'object' || typeof bv === 'object') {
+      return isEqual(av, bv, { ignoreDeep: options.ignoreProps });
+    }
+    return av === bv;
+  };
+
+  // Identity props (if declared) must still all match.
+  for (const key of strategy.identityProps ?? []) {
+    if (!propsEqual(a[key], b[key])) return null;
+  }
+
+  // Collect the updatable props that actually changed.
+  const properties: Record<string, unknown> = {};
+  const newProperties: Record<string, unknown> = {};
+  let changed = false;
+  for (const key of updateProps) {
+    if (!propsEqual(a[key], b[key])) {
+      properties[key] = a[key];
+      newProperties[key] = b[key];
+      changed = true;
+    }
+  }
+
+  if (!changed) return null;
+  return { newProperties, properties };
 };
 
 /**

@@ -142,6 +142,51 @@ describe('acceptSuggestion', () => {
     expect(editor.children).toEqual(output.children);
   });
 
+  it('accept block-element update suggestion keeps new props, clears flag', () => {
+    // Regression for the diff engine's element-level update path (renaming
+    // an MDX `<activity>`): the block element carries the NEW prop values
+    // plus an `update` suggestion holding both sides. Accept must keep the
+    // new props and only strip the suggestion metadata.
+    const updateData = {
+      id: '1',
+      createdAt: Date.now(),
+      newProperties: { duration: '20', name: 'New name' },
+      properties: { duration: '10', name: 'Old name' },
+      type: 'update',
+      userId: 'testId',
+    };
+
+    const input = {
+      children: [
+        {
+          type: 'activity',
+          name: 'New name',
+          duration: '20',
+          suggestion: updateData,
+          suggestionTransient: true,
+          children: [{ type: 'p', children: [{ text: 'body' }] }],
+        },
+      ],
+    };
+
+    const editor = createSlateEditor({
+      plugins: [suggestionPlugin],
+      value: input.children as any,
+    });
+
+    acceptSuggestion(editor, {
+      keyId: 'suggestion_1',
+      suggestionId: '1',
+    } as any);
+
+    const activity = editor.children[0] as any;
+    expect(activity.name).toBe('New name');
+    expect(activity.duration).toBe('20');
+    expect(activity.suggestion).toBeUndefined();
+    expect(activity.suggestionTransient).toBeUndefined();
+    expect(activity.children[0].children[0].text).toBe('body');
+  });
+
   it('accept line break suggestion', () => {
     const lineBreakData = {
       id: '1',

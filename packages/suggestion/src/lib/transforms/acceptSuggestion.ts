@@ -13,6 +13,9 @@ import type { TResolvedSuggestion } from '../types';
 import { BaseSuggestionPlugin } from '../BaseSuggestionPlugin';
 import { getInlineSuggestionData, getTransientSuggestionKey } from '../utils';
 
+// NOTE: element-level update accept keeps the new prop values (already on the
+// element) and only strips the suggestion flag; reject restores the old values.
+
 export const acceptSuggestion = (
   editor: SlateEditor,
   description: TResolvedSuggestion
@@ -142,6 +145,33 @@ export const acceptSuggestion = (
 
         return false;
       },
+    });
+
+    // Block-element UPDATE suggestions (e.g. an MDX `<activity>` whose
+    // `name`/`duration` changed): the element already carries the NEW prop
+    // values inline. Accepting just clears the suggestion flag — the update
+    // is kept. The block-suggestion match above only handles insert/remove
+    // (it returns false for `type === 'update'`), so we handle the update
+    // case explicitly here.
+    const updateBlockPaths = [
+      ...editor.api.nodes({
+        at: [],
+        match: (n) => {
+          if (!ElementApi.isElement(n)) return false;
+          if (editor.api.isInline(n)) return false;
+          if (
+            !editor.getApi(BaseSuggestionPlugin).suggestion.isBlockSuggestion(n)
+          )
+            return false;
+          const data = (n as TSuggestionElement).suggestion;
+          return data.type === 'update' && data.id === description.suggestionId;
+        },
+      }),
+    ];
+    updateBlockPaths.forEach(([, path]) => {
+      editor.tf.unsetNodes([KEYS.suggestion, getTransientSuggestionKey()], {
+        at: path,
+      });
     });
   });
 };

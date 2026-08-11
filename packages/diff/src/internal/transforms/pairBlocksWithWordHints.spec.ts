@@ -1038,6 +1038,82 @@ describe('pairBlocksWithWordHints', () => {
       expect(activity.children[1].tag).toBe('insert');
     });
 
+    it('CONTAINER with updateProps: prop-only change marks a granular update, wrapper is NOT replaced', () => {
+      // Regression for "rename an activity → whole phase struck through".
+      // The activity's `name`/`duration` are declared updatable, so the
+      // wrapper stays the SAME block: no delete/insert tags anywhere, just
+      // a single update mark carrying the changed props.
+      const oldDoc = [
+        container('activity', { name: 'A1', duration: '10' }, [p('body')]),
+      ];
+      const newDoc = [
+        container('activity', { name: 'A2', duration: '20' }, [p('body')]),
+      ];
+
+      let captured: any = null;
+      const flat = pairBlocksWithWordHints(
+        oldDoc,
+        newDoc,
+        makeOptions({
+          getDiffStrategy: (node) =>
+            node.type === 'activity'
+              ? { kind: 'container', updateProps: ['name', 'duration'] }
+              : undefined,
+          getUpdateProps: (_node, properties, newProperties) => {
+            captured = { newProperties, properties };
+            return { tag: 'update' as const };
+          },
+        })
+      );
+
+      // One unchanged wrapper (update-marked), no delete/insert pair.
+      expect(flat).toHaveLength(1);
+      const activity = flat[0] as any;
+      expect(activity.tag).toBe('update');
+      // New prop values win on the wrapper.
+      expect(activity.name).toBe('A2');
+      expect(activity.duration).toBe('20');
+      // The update mark carries exactly the changed props.
+      expect(captured).toEqual({
+        newProperties: { duration: '20', name: 'A2' },
+        properties: { duration: '10', name: 'A1' },
+      });
+      // Children recursed and stayed clean (body unchanged).
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(0);
+      expect(insertedBlocks).toHaveLength(0);
+    });
+
+    it('CONTAINER with updateProps + identityProps: identity mismatch still forces whole-block', () => {
+      // `phaseType` is identity, `name`/`duration` updatable. Changing the
+      // phaseType must still produce a real whole-block replacement.
+      const oldDoc = [
+        container('phase', { name: 'A', phaseType: 'evoke' }, [p('x')]),
+      ];
+      const newDoc = [
+        container('phase', { name: 'A', phaseType: 'reflect' }, [p('x')]),
+      ];
+
+      const flat = pairBlocksWithWordHints(
+        oldDoc,
+        newDoc,
+        makeOptions({
+          getDiffStrategy: (node) =>
+            node.type === 'phase'
+              ? {
+                  kind: 'container',
+                  identityProps: ['phaseType'],
+                  updateProps: ['name'],
+                }
+              : undefined,
+        })
+      );
+
+      const { deletedBlocks, insertedBlocks } = splitByTag(flat);
+      expect(deletedBlocks).toHaveLength(1);
+      expect(insertedBlocks).toHaveLength(1);
+    });
+
     it('CONTAINER without identityProps: defaults to comparing all own props', () => {
       // No identityProps means "every own property must match". The two
       // wrappers DO match (same name, no other props except children),

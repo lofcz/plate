@@ -13,12 +13,14 @@ export const getSuggestionProps = (
     createdAt = Date.now(),
     suggestionDeletion,
     suggestionUpdate,
+    suggestionUpdateProperties,
     transient,
   }: {
     id?: string;
     createdAt?: number;
     suggestionDeletion?: boolean;
     suggestionUpdate?: any;
+    suggestionUpdateProperties?: any;
     transient?: boolean;
   } = {}
 ) => {
@@ -38,6 +40,19 @@ export const getSuggestionProps = (
   };
 
   if (isElement) {
+    // Block-element update (e.g. an MDX container whose updatable props
+    // changed): carry both sides of the diff so accept keeps the new values
+    // and reject can restore the old ones. Mirrors the inline
+    // `properties`/`newProperties` convention used by `addMarkSuggestion`.
+    if (suggestionUpdate !== undefined) {
+      return {
+        [KEYS.suggestion]: {
+          ...suggestionData,
+          newProperties: suggestionUpdate,
+          properties: suggestionUpdateProperties,
+        },
+      };
+    }
     return {
       [KEYS.suggestion]: suggestionData,
     };

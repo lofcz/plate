@@ -25,9 +25,10 @@ export function diffToSuggestions<E extends SlateEditor>(
       }),
     getInsertProps = (node, ctx) =>
       getSuggestionProps(editor, node, { id: ctx?.pairId }),
-    getUpdateProps = (node, _properties, newProperties) =>
+    getUpdateProps = (node, properties, newProperties) =>
       getSuggestionProps(editor, node, {
         suggestionUpdate: newProperties,
+        suggestionUpdateProperties: properties,
       }),
     isInline = editor.api.isInline,
     // Use nanoid so the pair id is in the same format the suggestion plugin
