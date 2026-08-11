@@ -1,5 +1,11 @@
 # @platejs/suggestion
 
+## 53.4.2
+
+### Patch Changes
+
+- cc07e34: Allow block-level `update` suggestions in `TSuggestionData` (prop-only container changes). Fixes the suggestion package typecheck that blocked the 53.4.1 release.
+
 ## 53.4.0
 
 ### Minor Changes
