@@ -224,9 +224,17 @@ export interface TCommentText extends TText {
 export type TSuggestionData = {
   id: string;
   createdAt: number;
-  type: 'insert' | 'remove';
+  /**
+   * Block-level suggestion kind. `update` is used for prop-only changes on
+   * containers (e.g. MDX `<activity name>` / `duration`) — the element already
+   * carries the new values inline, with the old values stashed in
+   * `properties` so reject can restore them.
+   */
+  type: 'insert' | 'remove' | 'update';
   userId: string;
   isLineBreak?: boolean;
+  newProperties?: any;
+  properties?: any;
 };
 
 export type TSuggestionText = TText & {

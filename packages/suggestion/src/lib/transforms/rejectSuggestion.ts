@@ -227,10 +227,7 @@ export const rejectSuggestion = (
       }),
     ];
     updateBlockNodes.forEach(([node, path]) => {
-      const data = (node as TSuggestionElement).suggestion as unknown as {
-        newProperties?: Record<string, unknown>;
-        properties?: Record<string, unknown>;
-      };
+      const data = (node as TSuggestionElement).suggestion;
 
       // Restore the OLD values. Props that were newly added (absent in the
       // old `properties`) must be unset; props that existed get their old
