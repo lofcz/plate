@@ -12,14 +12,14 @@ for (const f of readdirSync(dir)) {
   let content = original;
 
   content = content.replace(
-    /'@platejs\/([^']+)'/g,
-    (_, name) => `'@lofcz/platejs-${name}'`,
+    /(['"])@platejs\/([^'"]+)\1/g,
+    (_, q, name) => `${q}@lofcz/platejs-${name}${q}`,
   );
   content = content.replace(
-    /'@udecode\/([^']+)'/g,
-    (_, name) => `'@lofcz/udecode-${name}'`,
+    /(['"])@udecode\/([^'"]+)\1/g,
+    (_, q, name) => `${q}@lofcz/udecode-${name}${q}`,
   );
-  content = content.replace(/'platejs'/g, "'@lofcz/platejs'");
+  content = content.replace(/(['"])platejs\1/g, (_, q) => `${q}@lofcz/platejs${q}`);
 
   if (content !== original) {
     writeFileSync(filePath, content);

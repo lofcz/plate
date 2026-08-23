@@ -1,7 +1,7 @@
 [
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/d142cfb5b9358d97b3ec67448e7e00be41f067a4/packages/plate/CHANGELOG.md",
-    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.3...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.3...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
+    "content": "`@platejs/core`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n`@platejs/slate`\n\n### Breaking Changes\n\n- Prepare v54 beta prerelease versioning for Slate. ([#5031](https://github.com/udecode/plate/pull/5031))\n\n[`v53.3.7...v54.0.0-beta.0`](https://github.com/udecode/plate/compare/v53.3.7...v54.0.0-beta.0) · By [@felixfeng33](https://github.com/felixfeng33)",
     "contributors": [
       {
         "url": "https://github.com/felixfeng33",
@@ -15,6 +15,78 @@
     "type": "major",
     "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5033",
     "url": "https://github.com/udecode/plate/releases/tag/v54.0.0-beta.0"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/af7b73f9fa46548f65ee337a46e7a99039cf4914/packages/plate/CHANGELOG.md",
+    "content": "`@platejs/core`\n\n### Bug Fixes\n\n- Fix multiline plain-text pastes crashing when `maxLength` truncates across blocks ([#5101](https://github.com/udecode/plate/pull/5101))\n\n`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/utils`.\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`.\n\n[`v53.3.6...v53.3.7`](https://github.com/udecode/plate/compare/v53.3.6...v53.3.7) · By [@zbeyens](https://github.com/zbeyens)",
+    "contributors": [
+      {
+        "url": "https://github.com/zbeyens",
+        "username": "@zbeyens"
+      }
+    ],
+    "date": "2026-08-20",
+    "packageTag": "platejs@53.3.7",
+    "tag": "v53.3.7",
+    "title": "v53.3.7",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5104",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.7"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/eaea1388e5daa20e9736019a34dacea430ddf84d/packages/plate/CHANGELOG.md",
+    "content": "`@platejs/core`\n\n### Bug Fixes\n\n- Fix `editor.api.html.deserialize` returning unwrapped text nodes at the root for inline-only HTML ([#5098](https://github.com/udecode/plate/pull/5098))\n\n`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/utils`.\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`.\n\n[`v53.3.5...v53.3.6`](https://github.com/udecode/plate/compare/v53.3.5...v53.3.6) · By [@NoiceHax](https://github.com/NoiceHax)",
+    "contributors": [
+      {
+        "url": "https://github.com/NoiceHax",
+        "username": "@NoiceHax"
+      }
+    ],
+    "date": "2026-08-15",
+    "packageTag": "platejs@53.3.6",
+    "tag": "v53.3.6",
+    "title": "v53.3.6",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5099",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.6"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/7d622cb3f6684b2535444a86d9d7a6c6ba215981/packages/plate/CHANGELOG.md",
+    "content": "`@platejs/link`\n\n### Bug Fixes\n\n- Fix pasted plain text starting with `#` or `/` (e.g. `#!/bin/sh`) being autolinked ([#5096](https://github.com/udecode/plate/pull/5096))\n\n`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`, `@platejs/utils`.\n\n`@platejs/slate`\n\n### Bug Fixes\n\n- Updated `slate`. ([`a102cd5`](https://github.com/udecode/plate/commit/a102cd5cd9d6488f5d0f3670cce40adb151893e6))\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`.\n\n[`v53.3.4...v53.3.5`](https://github.com/udecode/plate/compare/v53.3.4...v53.3.5) · By [@NoiceHax](https://github.com/NoiceHax), [@github-actions[bot]](https://github.com/github-actions%5Bbot%5D)",
+    "contributors": [
+      {
+        "url": "https://github.com/NoiceHax",
+        "username": "@NoiceHax"
+      },
+      {
+        "url": "https://github.com/github-actions%5Bbot%5D",
+        "username": "@github-actions[bot]"
+      }
+    ],
+    "date": "2026-08-15",
+    "packageTag": "platejs@53.3.5",
+    "tag": "v53.3.5",
+    "title": "v53.3.5",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5097",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.5"
+  },
+  {
+    "changelogUrl": "https://github.com/udecode/plate/blob/00ac8e7a3395c19268b99641265168a7584585d2/packages/plate/CHANGELOG.md",
+    "content": "`platejs`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`, `@platejs/utils`.\n\n`@platejs/slate`\n\n### Bug Fixes\n\n- Updated `slate`. ([`91f4c0c`](https://github.com/udecode/plate/commit/91f4c0c2af4c2f7e9724d242d2828b3bc0c82246))\n\n`@platejs/utils`\n\n### Bug Fixes\n\n- Updated `@platejs/core`, `@platejs/slate`.\n\n[`v53.3.3...v53.3.4`](https://github.com/udecode/plate/compare/v53.3.3...v53.3.4) · By [@github-actions[bot]](https://github.com/github-actions%5Bbot%5D)",
+    "contributors": [
+      {
+        "url": "https://github.com/github-actions%5Bbot%5D",
+        "username": "@github-actions[bot]"
+      }
+    ],
+    "date": "2026-08-14",
+    "packageTag": "platejs@53.3.4",
+    "tag": "v53.3.4",
+    "title": "v53.3.4",
+    "type": "patch",
+    "versionPackagePrUrl": "https://github.com/udecode/plate/pull/5095",
+    "url": "https://github.com/udecode/plate/releases/tag/v53.3.4"
   },
   {
     "changelogUrl": "https://github.com/udecode/plate/blob/357c964f6b34faefd2588030c6fdee435a1dbe84/packages/plate/CHANGELOG.md",

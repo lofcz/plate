@@ -45,8 +45,6 @@ Run `sync_upstream.bat` (or `powershell scripts/sync-upstream.ps1`). It:
 3. Converts upstream changesets (`@platejs/*` names) to `@lofcz/*` names so they publish correctly
 4. Runs `pnpm install`
 
-
-
 ## Making changes
 
 1. Edit code in `packages/`.
