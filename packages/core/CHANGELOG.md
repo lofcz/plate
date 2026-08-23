@@ -1,5 +1,12 @@
 # @platejs/core
 
+## 53.4.3
+
+### Patch Changes
+
+- 31f4d90: Fix multiline plain-text pastes crashing when `maxLength` truncates across blocks
+- 33a1f12: Fix `editor.api.html.deserialize` returning unwrapped text nodes at the root for inline-only HTML
+
 ## 53.3.4
 
 ### Patch Changes
