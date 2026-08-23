@@ -1,5 +1,11 @@
 # @platejs/link
 
+## 53.4.3
+
+### Patch Changes
+
+- 79dc385: Fix pasted plain text starting with `#` or `/` (e.g. `#!/bin/sh`) being autolinked
+
 ## 53.3.1
 
 ### Patch Changes
