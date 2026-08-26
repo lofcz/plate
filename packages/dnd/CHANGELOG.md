@@ -1,5 +1,11 @@
 # @platejs/dnd
 
+## 53.4.5
+
+### Patch Changes
+
+- Sync upstream: clone shared `usePlateEditor` initial values so multiple editors don't crash, and restore editor-to-editor drag-and-drop paths.
+
 ## 53.3.8
 
 ### Patch Changes
