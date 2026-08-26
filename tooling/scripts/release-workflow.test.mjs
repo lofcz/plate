@@ -62,7 +62,7 @@ test('package scripts expose CI version and release commands only', async () => 
 
   assert.equal(
     packageJson.scripts['ci:version'],
-    'pnpm changeset version && pnpm install --no-frozen-lockfile'
+    'node tooling/scripts/prepare-release-changesets.mjs && pnpm changeset version && pnpm install --no-frozen-lockfile'
   );
   assert.equal(packageJson.scripts['ci:release'], 'pnpm release');
   assert.equal(packageJson.scripts['release:releases'], undefined);
