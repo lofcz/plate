@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 53.4.4
+
+### Patch Changes
+
+- e644d2f: Do not force-void HTML void names that are used as paired MDX components (`<source>…</source>`). The previous rewrite left a stray closing tag, remark-mdx threw, and deserializeMd dumped the whole document as raw paragraphs.
+
 ## 53.3.5
 
 ### Patch Changes
