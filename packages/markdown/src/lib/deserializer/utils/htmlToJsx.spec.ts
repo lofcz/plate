@@ -122,4 +122,39 @@ describe('htmlToJsx', () => {
     expect(result).toContain('className="container"');
     expect(result).toContain('id="main"');
   });
+
+  it('void-closes unpaired HTML source tags', () => {
+    const input = '<video><source src="clip.mp4" type="video/mp4"></video>';
+    const result = htmlToJsx(input);
+    expect(result).toContain('<source src="clip.mp4" type="video/mp4" />');
+    expect(result).not.toContain('</source>');
+  });
+
+  it('does not void-close a paired source MDX component', () => {
+    const input = `<source title="Excerpt" type="generated">
+Quoted text.
+</source>`;
+    const result = htmlToJsx(input);
+    expect(result).toContain(
+      '<source title="Excerpt" type="generated">\nQuoted text.\n</source>'
+    );
+    expect(result).not.toContain('<source title="Excerpt" type="generated" />');
+  });
+
+  it('void-closes an HTML source sitting before a paired source component', () => {
+    const input = `<source src="clip.mp4">
+<source title="Excerpt" type="generated">
+Quoted text.
+</source>`;
+    const result = htmlToJsx(input);
+    expect(result).toContain('<source src="clip.mp4" />');
+    expect(result).toContain(
+      '<source title="Excerpt" type="generated">\nQuoted text.\n</source>'
+    );
+  });
+
+  it('leaves already self-closing source chips alone', () => {
+    const input = '<source title="Chip" url="https://example.com" />';
+    expect(htmlToJsx(input)).toBe(input);
+  });
 });

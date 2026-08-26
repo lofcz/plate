@@ -270,4 +270,28 @@ describe('markdownToSlateNodes', () => {
       },
     ]);
   });
+
+  it('does not dump the document when a paired <source> MDX excerpt is present', () => {
+    const editor = createTestEditor();
+    const onError = mock();
+
+    const nodes = deserializeMd(
+      editor,
+      `Hello\n\n<source title="Excerpt" type="generated">\nQuoted text.\n</source>\n\n**World**`,
+      { onError: onError as any }
+    );
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(nodes[0]).toMatchObject({
+      children: [{ text: 'Hello' }],
+      type: 'p',
+    });
+    expect(
+      nodes.some(
+        (node) =>
+          Array.isArray((node as any).children) &&
+          (node as any).children.some((child: any) => child.bold)
+      )
+    ).toBe(true);
+  });
 });
