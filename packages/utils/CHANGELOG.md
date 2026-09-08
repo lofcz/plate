@@ -1,5 +1,11 @@
 # @platejs/utils
 
+## 53.4.9
+
+### Patch Changes
+
+- b0ac752: Pin `@platejs/core` so installs no longer pull a nested public `jotai-x`
+
 ## 53.4.2
 
 ### Patch Changes
