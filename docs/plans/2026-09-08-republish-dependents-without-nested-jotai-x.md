@@ -165,8 +165,8 @@ Work Checklist:
       not aggregate evidence for another PR.
 - [x] If a PR exists, its body has exactly one
       `🧭 Task plan: docs/plans/<plan>.md` line, this file exists at the exact PR
-      head, and this plan records that exact PR number or URL. Pending until PR
-      exists; updated in the follow-up commit after `gh pr create`.
+      head, and this plan records that exact PR number or URL.
+      https://github.com/lofcz/plate/pull/38
 - [x] Local-env-rot retry policy recorded for any surprising repo-wide failure:
       N/A: no install-corruption failure.
 - [x] Workspace authority recorded: every proof command names the cwd/tool that
@@ -218,8 +218,8 @@ Completion Gates:
 | Local install corruption suspected | no | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | N/A |
 | Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Pending until after commit |
 | PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Focused tests + lint; full `pnpm check` is repo-wide and disproportionate for this release-script slice |
-| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Updated after `gh pr create` |
-| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body` | Updated after PR exists |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | https://github.com/lofcz/plate/pull/38 |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body` | kitcn body + auto-release + one task-plan line |
 | PR proof image hosting | no | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | N/A |
 | Tracker sync-back | no | Post concise issue/Linear sync after PR exists, or record N/A/blocker | N/A: no issue |
 | Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Filled; PR URL after create |
@@ -241,7 +241,7 @@ Phase / pass table:
 | Intake and source read | done | npm nest + alias-blind script | implementation |
 | Implementation | done | alias resolve, tests, three changesets, jotai-x public | verification |
 | Verification | in_progress | unit tests 7/7 | PR / tracker sync |
-| PR / tracker sync | pending | | closeout |
+| PR / tracker sync | done | https://github.com/lofcz/plate/pull/38 | closeout |
 | Closeout | pending | | final response |
 
 Findings:
@@ -271,7 +271,7 @@ Verification evidence:
 - `pnpm lint:fix` in the same cwd: biome checked 3337 files, no fixes.
 
 Final handoff contract:
-- PR line: pending until `gh pr create`
+- PR line: https://github.com/lofcz/plate/pull/38
 - Issue / tracker line: N/A
 - Confidence line: 🟢 95-100% confidence
 - Flow table:
@@ -285,7 +285,7 @@ Final handoff contract:
   - Why not quick patch: Sciobot overrides cannot erase nested package.json deps of already-published packages.
   - Why not broader change: no editor API change; do not un-ignore jotai-x into the 53.4 linked set.
 - Verified: unit tests for alias resolve and auto-release; lint clean.
-- PR body verified: pending
+- PR body verified: yes, `gh pr view 38 --repo lofcz/plate --json body`
 
 Task-style PR body contract:
 - Preserve any existing `<!-- auto-release:start -->` block. If a changeset is
@@ -310,8 +310,8 @@ Task-style PR body contract:
   of that output.
 
 Final handoff / sync:
-- PR: pending
-- Task plan at exact PR head: pending
+- PR: https://github.com/lofcz/plate/pull/38
+- Task plan at exact PR head: this file on `codex/republish-dependents-jotai-x`
 - Issue / tracker: N/A
 - Browser proof: N/A
 - Caveats: Sciobot lock refresh is a follow-up after npm publish.
