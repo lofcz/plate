@@ -1,6 +1,13 @@
 # @platejs/code-drawing
 
+## 53.4.9
+
+### Patch Changes
+
+- b0ac752: Pin `@platejs/utils` so nested core no longer installs public `jotai-x`
+
 ## 53.0.0
+
 ## 52.3.6
 
 ### Patch Changes
