@@ -152,11 +152,11 @@ Work Checklist:
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
 |------|---------|-----------------|----------|
-| Named verification threshold | yes | Focused tests + 0 behind upstream | pending |
+| Named verification threshold | yes | Focused tests + 0 behind upstream | list 5, core html 4, markdown 37, math 49; 0 behind |
 | Pre-solution issue challenge verdict | no | N/A | N/A: sync |
 | Repro escalation ladder | no | N/A | N/A |
 | Bug reproduced before fix | no | N/A | N/A |
-| Targeted behavior verification | yes | Focused package tests | pending |
+| Targeted behavior verification | yes | Focused package tests | all named specs passed |
 | TypeScript or typed config changed | yes | Package typecheck if tests need it | pending |
 | Package exports or file layout changed | yes | list file rename | barrel path unchanged |
 | Package manifests, lockfile, or install graph changed | yes | lock auto-merged | pending install if needed |
