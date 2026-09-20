@@ -1890,9 +1890,6 @@ importers:
       prompts:
         specifier: 2.4.2
         version: 2.4.2
-      tinyexec:
-        specifier: 1.2.4
-        version: 1.2.4
       zod:
         specifier: 3.25.61
         version: 3.25.61

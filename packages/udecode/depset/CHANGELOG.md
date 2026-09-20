@@ -1,5 +1,11 @@
 # depset
 
+## 53.4.10
+
+### Patch Changes
+
+- 35d62d7: Preserve dependency names and version constraints in package queries
+
 ## 52.3.6
 
 ### Patch Changes

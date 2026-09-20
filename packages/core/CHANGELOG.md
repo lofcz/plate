@@ -1,5 +1,11 @@
 # @platejs/core
 
+## 53.4.10
+
+### Patch Changes
+
+- 35d62d7: Keep HTML element transforms in their source document during DOCX paste
+
 ## 53.4.8
 
 ### Patch Changes

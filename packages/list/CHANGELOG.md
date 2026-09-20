@@ -1,5 +1,11 @@
 # @platejs/list
 
+## 53.4.10
+
+### Patch Changes
+
+- 35d62d7: Fix the headless list entry requiring React at runtime
+
 ## 53.2.1
 
 ### Patch Changes
