@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 53.4.10
+
+### Patch Changes
+
+- 35d62d7: Preserve link text and destinations when serializing Markdown
+
 ## 53.4.4
 
 ### Patch Changes
