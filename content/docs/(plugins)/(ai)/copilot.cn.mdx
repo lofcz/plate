@@ -60,13 +60,11 @@ Copilot 需要一个服务器端 API 端点来与 AI 模型通信。添加预配
 
 <ComponentSource name="copilot-api" />
 
-### 配置环境
+### 配置凭据
 
-确保您的 AI Gateway 密钥已设置在环境变量中：
+使用自带密钥（BYOK）模式时，在编辑器设置中输入你自己的 AI Gateway 密钥，或通过`completeOptions.body` 的 `apiKey`传入。浏览器将调用者自己的密钥发送到 API 路由，供该请求使用。
 
-```bash title=".env.local"
-AI_GATEWAY_API_KEY="您的-api-密钥"
-```
+使用应用共享凭据时，先验证并授权每个请求，实施每用户用量限制，再在服务器上读取密钥。不要将共享密钥放入客户端代码或请求体。
 
 </Steps>
 
@@ -175,7 +173,7 @@ export async function POST(req: NextRequest) {
     prompt,
   } = await req.json();
 
-  const apiKey = key || process.env.AI_GATEWAY_API_KEY;
+  const apiKey = typeof key === 'string' ? key.trim() : '';
 
   if (!apiKey) {
     return NextResponse.json(
@@ -210,7 +208,7 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-然后，在 `.env.local` 中设置您的 `AI_GATEWAY_API_KEY`。
+通过 `completeOptions.body` 的 `apiKey` 传入请求方的密钥。
 
 ### Instructions
 
@@ -281,15 +279,23 @@ ${prompt}
 
 ```tsx title="app/api/ai/copilot/route.ts"
 import { createGateway, generateText } from 'ai';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const {
+    apiKey: key,
     instructions,
     model = 'openai/gpt-4o-mini',
     prompt,
   } = await req.json();
 
-  const gateway = createGateway({ apiKey: process.env.AI_GATEWAY_API_KEY });
+  const apiKey = typeof key === 'string' ? key.trim() : '';
+
+  if (!apiKey) {
+    return NextResponse.json({ error: 'Missing AI Gateway API key.' }, { status: 401 });
+  }
+
+  const gateway = createGateway({ apiKey });
 
   const result = await generateText({
     instructions,
