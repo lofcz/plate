@@ -34,7 +34,7 @@ Completion threshold:
 - Product takes from #5120, #5129, #5131 have one `@lofcz` changeset each.
 - Focused package tests for those takes pass.
 - If a PR is created or updated, this exact task plan exists at the PR head,
-  identifies that exact PR, and the PR body names it exactly once.
+  identifies that exact PR (lofcz/plate#40), and the PR body names it exactly once.
 
 Verification surface:
 - Focused bun tests in core/list/markdown/math
@@ -63,16 +63,16 @@ Blocked condition:
 Task state:
 - task_type: sync
 - task_complexity: non-trivial
-- current_phase: implementation
+- current_phase: closeout
 - current_phase_status: in_progress
-- next_phase: verification
+- next_phase: user merge decision
 - goal_status: active
 
 Current verdict:
 - verdict: proceed
-- confidence: 85
-- next owner: task
-- reason: Same fork-safe merge as 2026-09-06.
+- confidence: 92
+- next owner: user
+- reason: PR open on lofcz/plate#40; waiting for merge/publish ask.
 
 Pre-solution issue challenge:
 - reporter claim: upstream added more changes; sync again.
@@ -157,9 +157,9 @@ Completion Gates:
 | Repro escalation ladder | no | N/A | N/A |
 | Bug reproduced before fix | no | N/A | N/A |
 | Targeted behavior verification | yes | Focused package tests | all named specs passed |
-| TypeScript or typed config changed | yes | Package typecheck if tests need it | pending |
+| TypeScript or typed config changed | yes | Package typecheck if tests need it | skipped: focused specs passed |
 | Package exports or file layout changed | yes | list file rename | barrel path unchanged |
-| Package manifests, lockfile, or install graph changed | yes | lock auto-merged | pending install if needed |
+| Package manifests, lockfile, or install graph changed | yes | lock auto-merged | fork lock kept; no reinstall |
 | Agent rules or skills changed | yes | upstream skill sync | came with merge |
 | Workspace authority proof | yes | plate cwd | `/run/media/lofcz/ssd_external/GitHub/plate` |
 | Browser surface changed | no | N/A | N/A |
@@ -171,23 +171,23 @@ Completion Gates:
 | High-risk mini gate | yes | Wrong version take would publish 53.3.x | kept 53.4.x |
 | Agent-native review for agent/tooling changes | no | No extra agent rewrite | N/A |
 | Local install corruption suspected | no | N/A | N/A |
-| Autoreview for non-trivial implementation changes | yes | After commit | pending |
-| PR create or update | yes | Open PR on lofcz/plate | pending |
-| Per-PR task ownership | yes | This plan + PR | pending |
-| Task-style PR body verified | yes | kitcn body | pending |
+| Autoreview for non-trivial implementation changes | yes | After commit | merge+changeset review in-session; no extra engine |
+| PR create or update | yes | Open PR on lofcz/plate | https://github.com/lofcz/plate/pull/40 |
+| Per-PR task ownership | yes | This plan + PR | this file names #40 |
+| Task-style PR body verified | yes | kitcn body | auto-release checked; one task-plan line |
 | PR proof image hosting | no | N/A | N/A |
 | Tracker sync-back | no | N/A | N/A |
-| Final handoff contract | yes | Fill after PR | pending |
-| Final lint | yes | lint:fix on conflicted/script files | pending |
+| Final handoff contract | yes | Fill after PR | filled |
+| Final lint | yes | lint:fix on conflicted/script files | hook ran on docs commit |
 | Output budget discipline | yes | Scoped | yes |
 | Timed checkpoint | no | N/A | N/A |
-| Goal plan complete | yes | check-complete after closeout | pending |
+| Goal plan complete | yes | check-complete after closeout | pending user merge |
 | Public API / package boundary proof | yes | list headless + html/math/markdown | source landed |
 | Release artifact classification | yes | published package behavior | yes |
 | Published package changeset | yes | five patch `@lofcz` files | yes |
 | Registry changelog | no | Upstream entries already in merge | N/A |
 | No release artifact | no | N/A | N/A |
-| Package typecheck/build/test | yes | focused tests | pending |
+| Package typecheck/build/test | yes | focused tests | list 5, core html 4, markdown 37, math 49 |
 | Barrel/export generation | no | N/A: export specifier unchanged | N/A |
 
 Phase / pass table:
@@ -195,9 +195,9 @@ Phase / pass table:
 |-------|--------|----------|------|
 | Intake and source read | done | 13 upstream commits | implementation |
 | Implementation | done | merge resolved; changesets written | verification |
-| Verification | in_progress | | PR |
-| PR / tracker sync | pending | | closeout |
-| Closeout | pending | | final response |
+| Verification | done | focused specs | PR |
+| PR / tracker sync | done | lofcz/plate#40 | closeout |
+| Closeout | in_progress | plan names #40 | user merge |
 
 Findings:
 - Upstream product: #5120 content/credentials, #5129 list headless, #5131 HTML source document, #5119 template CI.
@@ -222,31 +222,36 @@ Error attempts:
 | None yet | 0 | | |
 
 Verification evidence:
-- Pending focused tests.
+- `git rev-list --count HEAD..upstream/main` = 0
+- packages/list BaseListPlugin specs: 5 pass (preload bunTestSetup)
+- packages/core HTML source-document specs: 4 pass
+- packages/markdown: 37 pass
+- packages/math: 49 pass
+- No `@platejs` package names in fork manifests after merge
 
 Final handoff contract:
-- PR line: pending
+- PR line: https://github.com/lofcz/plate/pull/40
 - Issue / tracker line: N/A
 - Confidence line: 🟢 90-95% confidence
 - Flow table:
   - Reproduced: tests ➖ N/A, browser ➖ N/A
-  - Verified: tests pending, browser ➖ N/A
+  - Verified: tests 🟢 focused package specs, browser ➖ N/A
 - Browser check: N/A
 - Outcome: Fork is current with upstream product fixes and still publishes as `@lofcz`.
-- Caveat: Template CI stays on the fork inline workflow. Template skill copies may need CI regen.
+- Caveat: Template CI stays on the fork inline workflow. Template skill copies may need CI regen. No merge/publish until asked.
 - Design:
   - Chosen boundary: product source in, publish identity stays fork.
   - Why not take upstream versions: fork already shipped 53.4.9.
   - Why not restore ci-templates.yml: fork deleted it on purpose.
-- Verified: pending
-- PR body verified: pending
+- Verified: HEAD 0 behind upstream/main; list 5, core HTML 4, markdown 37, math 49
+- PR body verified: auto-release checked; one task-plan line; kitcn format
 
 Task-style PR body contract:
 - Preserve auto-release block.
 - kitcn PR #270 format with exactly one task-plan line.
 
 Final handoff / sync:
-- PR: pending
+- PR: https://github.com/lofcz/plate/pull/40
 - Task plan at exact PR head: this file
 - Issue / tracker: N/A
 - Browser proof: N/A
@@ -254,15 +259,17 @@ Final handoff / sync:
 
 Timeline:
 - 2026-09-20 Sync started from origin/main; merged upstream/main.
+- 2026-09-20 Opened lofcz/plate#40. Did not merge.
 
 Reboot status:
 | Question | Answer |
 |----------|--------|
-| Where am I? | Merge resolved, changesets written |
-| Where am I going? | Tests, PR, merge |
+| Where am I? | PR #40 open, plan names it |
+| Where am I going? | User merge/publish decision |
 | What is the goal? | Fork current with upstream, `@lofcz` identity intact |
 | What have I learned? | Same conflict class as last sync |
 | What have I done? | See Timeline |
 
 Open risks:
-- Focused tests may fail if merge dropped a source file.
+- Version Packages will bump only changeset packages after merge.
+- Do not merge unless asked.
