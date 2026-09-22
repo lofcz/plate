@@ -254,6 +254,9 @@ importers:
 
   apps/source-map-playground:
     dependencies:
+      '@platejs/ai':
+        specifier: workspace:@lofcz/platejs-ai@*
+        version: link:../../packages/ai
       '@platejs/basic-nodes':
         specifier: workspace:@lofcz/platejs-basic-nodes@*
         version: link:../../packages/basic-nodes
@@ -1890,6 +1893,9 @@ importers:
       prompts:
         specifier: 2.4.2
         version: 2.4.2
+      tinyexec:
+        specifier: ^1.2.4
+        version: 1.2.4
       zod:
         specifier: 3.25.61
         version: 3.25.61

@@ -11,6 +11,7 @@ import type {
   MarkdownSourceMapSegment,
   SerializeMdSourceMapResult,
 } from './editor';
+import { DirectEditPlayground } from './direct-edit-playground';
 import { DiffPlayground } from './diff-playground';
 import { resolveSelection, type ResolvedSelection } from './resolveSelection';
 import { PRESETS } from './values';
@@ -19,12 +20,14 @@ type MonacoInstance = monacoEditor.IStandaloneCodeEditor;
 const PRESET_KEYS = Object.keys(PRESETS);
 const DEBOUNCE_MS = 150;
 
-type Mode = 'source-map' | 'diff';
+type Mode = 'source-map' | 'diff' | 'direct-edit';
 
 const readMode = (): Mode =>
-  typeof window !== 'undefined' && window.location.hash === '#diff'
-    ? 'diff'
-    : 'source-map';
+  typeof window !== 'undefined' && window.location.hash === '#direct-edit'
+    ? 'direct-edit'
+    : typeof window !== 'undefined' && window.location.hash === '#diff'
+      ? 'diff'
+      : 'source-map';
 
 /**
  * Top-level shell that routes between the two playground modes. We use a
@@ -42,7 +45,8 @@ export function App() {
   }, []);
 
   const navigate = useCallback((next: Mode) => {
-    if (next === 'diff') window.location.hash = '#diff';
+    if (next === 'direct-edit') window.location.hash = '#direct-edit';
+    else if (next === 'diff') window.location.hash = '#diff';
     else window.location.hash = '';
     setMode(next);
   }, []);
@@ -51,7 +55,13 @@ export function App() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <ModeNav mode={mode} onChange={navigate} />
       <div style={{ flex: 1, minHeight: 0 }}>
-        {mode === 'diff' ? <DiffPlayground /> : <SourceMapApp />}
+        {mode === 'direct-edit' ? (
+          <DirectEditPlayground />
+        ) : mode === 'diff' ? (
+          <DiffPlayground />
+        ) : (
+          <SourceMapApp />
+        )}
       </div>
     </div>
   );
@@ -95,6 +105,7 @@ function ModeNav({
     >
       {tab('source-map', 'Source map')}
       {tab('diff', 'Diff')}
+      {tab('direct-edit', 'AI direct editing')}
     </div>
   );
 }
