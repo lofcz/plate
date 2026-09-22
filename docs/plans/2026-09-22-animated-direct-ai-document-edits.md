@@ -387,3 +387,6 @@ Execution decisions:
 
 ## Authorized publication
 - Full `pnpm check`: lint, build, and all 56 package typechecks passed; fast tests retain 109 existing failures in unchanged table tests. Isolated `withDeleteTable` reproduces baseline trailing-paragraph fixture mismatches introduced by existing normalization (060b83b7b93). Focused AI/package and nine browser scenarios pass. User explicitly authorized publication with these baseline failures documented on 2026-09-22.
+
+Exact implementation PR: https://github.com/lofcz/plate/pull/42
+- Dedicated task invocation and this plan own PR #42. Release metadata is managed by the existing release workflow.
