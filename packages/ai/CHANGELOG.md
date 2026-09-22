@@ -1,5 +1,11 @@
 # @platejs/ai
 
+## 53.4.12
+
+### Patch Changes
+
+- 560b043: Bound AI playback across edits and crossfade broad rewrites while retaining the previous visible content.
+
 ## 53.4.11
 
 ### Patch Changes
