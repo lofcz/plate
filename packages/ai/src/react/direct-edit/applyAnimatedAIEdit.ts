@@ -5,6 +5,12 @@ import type { PlateEditor } from 'platejs/react';
 export interface AnimatedAIEditOptions {
   /** Collaborator label shown beside the typing caret. Default: AI. */
   label?: string;
+  /** Canonical pre-edit value, when the app normalizes both sides of its diff. */
+  beforeValue?: Value;
+  /** Synchronous application-owned commit, run inside one undo batch. Return final changed block paths. */
+  apply?: () => number[][];
+  /** Reveal collapsed ancestors and return the refreshed DOM node before scrolling. */
+  reveal?: (path: number[]) => HTMLElement | undefined;
   /** Total playback budget in milliseconds, including scrolls. Default: 1800; capped at 2000. */
   duration?: number;
   /** Disable motion explicitly. Otherwise follows prefers-reduced-motion. */
@@ -199,7 +205,7 @@ function reconcileAIValue(editor: PlateEditor, target: Value) {
  * Apply one undoable edit and play a bounded visual transition.
  *
  * The old visible document is retained in an inert snapshot during the swap.
- * Broad rewrites crossfade together; small edits receive ordered ink/caret
+ * Broad rewrites use a feathered reveal; small edits receive ordered ink/caret
  * accents. Text and list markers in pending regions remain visible throughout.
  * Playback never writes partial content into Slate or persistence.
  */
@@ -219,11 +225,33 @@ export function applyAnimatedAIEdit(
     key({ children: next as Tree[] })
   )
     return { finished: Promise.resolve(), cancel: () => {} };
-  const paths = getAIEditPaths(editor.children, next);
-  const changedRoots = new Set(paths.map((path) => path[0]));
+  const before = options.beforeValue ?? editor.children;
+  let paths = getAIEditPaths(before, next);
+  // Count REPLACED existing leaf blocks, not inserted blocks. Inserting any
+  // number of sections into an otherwise unchanged document is not a rewrite.
+  const leaves = (nodes: Tree[]): string[] =>
+    nodes.flatMap((node) =>
+      node.children?.some((child) => child.children)
+        ? leaves(node.children)
+        : [key(node)]
+    );
+  const oldLeaves = leaves(before as Tree[]);
+  const newLeaves = leaves(next as Tree[]);
+  const available = new Map<string, number>();
+  for (const item of newLeaves)
+    available.set(item, (available.get(item) ?? 0) + 1);
+  let retained = 0;
+  for (const item of oldLeaves) {
+    const count = available.get(item) ?? 0;
+    if (count) {
+      retained++;
+      available.set(item, count - 1);
+    }
+  }
   const broad =
-    paths.length > 5 ||
-    changedRoots.size / Math.max(1, editor.children.length, next.length) >= 0.6;
+    oldLeaves.length > 0 &&
+    (oldLeaves.length - retained) / oldLeaves.length >= 0.6 &&
+    (newLeaves.length - retained) / Math.max(1, newLeaves.length) >= 0.6;
   // A burst of tool calls shares its original deadline, not one budget per call.
   const requested = options.duration ?? 1800;
   const budget = Math.max(
@@ -256,7 +284,7 @@ export function applyAnimatedAIEdit(
   )
     scrollRoot = scrollRoot.parentElement;
   // Capture before mutating Slate: the old words never disappear into blank lists.
-  if (motion && root && win && Date.now() < deadline) {
+  if (motion && broad && root && win && Date.now() < deadline) {
     const rect = root.getBoundingClientRect();
     const viewport = scrollRoot?.getBoundingClientRect();
     const top = Math.max(0, rect.top, viewport?.top ?? 0);
@@ -305,12 +333,26 @@ export function applyAnimatedAIEdit(
     }
   }
   try {
-    editor.tf.withNewBatch(() => reconcileAIValue(editor, next));
+    editor.tf.withNewBatch(() => {
+      if (options.apply) {
+        paths = options.apply();
+      } else reconcileAIValue(editor, next);
+    });
     editor.tf.setSplittingOnce(true);
   } catch (error) {
     snapshot?.remove();
     throw error;
   }
+  paths = paths
+    .filter(
+      (path, i, all) =>
+        !all.slice(0, i).some((other) => other.join('.') === path.join('.'))
+    )
+    .sort((a, b) => {
+      for (let i = 0; i < Math.min(a.length, b.length); i++)
+        if (a[i] !== b[i]) return a[i] - b[i];
+      return a.length - b.length;
+    });
   const committedChildren = editor.children;
   let cancelled = false;
   let cleanup = () => {
@@ -347,6 +389,7 @@ export function applyAnimatedAIEdit(
     doc.body.append(caret);
     root.dataset.aiEditMode = broad ? 'rewrite' : 'regions';
     const animations: Animation[] = [];
+    let sweep: HTMLElement | undefined;
     const regions: HTMLElement[] = [];
     const events = [
       'beforeinput',
@@ -369,6 +412,7 @@ export function applyAnimatedAIEdit(
       win.clearInterval(monitor);
       win.clearTimeout(watchdog);
       snapshot?.remove();
+      sweep?.remove();
       for (const animation of animations) animation.cancel();
       css?.highlights?.delete(`${name}-ink`);
       style.remove();
@@ -411,42 +455,89 @@ export function applyAnimatedAIEdit(
     const animate = (
       element: HTMLElement,
       frames: Keyframe[],
-      duration: number
+      duration: number,
+      easing = 'cubic-bezier(.2,.7,.2,1)'
     ) => {
       if (element.animate)
         animations.push(
           element.animate(frames, {
             duration,
-            easing: 'cubic-bezier(.2,.7,.2,1)',
+            easing,
             fill: 'forwards',
           })
         );
     };
     const swapDuration = Math.min(
-      broad ? 480 : 160,
+      broad ? 1350 : 0,
       Math.max(0, deadline - Date.now() - 32)
     );
-    if (snapshot)
-      animate(snapshot, [{ opacity: 1 }, { opacity: 0 }], swapDuration);
     if (broad) {
-      // A full rewrite is one short, calm transition. Preserve the viewport.
-      animate(
-        root,
-        [
-          { opacity: 0.45, filter: 'blur(1px)' },
-          { opacity: 1, filter: 'blur(0px)' },
-        ],
-        swapDuration
-      );
+      // Hold the readable original, then softly reveal the replacement from
+      // top to bottom. No whole-document dimming, blur, or flash.
+      if (snapshot && typeof snapshot.animate === 'function') {
+        snapshot.style.maskImage =
+          'linear-gradient(to bottom, transparent 49%, black 51%)';
+        snapshot.style.maskSize = '100% 300%';
+        snapshot.style.maskRepeat = 'no-repeat';
+        animate(
+          snapshot,
+          [
+            { maskPosition: '0 100%', offset: 0 },
+            { maskPosition: '0 100%', offset: 0.12 },
+            { maskPosition: '0 0%', offset: 0.9 },
+            { maskPosition: '0 0%', offset: 1 },
+          ],
+          swapDuration,
+          'linear'
+        );
+        sweep = doc.createElement('div');
+        sweep.dataset.aiEditSweep = '';
+        sweep.setAttribute('aria-hidden', 'true');
+        sweep.style.cssText = snapshot.style.cssText;
+        sweep.style.maskImage = 'none';
+        sweep.style.background = 'transparent';
+        const light = doc.createElement('div');
+        light.style.cssText =
+          'position:absolute;left:0;right:0;top:-120px;height:120px;background:linear-gradient(180deg,transparent,#8b5cf612 35%,#38bdf818 55%,transparent);';
+        sweep.append(light);
+        snapshot.parentElement!.append(sweep);
+        animate(
+          light,
+          [
+            { transform: 'translateY(0)', opacity: 0, offset: 0 },
+            { transform: 'translateY(0)', opacity: 0.8, offset: 0.12 },
+            {
+              transform: `translateY(${snapshot.clientHeight + 120}px)`,
+              opacity: 0.8,
+              offset: 0.9,
+            },
+            {
+              transform: `translateY(${snapshot.clientHeight + 120}px)`,
+              opacity: 0,
+              offset: 1,
+            },
+          ],
+          swapDuration,
+          'linear'
+        );
+      }
       await wait(swapDuration);
       return;
     }
+    if (snapshot)
+      animate(snapshot, [{ opacity: 1 }, { opacity: 0 }], swapDuration);
     await wait(swapDuration);
     snapshot?.remove();
-    const groups: { element: HTMLElement; ranges: Range[] }[] = [];
-    for (const path of paths) {
+    // Resolve/reveal each target immediately before scrolling; hidden MDX
+    // containers can mount a fresh backing DOM node during synchronous reveal.
+    const resolve = (path: number[]) => {
+      const revealed = options.reveal?.(path);
       const node = editor.api.node(path)?.[0];
-      const element = node && editor.api.toDOMNode(node as TElement);
+      return revealed ?? (node && editor.api.toDOMNode(node as TElement));
+    };
+    for (const [index, path] of paths.entries()) {
+      if (invalid()) break;
+      const element = resolve(path);
       if (!element) continue;
       const ranges: Range[] = [];
       for (const span of element.querySelectorAll('[data-slate-string]')) {
@@ -459,13 +550,10 @@ export function applyAnimatedAIEdit(
           text = walker.nextNode();
         }
       }
-      groups.push({ element, ranges });
-    }
-    for (const [index, { element, ranges }] of groups.entries()) {
-      if (invalid()) break;
+
       regions.push(element);
       element.dataset.aiEditRegion = name;
-      label.textContent = `✦ ${options.label ?? 'AI'} · ${index + 1}/${groups.length}`;
+      label.textContent = `✦ ${options.label ?? 'AI'} · ${index + 1}/${paths.length}`;
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
@@ -473,7 +561,7 @@ export function applyAnimatedAIEdit(
       });
       const slot = Math.max(
         0,
-        (deadline - Date.now() - 40) / (groups.length - index)
+        (deadline - Date.now() - 40) / (paths.length - index)
       );
       await wait(Math.min(130, slot * 0.3));
       const total = ranges.reduce(
