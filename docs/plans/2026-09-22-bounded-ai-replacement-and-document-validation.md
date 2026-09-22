@@ -363,3 +363,5 @@ Open risks:
 
 ## Immediate release authorization
 - User explicitly stopped the monorepo check and requested immediate deployment. Focused package types, 14 unit tests, 15 browser scenarios, 36 Sciobot tests, and both scoped reviews pass. Full check intentionally stopped; prior 109 baseline table failures remain documented.
+
+Exact implementation PR: https://github.com/lofcz/plate/pull/44
