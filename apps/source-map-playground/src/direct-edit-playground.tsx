@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { LinkPlugin } from '@platejs/link/react';
 import type { PlateElementProps } from 'platejs/react';
-import { applyAnimatedAIEdit } from '@platejs/ai/react';
+import {
+  applyAnimatedAIEdit,
+  type AnimatedAIEditOptions,
+} from '@platejs/ai/react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 import { deserializeMd, EDITOR_PLUGINS } from './editor';
 
@@ -43,9 +46,13 @@ export function DirectEditPlayground() {
       applyMarkdown(markdown: string) {
         return this.apply(deserializeMd(editor, markdown));
       },
-      apply(value: typeof editor.children) {
+      apply(
+        value: typeof editor.children,
+        options: AnimatedAIEditOptions = {}
+      ) {
         playback.current = applyAnimatedAIEdit(editor, value, {
           label: 'ScioBot',
+          ...options,
         });
         return playback.current.finished;
       },
@@ -56,11 +63,11 @@ export function DirectEditPlayground() {
       Reflect.deleteProperty(window, 'directEditPlayground');
     };
   }, [editor]);
-  const apply = () => {
+  const apply = (markdown = revised) => {
     setPlaying(true);
     playback.current = applyAnimatedAIEdit(
       editor,
-      deserializeMd(editor, revised),
+      deserializeMd(editor, markdown),
       { label: 'ScioBot' }
     );
     void playback.current.finished.finally(() => setPlaying(false));
@@ -88,8 +95,24 @@ export function DirectEditPlayground() {
         <span role="status">
           {playing ? 'Editing your document…' : 'Ready'}
         </span>
-        <button type="button" onClick={apply}>
+        <button type="button" onClick={() => apply()}>
           Edit three sections
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            apply(
+              '**Parent meeting**\n\nDear families,\n\n- Date: Wednesday\n- Time: 17:00\n- Place: Classroom\n\n## Agenda\n\n' +
+                Array.from(
+                  { length: 12 },
+                  (_, i) =>
+                    `${i + 1}. Discuss learning, activities and questions ${i + 1}.`
+                ).join('\n') +
+                '\n\nThank you for joining us.'
+            )
+          }
+        >
+          Rewrite whole document
         </button>
         <button
           type="button"

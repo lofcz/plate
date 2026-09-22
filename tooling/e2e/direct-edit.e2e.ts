@@ -35,7 +35,7 @@ test('three distant edits reveal in order, scroll, and undo/redo as one change',
   await page.getByRole('button', { name: 'Edit three sections' }).click();
   await expect(page.locator('[data-ai-edit-caret]')).toBeVisible();
   await expect(page.locator('[data-ai-edit-caret]')).toHaveCount(0, {
-    timeout: 15_000,
+    timeout: 2500,
   });
   expect(await page.evaluate(() => (window as any).visitedAIRegions)).toEqual([
     '1. Start with a question ✨',
@@ -163,7 +163,7 @@ test('rich markdown edits retain links, marks, lists, and table structure', asyn
   await expect(editor).not.toContainText('inserted');
 });
 
-test('typing follows a long changed paragraph down the viewport', async ({
+test('a long full rewrite stays in place and completes quickly', async ({
   page,
 }) => {
   await page.evaluate(async () => {
@@ -175,7 +175,7 @@ test('typing follows a long changed paragraph down the viewport', async ({
   });
   expect(
     await page.getByTestId('direct-edit-scroll').evaluate((el) => el.scrollTop)
-  ).toBeGreaterThan(400);
+  ).toBe(0);
   await expect(page.locator('[data-ai-edit-caret]')).toHaveCount(0);
   await expect(
     page.getByRole('textbox', { name: 'AI document' })
@@ -212,4 +212,186 @@ test('complete preparation edits preserve nested phases and activities', async (
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(editor).toContainText('Original instructions.');
   await expect(editor).not.toContainText('Share your findings.');
+});
+
+test('an eighteen-region rewrite retains the old snapshot and never hides list text', async ({
+  page,
+}) => {
+  const before =
+    '**Invitation**\n\nDear parents,\n\n- Date: Wednesday\n- Time: 17:00\n- Place: Classroom\n\n## Agenda\n\n' +
+    Array.from(
+      { length: 12 },
+      (_, i) => `${i + 1}. Original agenda item ${i + 1}`
+    ).join('\n') +
+    '\n\nThank you.';
+  const after = before
+    .replaceAll('Original', 'Improved')
+    .replace('Invitation', 'Parent meeting')
+    .replace('Dear parents', 'Dear families')
+    .replace('Wednesday', 'Thursday')
+    .replace('17:00', '18:00')
+    .replace('Classroom', 'Library')
+    .replace('Thank you.', 'See you soon.');
+  await page.evaluate(
+    (before) => (window as any).directEditPlayground.setMarkdown(before),
+    before
+  );
+  await expect(
+    page.getByRole('textbox', { name: 'AI document' })
+  ).toContainText('Original agenda item');
+  const evidence = await page.evaluate(async (after) => {
+    const h = (window as any).directEditPlayground;
+    const start = performance.now();
+    const done = h.applyMarkdown(after);
+    const snapshot = document.querySelector('[data-ai-edit-snapshot]');
+    const oldVisible = snapshot?.textContent?.includes('Original agenda item');
+    const inert = (snapshot as HTMLElement)?.inert;
+    const samples: string[] = [];
+    const timer = setInterval(() => {
+      for (const style of document.querySelectorAll('style'))
+        if (style.textContent?.includes('color: transparent'))
+          samples.push(style.textContent);
+    }, 16);
+    await done;
+    clearInterval(timer);
+    return {
+      elapsed: performance.now() - start,
+      oldVisible,
+      inert,
+      hiddenTextStyles: samples.length,
+    };
+  }, after);
+  expect(evidence.oldVisible).toBe(true);
+  expect(evidence.inert).toBe(true);
+  expect(evidence.elapsed).toBeLessThan(850);
+  expect(evidence.hiddenTextStyles).toBe(0);
+  const editor = page.getByRole('textbox', { name: 'AI document' });
+  await expect(editor).toContainText('Improved agenda item 12');
+  await expect(
+    page.locator(
+      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+    )
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(editor).toContainText('Original agenda item 12');
+  await page.getByRole('button', { name: 'Redo', exact: true }).click();
+  await expect(editor).toContainText('Improved agenda item 12');
+});
+
+test('the total budget includes distant scrolls and repeated tool calls', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const h = (window as any).directEditPlayground;
+    const start = performance.now();
+    const original = structuredClone(h.editor.children);
+    const edits: Promise<void>[] = [];
+    for (let i = 0; i < 5; i++) {
+      const next = structuredClone(original);
+      next[0].children[0].text = `Update ${i}`;
+      next[15].children[0].text = `Middle ${i}`;
+      next[33].children[0].text = `End ${i}`;
+      edits.push(h.apply(next));
+      await new Promise((resolve) => setTimeout(resolve, 160));
+    }
+    await Promise.all(edits);
+    return {
+      elapsed: performance.now() - start,
+      text: h.editor.api.string([]),
+    };
+  });
+  expect(result.elapsed).toBeLessThan(2200);
+  expect(result.text).toContain('End 4');
+  await expect(
+    page.locator(
+      '[data-ai-edit-snapshot], [data-ai-edit-caret], [data-ai-edit-mode]'
+    )
+  ).toHaveCount(0);
+});
+
+test('rewrite cancellation, undo and unsupported highlights leave no overlay', async ({
+  page,
+}) => {
+  await page.evaluate(async () => {
+    const h = (window as any).directEditPlayground;
+    const before = structuredClone(h.editor.children);
+    const done = h.apply([{ type: 'p', children: [{ text: 'Replacement' }] }]);
+    h.editor.tf.undo();
+    await done;
+    if (JSON.stringify(before) !== JSON.stringify(h.editor.children))
+      throw new Error('Undo mismatch');
+  });
+  await expect(
+    page.locator('[data-ai-edit-snapshot], [data-ai-edit-mode]')
+  ).toHaveCount(0);
+  await page.evaluate(async () => {
+    Object.defineProperty(window, 'Highlight', {
+      value: undefined,
+      configurable: true,
+    });
+    await (window as any).directEditPlayground.applyMarkdown(
+      'Final replacement'
+    );
+  });
+  await expect(page.getByRole('textbox', { name: 'AI document' })).toHaveText(
+    'Final replacement'
+  );
+  await expect(
+    page.locator('[data-ai-edit-snapshot], [data-ai-edit-mode]')
+  ).toHaveCount(0);
+});
+
+test('an explicit short total budget includes the full replacement transition', async ({
+  page,
+}) => {
+  const elapsed = await page.evaluate(async () => {
+    const h = (window as any).directEditPlayground;
+    const started = performance.now();
+    await h.apply([{ type: 'p', children: [{ text: 'Quick replacement' }] }], {
+      duration: 100,
+    });
+    return performance.now() - started;
+  });
+  expect(elapsed).toBeLessThan(350);
+  await expect(
+    page.locator(
+      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+    )
+  ).toHaveCount(0);
+});
+
+test('wheel interruption during a full rewrite removes the old snapshot immediately', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    const h = (window as any).directEditPlayground;
+    void h.apply([{ type: 'p', children: [{ text: 'Replacement' }] }]);
+    document
+      .querySelector('[data-testid="direct-edit-scroll"]')!
+      .dispatchEvent(new WheelEvent('wheel', { bubbles: true }));
+  });
+  await expect(
+    page.locator(
+      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+    )
+  ).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'AI document' })).toHaveText(
+    'Replacement'
+  );
+});
+
+test('unmount during a whole-document replacement clears snapshots and animation state', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    void (window as any).directEditPlayground.apply([
+      { type: 'p', children: [{ text: 'Replacement' }] },
+    ]);
+  });
+  await page.getByRole('button', { name: 'Source map', exact: true }).click();
+  await expect(
+    page.locator(
+      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+    )
+  ).toHaveCount(0);
 });

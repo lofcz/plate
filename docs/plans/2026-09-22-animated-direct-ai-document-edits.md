@@ -27,7 +27,7 @@ Timed checkpoint:
 - semantics: one-shot execution
 - initial confidence score: N/A: use executable evidence
 - improvement loop: unit, browser, source review, repair, release
-- final score / loop closure: open until verified and published
+- final score / loop closure: executable checks and publication evidence recorded below
 
 Completion threshold:
 - Direct edits default on; explicit suggestions retained; animated top-to-bottom reveal and scrolling; normal undo/redo; playground E2E; published npm package integrated in Sciobot.
@@ -65,28 +65,28 @@ Blocked condition:
 Task state:
 - task_type: additive feature
 - task_complexity: non-trivial
-- current_phase: verification and release
-- current_phase_status: in_progress
-- next_phase: implementation
-- goal_status: active
+- current_phase: closeout
+- current_phase_status: done
+- next_phase: complete
+- goal_status: complete
 
 Current verdict:
-- verdict: pending
-- confidence: pending
+- verdict: completed with authorized baseline exception
+- confidence: focused package/browser/integration checks passed
 - next owner: task
-- reason: pending
+- reason: published package consumed by Sciobot; see final evidence
 
 Pre-solution issue challenge:
-- reporter claim: pending
-- suggested diagnosis or fix: pending
+- reporter claim: users do not accept suggestion overlays; direct edits requested
+- suggested diagnosis or fix: optional explicit-suggestion flag and shared direct-edit API
 - repro ladder:
-  - tests / source-level repro: pending
-  - Playwright / automated browser: pending
-  - Browser plugin: pending
-  - screenshot / visual proof: pending
-- reproduction verdict: pending
-- validity verdict: pending
-- best long-term fix boundary: pending
+  - tests / source-level repro: N/A feature request; tests cover required behavior
+  - Playwright / automated browser: nine scenarios passed
+  - Browser plugin: unavailable; dev-browser fallback used
+  - screenshot / visual proof: final screenshot inspected
+- reproduction verdict: N/A additive feature
+- validity verdict: valid user requirement
+- best long-term fix boundary: package transforms/playback, shared Sciobot routing
 - harsh honest feedback: old review-only default does not meet the requested direct editing behavior
 - hard-stop decision: none
 
@@ -133,23 +133,23 @@ Start Gates:
 
 
 Work Checklist:
-- [ ] If a duration was requested, it is recorded as minimum active work unless
+- [x] If a duration was requested, it is recorded as minimum active work unless
       explicitly marked hard stop; when no better metric exists, initial and
       final confidence scores are recorded.
-- [ ] Short objective plus outcome, completion threshold, verification surface,
+- [x] Short objective plus outcome, completion threshold, verification surface,
       constraints, boundaries, and blocked condition are concrete.
-- [ ] Task source classified with source type, id/link, title, task type,
+- [x] Task source classified with source type, id/link, title, task type,
       acceptance criteria, caveats, likely files/routes/packages, browser
       surface, and root-cause layer.
-- [ ] Required video or screen-recording evidence is cached/read as normalized
+- [x] Required video or screen-recording evidence is cached/read as normalized
       `<video-transcripts>` XML, or marked N/A with reason.
-- [ ] For public tracker bug reports, behavior claims, technical diagnoses, or
+- [x] For public tracker bug reports, behavior claims, technical diagnoses, or
       suggested fixes, reporter claims are challenged before implementation
       with a recorded verdict: `valid`, `not reproduced`, `invalid`,
       `wont-fix`, `partially valid`, or `platform limitation`. Feature, docs,
       support, or cleanup requests with no bug claim may mark reproduction
       `N/A` with reason.
-- [ ] Repro escalation ladder followed for bug/behavior claims: focused
+- [x] Repro escalation ladder followed for bug/behavior claims: focused
       test/source-level repro first when applicable; existing repo-owned
       Playwright regression/test harness next when available and useful as
       executable coverage; do not use standalone Playwright, Puppeteer, or raw
@@ -158,140 +158,141 @@ Work Checklist:
       Playwright cannot reproduce or cannot model the surface honestly;
       screenshot or explicit visual-proof waiver when visual/native state
       matters.
-- [ ] Hard-stop rule followed for bug/behavior claims: no code when the issue
+- [x] Hard-stop rule followed for bug/behavior claims: no code when the issue
       is not reproduced, invalid, or won't-fix; partial validity pivots to the
       best long-term fix and records what was wrong or incomplete in the issue's
       proposed path.
-- [ ] Nearby repo instructions and implementation patterns read before edits.
-- [ ] Implementation fixes the right ownership boundary, or the narrower choice
+- [x] Nearby repo instructions and implementation patterns read before edits.
+- [x] Implementation fixes the right ownership boundary, or the narrower choice
       is recorded with reason.
-- [ ] Release artifact requirement recorded: changeset, registry changelog, or
+- [x] Release artifact requirement recorded: changeset, registry changelog, or
       N/A with reason.
-- [ ] Final handoff shape decided: bug/feature/testing/batch/review/tracker
+- [x] Final handoff shape decided: bug/feature/testing/batch/review/tracker
       requirements, PR body sync, and issue/Linear sync when applicable.
-- [ ] Branch handling recorded for code-changing work: dedicated branch used,
+- [x] Branch handling recorded for code-changing work: dedicated branch used,
       new branch needed, or N/A with reason.
-- [ ] Every PR has its own `task` invocation and dedicated plan; this plan is
+- [x] Every PR has its own `task` invocation and dedicated plan; this plan is
       not aggregate evidence for another PR.
-- [ ] If a PR exists, its body has exactly one
+- [x] If a PR exists, its body has exactly one
       `🧭 Task plan: docs/plans/<plan>.md` line, this file exists at the exact PR
       head, and this plan records that exact PR number or URL.
-- [ ] Local-env-rot retry policy recorded for any surprising repo-wide failure:
+- [x] Local-env-rot retry policy recorded for any surprising repo-wide failure:
       reinstall/rerun evidence or N/A with reason.
-- [ ] Workspace authority recorded: every proof command names the cwd/tool that
+- [x] Workspace authority recorded: every proof command names the cwd/tool that
       owns the changed behavior.
-- [ ] High-risk note recorded for public API, runtime, package-boundary,
+- [x] High-risk note recorded for public API, runtime, package-boundary,
       browser behavior, agent-action, or command-contract changes, or marked
       N/A with reason.
-- [ ] Review/autoreview target selected from actual diff state for non-trivial
+- [x] Review/autoreview target selected from actual diff state for non-trivial
       implementation work, or marked N/A with reason.
-- [ ] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
+- [x] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
       `.codex/**`, skills, hooks, commands, prompts, or user-action tooling.
-- [ ] Output budget discipline recorded and followed: broad searches are
+- [x] Output budget discipline recorded and followed: broad searches are
       scoped, capped, counted, or artifacted instead of streamed into goal
       context.
-- [ ] Browser pack: route, interaction path, and expected visible outcome are recorded before proof.
-- [ ] Browser pack: browser proof uses the repo-approved browser tool or records a blocker/waiver.
-- [ ] Browser pack: console and network errors are checked or explicitly out of scope.
-- [ ] Browser pack: screenshot, trace, or exact verification caveat is ready for final handoff.
-- [ ] Package/API pack: public API, package boundary, export, and release-artifact impact are recorded.
-- [ ] Package/API pack: release artifact matrix is applied: `.changeset`, registry changelog, or explicit no-artifact reason.
-- [ ] Package/API pack: `.changeset` work loads `changeset` and follows its package/version/prose rules.
-- [ ] Package/API pack: registry-only work uses the `registry-changelog` pack instead of adding a package changeset.
-- [ ] Package/API pack: no-artifact decisions state why the diff has no published package user-visible delta from `main`.
-- [ ] Package/API pack: compatibility, migration, or hard-cut decision is explicit when public shape changes.
-- [ ] Package/API pack: package-owned typecheck/build/test proof is recorded or marked N/A with reason.
-- [ ] Package/API pack: generated barrels or release notes are updated when required.
+- [x] Browser pack: route, interaction path, and expected visible outcome are recorded before proof.
+- [x] Browser pack: browser proof uses the repo-approved browser tool or records a blocker/waiver.
+- [x] Browser pack: console and network errors are checked or explicitly out of scope.
+- [x] Browser pack: screenshot, trace, or exact verification caveat is ready for final handoff.
+- [x] Package/API pack: public API, package boundary, export, and release-artifact impact are recorded.
+- [x] Package/API pack: release artifact matrix is applied: `.changeset`, registry changelog, or explicit no-artifact reason.
+- [x] Package/API pack: `.changeset` work loads `changeset` and follows its package/version/prose rules.
+- [x] Package/API pack: registry-only work uses the `registry-changelog` pack instead of adding a package changeset.
+- [x] Package/API pack: no-artifact decisions state why the diff has no published package user-visible delta from `main`.
+- [x] Package/API pack: compatibility, migration, or hard-cut decision is explicit when public shape changes.
+- [x] Package/API pack: package-owned typecheck/build/test proof is recorded or marked N/A with reason.
+- [x] Package/API pack: generated barrels or release notes are updated when required.
 
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
 |------|---------|-----------------|----------|
-| Named verification threshold | pending | Run the command, proof, source audit, or artifact check named in this plan | pending |
-| Pre-solution issue challenge verdict | pending | Record reporter claim, suggested fix, repro verdict, validity verdict, durable boundary, and hard-stop/pivot decision before implementation | pending |
-| Repro escalation ladder | pending | For bug/behavior claims, record test/source-level, Playwright, Browser, and screenshot/visual-proof outcomes or N/A/blocker reasons before `not reproduced` | pending |
-| Bug reproduced before fix | pending | Record failing test/repro or N/A with reason | pending |
-| Targeted behavior verification | pending | Run focused test/proof for changed behavior or record N/A | pending |
-| TypeScript or typed config changed | pending | Run relevant typecheck | pending |
-| Package exports or file layout changed | pending | Run `pnpm brl` before final verification and keep generated barrel updates | pending |
-| Package manifests, lockfile, or install graph changed | pending | Run `pnpm install` and relevant package checks | pending |
-| Agent rules or skills changed | pending | Run `pnpm install` and verify generated skill sync | pending |
-| Workspace authority proof | pending | Run verification in the owning repo/package/app/route/tool and record cwd; do not count the wrong workspace as proof | pending |
-| Browser surface changed | pending | Capture Browser Use proof or record explicit waiver/blocker | pending |
-| Browser final proof | pending | Attach screenshot or exact browser verification caveat when browser proof applies | pending |
-| CI-controlled template output changed | pending | Restore generated template output or record why it is intentionally kept | pending |
-| Package behavior or public API changed | pending | Add a changeset or record why no changeset applies | pending |
-| User-visible registry output changed | pending | Use the registry-changelog pack: add/update `apps/www/src/registry/changelog/entries/*.mdx`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --write`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --check`, or record N/A | pending |
-| Docs or content changed | pending | For docs-heavy work, use `--template docs`; for supporting public docs/content/API/example changes, load `docs-creator` and close the docs pack; for typo/link-only edits, record the explicit reason and proportional proof | pending |
-| High-risk mini gate | pending | For public API/runtime/package-boundary/browser/agent-action/command-contract changes, record realistic failure mode, proof plan, and why the chosen boundary is right; otherwise N/A | pending |
-| Agent-native review for agent/tooling changes | pending | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | pending |
-| Local install corruption suspected | pending | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | pending |
-| Autoreview for non-trivial implementation changes | pending | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | pending |
-| PR create or update | pending | Run `check` before PR work and sync PR body to the task-style final handoff | pending |
-| Per-PR task ownership | pending | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | pending |
-| Task-style PR body verified | pending | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | pending |
-| PR proof image hosting | pending | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | pending |
-| Tracker sync-back | pending | Post concise issue/Linear sync after PR exists, or record N/A/blocker | pending |
-| Final handoff contract | pending | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | pending |
-| Final lint | pending | Run `pnpm lint:fix` or scoped equivalent | pending |
-| Output budget discipline | pending | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | pending |
-| Timed checkpoint | pending | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | pending |
-| Goal plan complete | yes | Run `node .agents/skills/autogoal/scripts/check-complete.mjs docs/plans/2026-09-22-animated-direct-ai-document-edits.md` | pending |
-| Browser interaction proof | pending | Exercise the target route/interaction with the approved browser tool or record blocker | pending |
-| Browser console/network check | pending | Record console/network state or why it is not applicable | pending |
-| Browser final proof artifact | pending | Record screenshot/trace/route proof or exact caveat | pending |
-| Public API / package boundary proof | pending | Source-audit public API, exports, and package boundary impact | pending |
-| Release artifact classification | pending | Record whether the change is published package behavior/API/types/config/runtime, registry-only, or no published user-visible delta | pending |
-| Published package changeset | pending | If published package users see a delta, load `changeset`, add/update one `.changeset/*.md` per package, and prove no forbidden `minor` on `@platejs/slate`, `@platejs/core`, or `platejs` | pending |
-| Registry changelog | pending | If the change is registry-only under `apps/www/src/registry/**`, use the `registry-changelog` pack and do not add a package changeset | pending |
-| No release artifact | pending | If no artifact is needed, record the exact reason: internal-only, docs-only, agent-only, test-only, or no user-visible delta from `main` | pending |
-| Package typecheck/build/test | pending | Run owning package checks or record N/A with reason | pending |
-| Barrel/export generation | pending | Run `pnpm brl` when exports or exported file layout changed, otherwise N/A | pending |
+| Named verification threshold | yes | Run the command, proof, source audit, or artifact check named in this plan | See final release/integration evidence below. |
+| Pre-solution issue challenge verdict | N/A | Record reporter claim, suggested fix, repro verdict, validity verdict, durable boundary, and hard-stop/pivot decision before implementation | Additive user feature; no specific reported defect requires reproduction. |
+| Repro escalation ladder | N/A | For bug/behavior claims, record test/source-level, Playwright, Browser, and screenshot/visual-proof outcomes or N/A/blocker reasons before `not reproduced` | Additive feature; package tests, repository browser tests, and dev-browser visual inspection supply behavior proof. |
+| Bug reproduced before fix | N/A | Record failing test/repro or N/A with reason | Additive feature; the listStart review finding has a focused regression. |
+| Targeted behavior verification | yes | Run focused test/proof for changed behavior or record N/A | 14 package tests / 313 assertions, nine Chromium scenarios, 22 Sciobot regression tests. |
+| TypeScript or typed config changed | yes | Run relevant typecheck | Root Plate check passed all 56 package typechecks; Sciobot final checks recorded below. |
+| Package exports or file layout changed | yes | Run `pnpm brl` before final verification and keep generated barrel updates | pnpm brl generated AI and core React exports; committed. |
+| Package manifests, lockfile, or install graph changed | yes | Run `pnpm install` and relevant package checks | pnpm install succeeded with tinyexec ^1.2.4; package checks passed. |
+| Agent rules or skills changed | N/A | Run `pnpm install` and verify generated skill sync | No agent rules or skill source changed. |
+| Workspace authority proof | yes | Run verification in the owning repo/package/app/route/tool and record cwd; do not count the wrong workspace as proof | Plate commands in GitHub/plate; Sciobot checks in GitHub/sciobot-next. Browser route is localhost:3999/#direct-edit. |
+| Browser surface changed | yes | Capture Browser Use proof or record explicit waiver/blocker | Browser plugins unavailable; dev-browser fallback connected to dedicated Chromium and exercised playground. |
+| Browser final proof | yes | Attach screenshot or exact browser verification caveat when browser proof applies | /home/lofcz/.dev-browser/tmp/plate-ai-final.png inspected; nine browser scenarios pass. |
+| CI-controlled template output changed | N/A | Restore generated template output or record why it is intentionally kept | No template files changed; release CI owns generated output. |
+| Package behavior or public API changed | yes | Add a changeset or record why no changeset applies | Three patch changesets included; AI React barrel exports applyAnimatedAIEdit. |
+| User-visible registry output changed | N/A | Use the registry-changelog pack: add/update `apps/www/src/registry/changelog/entries/*.mdx`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --write`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --check`, or record N/A | No registry component changes. |
+| Docs or content changed | N/A | For docs-heavy work, use `--template docs`; for supporting public docs/content/API/example changes, load `docs-creator` and close the docs pack; for typo/link-only edits, record the explicit reason and proportional proof | Only internal task evidence and changesets; no public reference docs changed. |
+| High-risk mini gate | yes | For public API/runtime/package-boundary/browser/agent-action/command-contract changes, record realistic failure mode, proof plan, and why the chosen boundary is right; otherwise N/A | History, rich content, cancellation and user-input races covered by unit, browser, and hook tests; package owns transforms and playback. |
+| Agent-native review for agent/tooling changes | yes | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | Tool schema/prompt review: optional false default, explicit true only, ordered edits, shared routing. No accepted findings remain. |
+| Local install corruption suspected | N/A | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | Transient dist resolution overlapped the root build; sequential rerun passed. Table fixture failures reproduce independently in unchanged code. |
+| Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Four Plate reviews and Sciobot review completed; listStart fixed. Source-backed rejection of false Slate mutation/null-property claims recorded below. |
+| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full check executed: lint/build/types pass, 109 baseline table failures. User explicitly authorized publication with failures documented in PR #42. |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | PR #42 body has exactly one task-plan line; plan at head 8378804166 identifies PR #42; readback verified. |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | gh pr view body readback contains auto-release block, task line, emoji sections and phase table; no self-link. |
+| PR proof image hosting | N/A | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | PR cites executable browser cases; screenshot is local visual inspection evidence, not embedded in PR. |
+| Tracker sync-back | N/A | Post concise issue/Linear sync after PR exists, or record N/A/blocker | No issue or tracker supplied. |
+| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | See populated final handoff fields and release evidence. |
+| Final lint | yes | Run `pnpm lint:fix` or scoped equivalent | Plate root lint and scoped checks passed; Sciobot scoped lint recorded below. |
+| Output budget discipline | yes | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | Logs artifacted under /tmp; accidental long generated release-index lines were truncated; subsequent queries use selected fields. |
+| Timed checkpoint | N/A | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | No timed duration requested. |
+| Goal plan complete | yes | Run `node .agents/skills/autogoal/scripts/check-complete.mjs docs/plans/2026-09-22-animated-direct-ai-document-edits.md` | Completion checker run at final closeout. |
+| Browser interaction proof | yes | Exercise the target route/interaction with the approved browser tool or record blocker | dev-browser exercised direct-edit mode; repository browser suite covers ordered edits, undo, interruptions, rich content and nested preparation. |
+| Browser console/network check | yes | Record console/network state or why it is not applicable | No external network required for local playground; E2E behavior passes. Console/network cleanliness is not a release claim. |
+| Browser final proof artifact | yes | Record screenshot/trace/route proof or exact caveat | /home/lofcz/.dev-browser/tmp/plate-ai-final.png; E2E output under ignored test-results/direct-edit. |
+| Public API / package boundary proof | yes | Source-audit public API, exports, and package boundary impact | Additive applyAnimatedAIEdit export from @platejs/ai/react; options documented in source; no migration required. |
+| Release artifact classification | yes | Record whether the change is published package behavior/API/types/config/runtime, registry-only, or no published user-visible delta | Published runtime/API changes: AI package, generated core exports, depset dependency; all patch changesets. |
+| Published package changeset | yes | If published package users see a delta, load `changeset`, add/update one `.changeset/*.md` per package, and prove no forbidden `minor` on `@platejs/slate`, `@platejs/core`, or `platejs` | AI/core/depset patch changesets; no forbidden minor changes. |
+| Registry changelog | N/A | If the change is registry-only under `apps/www/src/registry/**`, use the `registry-changelog` pack and do not add a package changeset | Published package feature, not registry-only. |
+| No release artifact | N/A | If no artifact is needed, record the exact reason: internal-only, docs-only, agent-only, test-only, or no user-visible delta from `main` | Patch changesets required and supplied for three affected published packages. |
+| Package typecheck/build/test | yes | Run owning package checks or record N/A with reason | Root build and 56 typechecks pass; AI 14 tests pass; table baseline exception explicitly authorized. |
+| Barrel/export generation | yes | Run `pnpm brl` when exports or exported file layout changed, otherwise N/A | pnpm brl run and generated exports committed. |
 
 Phase / pass table:
 | Phase | Status | Evidence | Next |
 |-------|--------|----------|------|
 | Intake and source read | done | User requirements and shared bridge/package source read | complete |
 | Implementation | done | Additive API, playground, Sciobot routing and manual-edit protection | verification |
-| Verification | in_progress | Feature tests pass; root check running after depset repair | release |
-| PR / tracker sync | pending | | final response |
-| Closeout | pending | | final response |
+| Verification | done | Feature tests pass; documented table baseline exception authorized | complete |
+| PR / tracker sync | done | PR #42 merged; generated version PR #43 merged via authenticated gh | complete |
+| Closeout | done | Published npm artifact and Sciobot checks recorded below | final response |
 
 Findings:
-- None yet.
+- Atomic content commit with visual-only playback prevents partial persisted content on interruption.
 
 Decisions and tradeoffs:
-- None yet.
+- Reduced motion or unsupported CSS highlights applies edits immediately; user input cancels visual playback.
 
 Implementation notes:
-- None yet.
+- Shared package API handles granular Slate reconciliation/history; Sciobot provider handles document deserialization.
 
 Review fixes:
-- None yet.
+- List metadata key fixed; React DOM readiness wait added; delayed suggestion RAF cancelled before direct edit.
 
 Error attempts:
 | Error / failed attempt | Count | Next different move | Resolution |
 |------------------------|-------|---------------------|------------|
-| None yet | 0 | | |
+| Root check dependencies | 2 | Declare compatible tinyexec | Build/types pass; table baseline remains |
+| Automatic release merge missing CI token | 1 | Authenticated gh CLI | Version PR #43 merged |
 
 Verification evidence:
-- Pending.
+- See verification checkpoints and final release/integration evidence below.
 
 Final handoff contract:
-- PR line: pending
-- Issue / tracker line: pending
-- Confidence line: pending
+- PR line: https://github.com/lofcz/plate/pull/42
+- Issue / tracker line: N/A: user request, no tracker
+- Confidence line: Focused package/browser/integration proof passed; baseline exception documented
 - Flow table:
-  - Reproduced: tests pending, browser pending
-  - Verified: tests pending, browser pending
-- Browser check: pending
-- Outcome: pending
-- Caveat: pending
+  - Reproduced: tests N/A additive feature, browser N/A additive feature
+  - Verified: 14 package tests / 313 assertions; nine browser cases; Sciobot evidence below
+- Browser check: Nine Chromium scenarios plus inspected dev-browser screenshot
+- Outcome: Default direct AI edits with collaborator playback, scrolling and undo/redo; explicit suggestions retained
+- Caveat: 109 baseline table failures waived by user; reduced-motion/highlight fallback applies immediately
 - Design:
-  - Chosen boundary: pending
-  - Why not quick patch: pending
-  - Why not broader change: pending
-- Verified: pending
-- PR body verified: pending
+  - Chosen boundary: Plate package owns history/playback; Sciobot provider owns deserialization
+  - Why not quick patch: Shared API covers all Plate material callers and cancellation/history consistently
+  - Why not broader change: Existing suggestion engine remains for explicit requests; unrelated table fixtures excluded
+- Verified: 14 package tests / 313 assertions; nine browser cases; Sciobot evidence below
+- PR body verified: gh body readback checked; exact plan at head and PR number recorded
 
 Task-style PR body contract:
 - Preserve any existing `<!-- auto-release:start -->` block. If a changeset is
@@ -316,11 +317,11 @@ Task-style PR body contract:
   of that output.
 
 Final handoff / sync:
-- PR: pending
-- Task plan at exact PR head: pending
-- Issue / tracker: pending
-- Browser proof: pending
-- Caveats: pending
+- PR: https://github.com/lofcz/plate/pull/42
+- Task plan at exact PR head: 8378804166c483b73628f7af7c85158db39eb2ec; contains PR #42
+- Issue / tracker: N/A: no tracker
+- Browser proof: Nine repository E2E scenarios and dev-browser screenshot
+- Caveats: Existing 109 table failures; user approved release with documentation
 
 Timeline:
 - 2026-09-22T09:55:02.895Z Task goal plan created.
@@ -328,24 +329,24 @@ Timeline:
 Reboot status:
 | Question | Answer |
 |----------|--------|
-| Where am I? | Intake and source read |
-| Where am I going? | Implementation, verification, PR/tracker sync, closeout |
+| Where am I? | Completed release and integration |
+| Where am I going? | Final handoff |
 | What is the goal? | Verified direct AI edits, npm publication, and Sciobot integration |
 | What have I learned? | See Findings |
 | What have I done? | See Timeline |
 
 Open risks:
-- Pending.
+- 109 unchanged table-test failures remain, documented and explicitly approved. Unsupported highlight browsers use immediate edits.
 
 ## Requirement extraction and implementation contract
-- [ ] Optional `is_suggesion` defaults false; true only for explicit suggestion requests.
-- [ ] Shared Plate editing covers documents, complete preparations, and other Plate materials.
-- [ ] Direct content replacement with polished collaborator cursor and typing reveal.
-- [ ] Normal undo/redo, no partially typed persisted documents.
-- [ ] Changed regions animate sequentially top to bottom with smooth viewport tracking.
-- [ ] Dedicated mode in source-map-playground with deep browser E2E coverage.
-- [ ] Publish using gh-driven CI and verify npm artifact.
-- [ ] Update Sciobot dependency and integrate published API.
+- [x] Optional `is_suggesion` defaults false; true only for explicit suggestion requests.
+- [x] Shared Plate editing covers documents, complete preparations, and other Plate materials.
+- [x] Direct content replacement with polished collaborator cursor and typing reveal.
+- [x] Normal undo/redo, no partially typed persisted documents.
+- [x] Changed regions animate sequentially top to bottom with smooth viewport tracking.
+- [x] Dedicated mode in source-map-playground with deep browser E2E coverage.
+- [x] Publish using gh-driven CI and verify npm artifact.
+- [x] Update Sciobot dependency and integrate published API.
 
 Execution decisions:
 - Normal additive feature, task + autogoal plan + browser/package-api packs; release-lanes and changeset own publication.
@@ -390,3 +391,20 @@ Execution decisions:
 
 Exact implementation PR: https://github.com/lofcz/plate/pull/42
 - Dedicated task invocation and this plan own PR #42. Release metadata is managed by the existing release workflow.
+
+## Checklist applicability
+- Duration, video, tracker bug reproduction/hard-stop, tracker sync, registry-only changelog, and no-artifact paths are N/A for this package feature request.
+- Compatibility is additive; published API has no required migration. Browser console/network cleanliness was not audited exhaustively and is not claimed; behavioral tests and visual proof are the release evidence.
+
+## Final release and integration evidence
+- Implementation PR https://github.com/lofcz/plate/pull/42 merged as 914e2b93db00661583a2c58266f378c1f03a91d0. Plan at PR head 8378804166 identifies exact PR.
+- Generated version PR https://github.com/lofcz/plate/pull/43 merged through authenticated gh after automatic merge lacked a CI token.
+- Release https://github.com/lofcz/plate/releases/tag/v53.4.11; publish job succeeded: https://github.com/lofcz/plate/actions/runs/35717870089 . Downstream template sync is separate release automation.
+- npm readback: @lofcz/platejs-ai latest=53.4.11, integrity sha512-3n0l7U8uOTPa9knCm8T8+RuNP/+4CHbfEGO7yeyR5MA84EF35c88zrEugnN/VRHfteGu4uo6cNVKjtJwL7fv8w== . Registry propagation took several minutes.
+- Sciobot dependency and override both use npm:@lofcz/platejs-ai@^53.4.11; bun.lock resolves 53.4.11 with matching integrity. bun install --no-cache succeeded after stale manifest cache.
+- Installed artifact import verified applyAnimatedAIEdit and getAIEditPaths are functions.
+- Sciobot final frontend AND backend typecheck passes: bun run typecheck, /tmp/sciobot-ai-final-types.log.
+- Sciobot final 22 tests / 3 files pass: bun run test run src/hooks/chat/useWorkspaceEditBridge.test.tsx src/lib/agent-edit-find-replace.test.ts src/lib/suggestion-views.test.ts . Bridge tests exercise the actual published API, undo/redo, explicit-suggestion routing, and manual edit preservation. Evidence /tmp/sciobot-ai-final-tests.log.
+- Sciobot scoped oxlint exits zero with warnings; no lint error. Unrelated concurrent Sciobot changes preserved; integration left in working tree. No application production deployment requested or performed.
+- Full Plate check exception remains exactly the 109 documented baseline table-test failures; user explicitly approved publication.
+- Final GitHub workflow readback: success, including release/changelog and registry/template synchronization.

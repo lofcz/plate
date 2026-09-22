@@ -5,7 +5,7 @@ import type { PlateEditor } from 'platejs/react';
 export interface AnimatedAIEditOptions {
   /** Collaborator label shown beside the typing caret. Default: AI. */
   label?: string;
-  /** Maximum typing time per changed region, in milliseconds. Default: 1400. */
+  /** Total playback budget in milliseconds, including scrolls. Default: 1800; capped at 2000. */
   duration?: number;
   /** Disable motion explicitly. Otherwise follows prefers-reduced-motion. */
   reducedMotion?: boolean;
@@ -15,7 +15,7 @@ export interface AnimatedAIEditOptions {
 
 const active = new WeakMap<
   PlateEditor,
-  { cancel: () => void; paths: number[][] }
+  { cancel: () => void; startedAt: number }
 >();
 let sequence = 0;
 const SCROLLABLE = /(auto|scroll)/;
@@ -196,12 +196,12 @@ function reconcileAIValue(editor: PlateEditor, target: Value) {
 }
 
 /**
- * Replace a document as one normal undo/redo transaction, then reveal changed
- * regions top-to-bottom with a collaborator caret and smooth scrolling.
+ * Apply one undoable edit and play a bounded visual transition.
  *
- * Playback never writes partial text into Slate or persistence. Typing, undo,
- * another AI edit, abort, or unmount can end playback without losing content.
- * Unchanged regions stay visible. No suggestion marks are created.
+ * The old visible document is retained in an inert snapshot during the swap.
+ * Broad rewrites crossfade together; small edits receive ordered ink/caret
+ * accents. Text and list markers in pending regions remain visible throughout.
+ * Playback never writes partial content into Slate or persistence.
  */
 export function applyAnimatedAIEdit(
   editor: PlateEditor,
@@ -209,88 +209,145 @@ export function applyAnimatedAIEdit(
   options: AnimatedAIEditOptions = {}
 ): { finished: Promise<void>; cancel: () => void } {
   const previous = active.get(editor);
+  const startedAt = previous?.startedAt ?? Date.now();
   previous?.cancel();
   const next = structuredClone(
     value.length ? value : [{ type: 'p', children: [{ text: '' }] }]
   ) as Value;
-  const paths = [
-    ...(previous?.paths ?? []),
-    ...getAIEditPaths(editor.children, next),
-  ]
-    .filter(
-      (path, index, all) =>
-        !all.some((other, j) => j < index && other.join('.') === path.join('.'))
-    )
-    .sort((a, b) => {
-      for (let i = 0; i < Math.min(a.length, b.length); i++)
-        if (a[i] !== b[i]) return a[i] - b[i];
-      return a.length - b.length;
-    });
   if (
     key({ children: editor.children as Tree[] }) ===
     key({ children: next as Tree[] })
-  ) {
+  )
     return { finished: Promise.resolve(), cancel: () => {} };
+  const paths = getAIEditPaths(editor.children, next);
+  const changedRoots = new Set(paths.map((path) => path[0]));
+  const broad =
+    paths.length > 5 ||
+    changedRoots.size / Math.max(1, editor.children.length, next.length) >= 0.6;
+  // A burst of tool calls shares its original deadline, not one budget per call.
+  const requested = options.duration ?? 1800;
+  const budget = Math.max(
+    0,
+    Math.min(Number.isFinite(requested) ? requested : 1800, 2000)
+  );
+  const deadline = startedAt + budget;
+  let root: HTMLElement | undefined;
+  try {
+    root = editor.api.toDOMNode(editor) ?? undefined;
+  } catch {
+    /* Not mounted. */
   }
-  editor.tf.withNewBatch(() => reconcileAIValue(editor, next));
-  // The next manual keystroke starts its own undo batch, even if adjacent.
-  editor.tf.setSplittingOnce(true);
+  const doc = root?.ownerDocument;
+  const win = doc?.defaultView;
+  const motion =
+    root &&
+    win &&
+    budget > 0 &&
+    !options.signal?.aborted &&
+    !(
+      options.reducedMotion ??
+      win.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    );
+  let snapshot: HTMLElement | undefined;
+  let scrollRoot: HTMLElement | null = root?.parentElement ?? null;
+  while (
+    scrollRoot &&
+    !SCROLLABLE.test(win!.getComputedStyle(scrollRoot).overflowY)
+  )
+    scrollRoot = scrollRoot.parentElement;
+  // Capture before mutating Slate: the old words never disappear into blank lists.
+  if (motion && root && win && Date.now() < deadline) {
+    const rect = root.getBoundingClientRect();
+    const viewport = scrollRoot?.getBoundingClientRect();
+    const top = Math.max(0, rect.top, viewport?.top ?? 0);
+    const bottom = Math.min(
+      win.innerHeight,
+      rect.bottom,
+      viewport?.bottom ?? win.innerHeight
+    );
+    const left = Math.max(0, rect.left, viewport?.left ?? 0);
+    const right = Math.min(
+      win.innerWidth,
+      rect.right,
+      viewport?.right ?? win.innerWidth
+    );
+    if (bottom > top && right > left) {
+      snapshot = doc!.createElement('div');
+      snapshot.dataset.aiEditSnapshot = '';
+      snapshot.setAttribute('aria-hidden', 'true');
+      snapshot.inert = true;
+      let background = 'Canvas';
+      for (
+        let ancestor: HTMLElement | null = root;
+        ancestor;
+        ancestor = ancestor.parentElement
+      ) {
+        const color = win.getComputedStyle(ancestor).backgroundColor;
+        if (color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') {
+          background = color;
+          break;
+        }
+      }
+      snapshot.style.cssText = `position:fixed;pointer-events:none;z-index:50;overflow:hidden;background:${background};top:${top}px;left:${left}px;width:${right - left}px;height:${bottom - top}px;`;
+      const clone = root.cloneNode(true) as HTMLElement;
+      for (const element of [
+        clone,
+        ...clone.querySelectorAll<HTMLElement>('*'),
+      ]) {
+        element.removeAttribute('id');
+        element.removeAttribute('contenteditable');
+        element.removeAttribute('role');
+        element.removeAttribute('aria-label');
+      }
+      clone.style.cssText += `;position:absolute;margin:0;top:${rect.top - top}px;left:${rect.left - left}px;width:${rect.width}px;height:${rect.height}px;box-sizing:border-box;`;
+      snapshot.append(clone);
+      root.parentElement!.append(snapshot);
+    }
+  }
+  try {
+    editor.tf.withNewBatch(() => reconcileAIValue(editor, next));
+    editor.tf.setSplittingOnce(true);
+  } catch (error) {
+    snapshot?.remove();
+    throw error;
+  }
   const committedChildren = editor.children;
   let cancelled = false;
-  let cleanup = () => {};
+  let cleanup = () => {
+    snapshot?.remove();
+  };
   const cancel = () => {
     cancelled = true;
     cleanup();
   };
-  const playback = { cancel, paths };
+  const playback = { cancel, startedAt };
   active.set(editor, playback);
   const finished = (async () => {
-    if (typeof document === 'undefined' || options.signal?.aborted) return;
-    const root = editor.api.toDOMNode(editor);
-    if (!root) return;
-    const doc = root.ownerDocument;
-    const win = doc.defaultView!;
-    const reduced =
-      options.reducedMotion ??
-      win.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
-    // CSS Custom Highlights preserve Slate's DOM, selection and rich formatting.
+    if (!motion || !root || !doc || !win || Date.now() >= deadline) return;
+    const name = `plate-ai-${++sequence}`;
     const css = win.CSS as typeof CSS & { highlights?: Map<string, unknown> };
     const HighlightClass = (
       win as unknown as { Highlight?: new (...ranges: Range[]) => unknown }
     ).Highlight;
-    if (!css?.highlights || !HighlightClass) return;
-    const name = `plate-ai-${++sequence}`;
     const style = doc.createElement('style');
-    style.textContent = `::highlight(${name}) { color: transparent; text-shadow: none; }
-      ::highlight(${name}-ink) { color: #7c3aed; background-color: #8b5cf61a; text-shadow: 0 0 12px #8b5cf655; }
-      @keyframes ${name}-pulse { 50% { box-shadow: 0 0 28px #8b5cf633; } }
-      [data-ai-edit-region="${name}"] { border-radius: 6px; background: linear-gradient(110deg,#8b5cf610,#38bdf810,transparent); animation: ${name}-pulse 1.2s ease-in-out infinite; transition: background .3s; }`;
+    style.textContent = `::highlight(${name}-ink) { color: #7c3aed; background-color: #8b5cf61a; text-shadow: 0 0 9px #8b5cf633; }
+      [data-ai-edit-region="${name}"] { border-radius:6px; background:linear-gradient(110deg,#8b5cf614,#38bdf80d,transparent); }
+      [data-ai-edit-mode="rewrite"] { border-radius:6px; }`;
     const caret = doc.createElement('div');
     caret.dataset.aiEditCaret = '';
     caret.setAttribute('aria-hidden', 'true');
     caret.style.cssText =
-      'position:fixed;z-index:9999;pointer-events:none;width:2px;background:#8b5cf6;border-radius:2px;box-shadow:0 0 12px #8b5cf699;transition:left 45ms linear,top 45ms linear;display:none';
+      'position:fixed;z-index:51;pointer-events:none;width:2px;background:#8b5cf6;border-radius:2px;box-shadow:0 0 12px #8b5cf699;display:none';
     const label = doc.createElement('span');
-    label.textContent = options.label ?? 'AI';
+    label.textContent = `✦ ${options.label ?? 'AI'}`;
     label.style.cssText =
       'position:absolute;bottom:100%;left:0;white-space:nowrap;background:linear-gradient(110deg,#7c3aed,#6366f1);color:white;border-radius:6px 6px 6px 0;padding:4px 9px;font:600 11px/1.4 system-ui;box-shadow:0 3px 14px #7c3aed33';
     caret.append(label);
-    const status = doc.createElement('span');
-    status.setAttribute('role', 'status');
-    status.style.cssText =
-      'position:fixed;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)';
-    status.textContent = options.label ?? 'AI';
     doc.head.append(style);
-    doc.body.append(caret, status);
+    doc.body.append(caret);
+    root.dataset.aiEditMode = broad ? 'rewrite' : 'regions';
+    const animations: Animation[] = [];
     const regions: HTMLElement[] = [];
-    let scrollRoot: HTMLElement | null = root.parentElement;
-    while (
-      scrollRoot &&
-      !SCROLLABLE.test(win.getComputedStyle(scrollRoot).overflowY)
-    ) {
-      scrollRoot = scrollRoot.parentElement;
-    }
     const events = [
       'beforeinput',
       'keydown',
@@ -298,34 +355,51 @@ export function applyAnimatedAIEdit(
       'wheel',
       'touchstart',
     ] as const;
+    const eventRoot = scrollRoot ?? root;
+    const invalid = () =>
+      cancelled ||
+      !root!.isConnected ||
+      editor.children !== committedChildren ||
+      Date.now() >= deadline;
+    const monitor = win.setInterval(() => {
+      if (invalid()) cancel();
+    }, 16);
+    const watchdog = win.setTimeout(cancel, Math.max(0, deadline - Date.now()));
     cleanup = () => {
-      css.highlights!.delete(name);
-      css.highlights!.delete(`${name}-ink`);
+      win.clearInterval(monitor);
+      win.clearTimeout(watchdog);
+      snapshot?.remove();
+      for (const animation of animations) animation.cancel();
+      css?.highlights?.delete(`${name}-ink`);
       style.remove();
       caret.remove();
-      status.remove();
-      for (const region of regions) {
+      for (const region of regions)
         if (region.dataset.aiEditRegion === name)
           region.removeAttribute('data-ai-edit-region');
-      }
-      for (const event of events) root.removeEventListener(event, cancel, true);
+      // A cancelled predecessor must not clear a successor's state.
+      if (active.get(editor) === playback)
+        root!.removeAttribute('data-ai-edit-mode');
+      for (const event of events)
+        eventRoot.removeEventListener(event, cancel, true);
       options.signal?.removeEventListener('abort', cancel);
     };
     for (const event of events)
-      root.addEventListener(event, cancel, { capture: true, passive: true });
+      eventRoot.addEventListener(event, cancel, {
+        capture: true,
+        passive: true,
+      });
     options.signal?.addEventListener('abort', cancel, { once: true });
     const wait = (ms: number) =>
-      new Promise<void>((resolve) => win.setTimeout(resolve, ms));
-    // React may commit after the first frame when an entire subtree is new.
-    // Wait for Slate's DOM mappings, never animate stale or missing DOM nodes.
-    for (let attempt = 0; attempt < 60; attempt++) {
+      new Promise<void>((resolve) =>
+        win.setTimeout(
+          resolve,
+          Math.max(0, Math.min(ms, deadline - Date.now()))
+        )
+      );
+    // Bound DOM readiness as part of the same budget. Never reveal an old mapping.
+    for (let attempt = 0; attempt < 15; attempt++) {
       await wait(16);
-      if (
-        cancelled ||
-        !root.isConnected ||
-        editor.children !== committedChildren
-      )
-        return;
+      if (invalid()) return;
       if (
         paths.every((path) => {
           const node = editor.api.node(path)?.[0];
@@ -334,12 +408,45 @@ export function applyAnimatedAIEdit(
       )
         break;
     }
-    const pending: Range[] = [];
+    const animate = (
+      element: HTMLElement,
+      frames: Keyframe[],
+      duration: number
+    ) => {
+      if (element.animate)
+        animations.push(
+          element.animate(frames, {
+            duration,
+            easing: 'cubic-bezier(.2,.7,.2,1)',
+            fill: 'forwards',
+          })
+        );
+    };
+    const swapDuration = Math.min(
+      broad ? 480 : 160,
+      Math.max(0, deadline - Date.now() - 32)
+    );
+    if (snapshot)
+      animate(snapshot, [{ opacity: 1 }, { opacity: 0 }], swapDuration);
+    if (broad) {
+      // A full rewrite is one short, calm transition. Preserve the viewport.
+      animate(
+        root,
+        [
+          { opacity: 0.45, filter: 'blur(1px)' },
+          { opacity: 1, filter: 'blur(0px)' },
+        ],
+        swapDuration
+      );
+      await wait(swapDuration);
+      return;
+    }
+    await wait(swapDuration);
+    snapshot?.remove();
     const groups: { element: HTMLElement; ranges: Range[] }[] = [];
     for (const path of paths) {
       const node = editor.api.node(path)?.[0];
-      if (!node) continue;
-      const element = editor.api.toDOMNode(node as TElement);
+      const element = node && editor.api.toDOMNode(node as TElement);
       if (!element) continue;
       const ranges: Range[] = [];
       for (const span of element.querySelectorAll('[data-slate-string]')) {
@@ -349,105 +456,67 @@ export function applyAnimatedAIEdit(
           const range = doc.createRange();
           range.selectNodeContents(text);
           ranges.push(range);
-          pending.push(range);
           text = walker.nextNode();
         }
       }
       groups.push({ element, ranges });
     }
-    const paint = () =>
-      css.highlights!.set(name, new HighlightClass(...pending));
-    paint();
-    for (const { element, ranges } of groups) {
-      if (
-        cancelled ||
-        !root.isConnected ||
-        editor.children !== committedChildren
-      )
-        break;
-      label.textContent = `✦ ${options.label ?? 'AI'} · ${regions.length + 1}/${groups.length}`;
+    for (const [index, { element, ranges }] of groups.entries()) {
+      if (invalid()) break;
       regions.push(element);
       element.dataset.aiEditRegion = name;
+      label.textContent = `✦ ${options.label ?? 'AI'} · ${index + 1}/${groups.length}`;
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
         inline: 'nearest',
       });
-      await wait(360);
-      if (
-        cancelled ||
-        !root.isConnected ||
-        editor.children !== committedChildren
-      )
-        break;
+      const slot = Math.max(
+        0,
+        (deadline - Date.now() - 40) / (groups.length - index)
+      );
+      await wait(Math.min(130, slot * 0.3));
       const total = ranges.reduce(
         (sum, range) => sum + range.toString().length,
         0
       );
-      const duration = Math.max(
-        0,
-        Math.min(options.duration ?? 1400, Math.max(650, total * 14))
-      );
-      const started = win.performance.now();
-      let shown = 0;
+      const start = Date.now();
+      const duration = Math.max(0, slot - Math.min(130, slot * 0.3));
       do {
-        if (
-          cancelled ||
-          !root.isConnected ||
-          editor.children !== committedChildren
-        )
-          break;
-        const count =
-          duration === 0
-            ? total
-            : Math.min(
-                total,
-                Math.ceil(
-                  (total * (win.performance.now() - started)) / duration
-                )
-              );
-        let remaining = count - shown;
+        if (invalid()) break;
+        let count = Math.min(
+          total,
+          Math.ceil((total * (Date.now() - start)) / Math.max(1, duration))
+        );
         for (const range of ranges) {
           const length = range.endOffset - range.startOffset;
-          if (!length) continue;
-          const take = Math.min(remaining, length);
-          range.setStart(range.startContainer, range.startOffset + take);
-          remaining -= take;
-          if (take) {
-            const ink = range.cloneRange();
-            ink.setStart(
-              range.startContainer,
-              Math.max(0, range.startOffset - 18)
-            );
-            ink.setEnd(range.startContainer, range.startOffset);
-            css.highlights!.set(`${name}-ink`, new HighlightClass(ink));
-            const point = range.cloneRange();
-            point.collapse(true);
-            const rect = point.getBoundingClientRect();
-            if (rect.height) {
-              caret.style.display = 'block';
-              caret.style.left = `${rect.left}px`;
-              caret.style.top = `${rect.top}px`;
-              caret.style.height = `${rect.height}px`;
-              const viewport = scrollRoot?.getBoundingClientRect();
-              const bottom = viewport?.bottom ?? win.innerHeight;
-              const top = viewport?.top ?? 0;
-              if (rect.bottom > bottom - 70 || rect.top < top + 40) {
-                const delta = rect.top - (top + (bottom - top) * 0.45);
-                if (scrollRoot)
-                  scrollRoot.scrollBy({ top: delta, behavior: 'smooth' });
-                else win.scrollBy({ top: delta, behavior: 'smooth' });
-              }
-            }
+          if (count > length) {
+            count -= length;
+            continue;
           }
-          if (!remaining) break;
+          const ink = range.cloneRange();
+          ink.setStart(
+            range.startContainer,
+            Math.max(range.startOffset, range.startOffset + count - 18)
+          );
+          ink.setEnd(range.startContainer, range.startOffset + count);
+          if (css?.highlights && HighlightClass)
+            css.highlights.set(`${name}-ink`, new HighlightClass(ink));
+          const point = ink.cloneRange();
+          point.collapse(false);
+          const rect = point.getBoundingClientRect();
+          if (rect.height) {
+            caret.style.display = 'block';
+            caret.style.left = `${Math.min(rect.left, win.innerWidth - 130)}px`;
+            caret.style.top = `${rect.top}px`;
+            caret.style.height = `${rect.height}px`;
+          }
+          break;
         }
-        shown = count;
-        paint();
-        if (shown < total) await wait(24);
-      } while (shown < total);
+        if (Date.now() - start >= duration) break;
+        await wait(16);
+      } while (!invalid());
       element.removeAttribute('data-ai-edit-region');
-      playback.paths.shift();
     }
   })().finally(() => {
     cleanup();
