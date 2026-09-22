@@ -263,13 +263,14 @@ test('an eighteen-region rewrite retains the old snapshot and never hides list t
   }, after);
   expect(evidence.oldVisible).toBe(true);
   expect(evidence.inert).toBe(true);
-  expect(evidence.elapsed).toBeLessThan(850);
+  expect(evidence.elapsed).toBeGreaterThan(1100);
+  expect(evidence.elapsed).toBeLessThan(1900);
   expect(evidence.hiddenTextStyles).toBe(0);
   const editor = page.getByRole('textbox', { name: 'AI document' });
   await expect(editor).toContainText('Improved agenda item 12');
   await expect(
     page.locator(
-      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
     )
   ).toHaveCount(0);
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -322,7 +323,9 @@ test('rewrite cancellation, undo and unsupported highlights leave no overlay', a
       throw new Error('Undo mismatch');
   });
   await expect(
-    page.locator('[data-ai-edit-snapshot], [data-ai-edit-mode]')
+    page.locator(
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode]'
+    )
   ).toHaveCount(0);
   await page.evaluate(async () => {
     Object.defineProperty(window, 'Highlight', {
@@ -337,7 +340,9 @@ test('rewrite cancellation, undo and unsupported highlights leave no overlay', a
     'Final replacement'
   );
   await expect(
-    page.locator('[data-ai-edit-snapshot], [data-ai-edit-mode]')
+    page.locator(
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode]'
+    )
   ).toHaveCount(0);
 });
 
@@ -355,7 +360,7 @@ test('an explicit short total budget includes the full replacement transition', 
   expect(elapsed).toBeLessThan(350);
   await expect(
     page.locator(
-      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
     )
   ).toHaveCount(0);
 });
@@ -372,7 +377,7 @@ test('wheel interruption during a full rewrite removes the old snapshot immediat
   });
   await expect(
     page.locator(
-      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
     )
   ).toHaveCount(0);
   await expect(page.getByRole('textbox', { name: 'AI document' })).toHaveText(
@@ -391,7 +396,78 @@ test('unmount during a whole-document replacement clears snapshots and animation
   await page.getByRole('button', { name: 'Source map', exact: true }).click();
   await expect(
     page.locator(
-      '[data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
+      '[data-ai-edit-sweep], [data-ai-edit-snapshot], [data-ai-edit-mode], [data-ai-edit-caret]'
     )
   ).toHaveCount(0);
+});
+
+test('large section insertion uses local animation and scrolls to its first actual change', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    const h = (window as any).directEditPlayground;
+    const before = structuredClone(h.editor.children);
+    const added = Array.from({ length: 9 }, (_, i) => ({
+      type: 'p',
+      children: [{ text: `Inserted section ${i}` }],
+    }));
+    const after = [...before.slice(0, 24), ...added, ...before.slice(24)];
+    const reveals: number[][] = [];
+    Object.assign(window, { insertionReveals: reveals });
+    void h.apply(after, {
+      apply: () => {
+        h.editor.tf.setValue(after);
+        return [[24]];
+      },
+      reveal: (path: number[]) => {
+        reveals.push(path);
+        return h.editor.api.toDOMNode(h.editor.api.node(path)[0]);
+      },
+    });
+  });
+  await expect(page.locator('[data-ai-edit-mode="regions"]')).toHaveCount(1);
+  await expect(page.locator('[data-ai-edit-snapshot]')).toHaveCount(0);
+  await expect(
+    page.getByText('Inserted section 0', { exact: true })
+  ).toBeInViewport();
+  expect(await page.evaluate(() => (window as any).insertionReveals)).toEqual([
+    [24],
+  ]);
+  await expect(page.locator('[data-ai-edit-caret]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(
+    page.getByText('Inserted section 0', { exact: true })
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Redo', exact: true }).click();
+  await expect(
+    page.getByText('Inserted section 0', { exact: true })
+  ).toHaveCount(1);
+});
+
+test('each target is revealed only when reached, using refreshed nested DOM', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const h = (window as any).directEditPlayground;
+    const after = structuredClone(h.editor.children);
+    after[3].children = [{ text: 'First actual change' }];
+    after[30].children = [{ text: 'Last actual change' }];
+    const visits: { path: number[]; time: number }[] = [];
+    await h.apply(after, {
+      apply: () => {
+        h.editor.tf.setValue(after);
+        return [[30], [3]];
+      },
+      reveal: (path: number[]) => {
+        visits.push({ path, time: performance.now() });
+        return h.editor.api.toDOMNode(h.editor.api.node(path)[0]);
+      },
+    });
+    return visits;
+  });
+  expect(result.map((v) => v.path)).toEqual([[3], [30]]);
+  expect(result[1].time - result[0].time).toBeGreaterThan(300);
+  await expect(
+    page.getByText('Last actual change', { exact: true })
+  ).toBeInViewport();
 });
