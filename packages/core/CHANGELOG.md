@@ -1,5 +1,11 @@
 # @platejs/core
 
+## 53.4.11
+
+### Patch Changes
+
+- 914e2b9: Expose atom-store helpers through the generated React export barrel.
+
 ## 53.4.10
 
 ### Patch Changes
