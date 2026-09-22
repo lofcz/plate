@@ -1,5 +1,11 @@
 # @platejs/ai
 
+## 53.4.11
+
+### Patch Changes
+
+- 914e2b9: Add undoable direct AI edits with sequential typing reveal, collaborator caret, and smooth scrolling.
+
 ## 53.3.4
 
 ### Patch Changes

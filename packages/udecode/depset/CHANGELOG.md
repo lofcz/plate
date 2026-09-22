@@ -1,5 +1,11 @@
 # depset
 
+## 53.4.11
+
+### Patch Changes
+
+- 914e2b9: Declare the tinyexec runtime dependency for dependency synchronization.
+
 ## 53.4.10
 
 ### Patch Changes
