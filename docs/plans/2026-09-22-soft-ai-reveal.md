@@ -40,3 +40,7 @@ Reboot status:
 
 Open risks:
 Existing baseline table failures remain outside scope; monorepo gate waived by user.
+
+PR: https://github.com/lofcz/plate/pull/46
+
+Review: Plate structured autoreview clean. Downstream review correctly requires the pending dependency update before deployment; resolved by publishing this API and updating Sciobot together. AI unit tests: 14 pass, 313 assertions.
