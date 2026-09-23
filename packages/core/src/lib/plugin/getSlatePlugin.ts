@@ -33,6 +33,10 @@ export function getSlatePlugin<C extends AnyPluginConfig = PluginConfig>(
 
 /** Get editor plugin type by key or plugin object. */
 export function getPluginType(editor: SlateEditor, key: string): string {
+  // An unregistered key resolves to itself; building a throwaway plugin for it
+  // is costly on hot paths such as list normalization.
+  if (editor.plugins && !editor.plugins[key]) return key;
+
   const p = editor.getPlugin<AnySlatePlugin>({ key });
 
   return p.node.type ?? p.key ?? '';

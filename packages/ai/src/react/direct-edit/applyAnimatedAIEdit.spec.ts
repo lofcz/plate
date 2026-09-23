@@ -1,6 +1,9 @@
 import { createPlateEditor } from 'platejs/react';
 import type { Value } from 'platejs';
-import { applyAnimatedAIEdit, getAIEditPaths } from './applyAnimatedAIEdit';
+import { AIChangesPlugin } from './AIChangesPlugin';
+import { getAIChangeLedger } from './aiChanges';
+import { applyAnimatedAIEdit } from './applyAnimatedAIEdit';
+import { diffAIEdit } from './diffAIEdit';
 
 const p = (text: string) => ({ type: 'p', children: [{ text }] });
 const phase = (...children: ReturnType<typeof p>[]) => ({
@@ -102,40 +105,173 @@ describe('persisted properties', () => {
   });
 });
 
-describe('changed region ordering', () => {
-  it('finds three distant regions top to bottom', () => {
+const summary = (before: Value, after: Value) =>
+  diffAIEdit(before, after).map((group) => ({
+    at: [...(group.ancestors.at(-1)?.[1] ?? []), group.afterIndex],
+    kind: group.kind,
+  }));
+
+describe('structural diff', () => {
+  it('finds three distant word edits top to bottom', () => {
     expect(
-      getAIEditPaths(
-        [p('a'), p('x'), p('b'), p('y'), p('c')],
-        [p('A'), p('x'), p('B'), p('y'), p('C')]
-      )
-    ).toEqual([[0], [2], [4]]);
-  });
-  it('recurses into preparation sections', () => {
-    expect(
-      getAIEditPaths(
-        [phase(p('a'), p('b'), p('c'))],
-        [phase(p('A'), p('b'), p('C'))]
+      summary(
+        [p('a one'), p('x'), p('b two'), p('y'), p('c three')],
+        [p('A one'), p('x'), p('B two'), p('y'), p('C three')]
       )
     ).toEqual([
-      [0, 0],
-      [0, 2],
+      { at: [0], kind: 'text' },
+      { at: [2], kind: 'text' },
+      { at: [4], kind: 'text' },
+    ]);
+  });
+  it('recurses into sections', () => {
+    expect(
+      summary(
+        [phase(p('a x'), p('b'), p('c x'))],
+        [phase(p('A x'), p('b'), p('C x'))]
+      )
+    ).toEqual([
+      { at: [0, 0], kind: 'text' },
+      { at: [0, 2], kind: 'text' },
     ]);
   });
   it('handles repeated paragraphs and duplicate insertions', () => {
-    expect(
-      getAIEditPaths([p('same'), p('same')], [p('same'), p('changed')])
-    ).toEqual([[1]]);
-    expect(getAIEditPaths([p('same')], [p('same'), p('same')])).toEqual([[1]]);
+    expect(summary([p('same'), p('same')], [p('same'), p('changed')])).toEqual([
+      { at: [1], kind: 'replace' },
+    ]);
+    expect(summary([p('same')], [p('same'), p('same')])).toEqual([
+      { at: [1], kind: 'insert' },
+    ]);
   });
-  it('does not animate unchanged paragraphs shifted by insertion', () => {
+  it('does not touch paragraphs shifted by an insertion or deletion', () => {
+    expect(summary([p('a'), p('b')], [p('new'), p('a'), p('b')])).toEqual([
+      { at: [0], kind: 'insert' },
+    ]);
+    expect(summary([p('a'), p('b')], [p('b')])).toEqual([
+      { at: [0], kind: 'remove' },
+    ]);
+  });
+  it('reports rewritten words and removed words', () => {
+    const [group] = diffAIEdit(
+      [p('The cat sat on the mat.')],
+      [p('The dog sat on the rug.')]
+    );
+    expect(group.kind).toBe('text');
+    expect(group.text).toEqual({
+      inserted: [
+        [4, 7],
+        [19, 23],
+      ],
+      removed: 'cat mat.',
+    });
+  });
+  it('treats low-similarity rewrites as block replacements', () => {
     expect(
-      getAIEditPaths([p('a'), p('b')], [p('new'), p('a'), p('b')])
+      summary([p('alpha beta gamma')], [p('entirely different words')])
+    ).toEqual([{ at: [0], kind: 'replace' }]);
+  });
+});
+
+describe('canonical before value', () => {
+  it('promotes changes to the nearest live ancestor that lines up', async () => {
+    const editor = createPlateEditor({
+      value: [
+        p('intro'),
+        { type: 'quote', children: [p('inner a'), p('inner b')] } as any,
+      ],
+    });
+    const beforeValue = [p('intro'), phase(p('inner a'), p('inner b'))];
+    const after = [p('intro'), phase(p('inner a'), p('inner CHANGED'))];
+    const intro = editor.children[0];
+    const edit = applyAnimatedAIEdit(editor, after, {
+      beforeValue,
+      reducedMotion: true,
+    });
+    await edit.finished;
+    expect(editor.children[0]).toBe(intro);
+    expect(editor.children[1]).toMatchObject(after[1]);
+    expect(edit.changes.map((change) => change.item.kind)).toEqual(['replace']);
+  });
+});
+
+describe('change tracking', () => {
+  const tracked = (value: Value) =>
+    createPlateEditor({ plugins: [AIChangesPlugin], value });
+  const ledgerOf = (editor: ReturnType<typeof tracked>) =>
+    getAIChangeLedger(editor);
+  const edit = (
+    editor: ReturnType<typeof tracked>,
+    value: Value,
+    session = 's1'
+  ) =>
+    applyAnimatedAIEdit(editor, value, { reducedMotion: true, session })
+      .finished;
+
+  it('merges edits within a session and reverts to the pre-session content', async () => {
+    const editor = tracked([p('one two three'), p('keep')]);
+    await edit(editor, [p('one TWO three'), p('keep')]);
+    await edit(editor, [p('one TWO THREE'), p('keep')]);
+    const changes = ledgerOf(editor).changes;
+    expect(changes).toHaveLength(1);
+    expect(changes[0].kind).toBe('text');
+    editor.getApi(AIChangesPlugin).aiChanges.reject(changes[0].id);
+    expect(editor.api.string([0])).toBe('one two three');
+    expect(ledgerOf(editor).changes).toHaveLength(0);
+    editor.tf.undo();
+    expect(editor.api.string([0])).toBe('one TWO THREE');
+  });
+
+  it('restores removed blocks and removes inserted ones on reject', async () => {
+    const editor = tracked([p('a'), p('b'), p('c')]);
+    await edit(editor, [p('a'), p('c'), p('new')]);
+    const api = editor.getApi(AIChangesPlugin).aiChanges;
+    expect(api.list().map((change) => change.kind)).toEqual([
+      'remove',
+      'insert',
+    ]);
+    api.rejectAll();
+    expect(
+      editor.children.map((node) => editor.api.string(node as any))
+    ).toEqual(['a', 'b', 'c']);
+  });
+
+  it('accepting keeps content and clears the change', async () => {
+    const editor = tracked([p('a'), p('b')]);
+    await edit(editor, [p('a'), p('b'), p('c')]);
+    const api = editor.getApi(AIChangesPlugin).aiChanges;
+    api.accept(api.list()[0].id);
+    expect(api.list()).toHaveLength(0);
+    expect(editor.children).toHaveLength(3);
+    await edit(editor, [p('a'), p('b'), p('c'), p('d')]);
+    expect(api.list()).toHaveLength(1);
+    expect(api.list()[0].removed).toHaveLength(0);
+  });
+
+  it('a user edit inside a change accepts it; elsewhere it does not', async () => {
+    const editor = tracked([p('first words'), p('second words')]);
+    await edit(editor, [p('FIRST words'), p('SECOND words')]);
+    expect(ledgerOf(editor).changes).toHaveLength(2);
+    editor.tf.insertText('!', { at: { path: [1, 0], offset: 0 } });
+    expect(
+      ledgerOf(editor).changes.map((change) => change.refs[0].current)
     ).toEqual([[0]]);
   });
-  it('reveals a neighboring region after deletion', () => {
-    expect(getAIEditPaths([p('a'), p('b')], [p('b')])).toEqual([[0]]);
-    expect(getAIEditPaths([p('a'), p('b')], [p('a')])).toEqual([[0]]);
+
+  it('a new session accepts earlier changes', async () => {
+    const editor = tracked([p('a x'), p('b x')]);
+    await edit(editor, [p('A x'), p('b x')], 's1');
+    await edit(editor, [p('A x'), p('B x')], 's2');
+    const changes = ledgerOf(editor).changes;
+    expect(changes).toHaveLength(1);
+    expect(changes[0].refs[0].current).toEqual([1]);
+  });
+
+  it('undoing the AI edit drops its changes', async () => {
+    const editor = tracked([p('a'), p('b')]);
+    await edit(editor, [p('a'), p('new'), p('b')]);
+    expect(ledgerOf(editor).changes).toHaveLength(1);
+    editor.tf.undo();
+    expect(ledgerOf(editor).changes).toHaveLength(0);
   });
 });
 

@@ -4,6 +4,8 @@ import {
   type EditorNodeOptions,
   type EditorNodesOptions,
   LocationApi,
+  NodeApi,
+  PathApi,
   type ValueOf,
 } from '../../interfaces';
 import type { Editor } from '../../interfaces/editor/editor-type';
@@ -19,6 +21,10 @@ export const node = <N extends DescendantOf<E>, E extends Editor = Editor>(
   try {
     if (LocationApi.isAt(atOrOptions)) {
       const at = getAt(editor, atOrOptions)!;
+
+      // Slate throws on a missing path with the whole document serialized into
+      // the message; probing absent siblings is common enough to make that hot.
+      if (PathApi.isPath(at) && !NodeApi.has(editor, at)) return;
 
       return nodeBase(editor as any, at, nodeOptions) as any;
     }
