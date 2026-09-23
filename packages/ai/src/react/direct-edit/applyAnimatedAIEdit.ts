@@ -209,8 +209,8 @@ function captureGhost(
 }
 
 /**
- * Commit an AI edit as one undoable batch of minimal operations, record it as
- * reviewable changes (with AIChangesPlugin), and play a bounded transition:
+ * Commit an AI edit as one undoable batch of minimal operations, highlight the
+ * changed blocks (with AIChangesPlugin), and play a bounded transition:
  * removed blocks strike through and dissolve, replacements fade in and are
  * typed out by a labelled caret with a fading trail. Playback is purely
  * visual and never writes partial content into the document.

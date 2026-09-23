@@ -2,26 +2,27 @@ import type { Path, SlateEditor, TRange } from 'platejs';
 
 import { NodeApi, TextApi } from 'platejs';
 
-import type { AIChange, AIChangeLedger } from './aiChanges';
+import {
+  type AIChange,
+  type AIChangeLedger,
+  AI_CHANGE_FADE,
+} from './aiChanges';
 import type { AIEditTextSpan } from './diffAIEdit';
 
 const STYLE_ATTRIBUTE = 'data-plate-ai-edit-styles';
 
 export const AI_HIGHLIGHT = {
-  change: 'plate-ai-change',
   pending: 'plate-ai-pending',
   trail: ['plate-ai-trail-1', 'plate-ai-trail-2', 'plate-ai-trail-3'],
 } as const;
 
+const TINT = 'rgb(139 92 246/.07)';
+
 const CSS_TEXT = `
-[data-ai-change],[data-ai-change-removed]{--plate-ai-bar:0 0 transparent;--plate-ai-cut:0 0 transparent;box-shadow:var(--plate-ai-bar),var(--plate-ai-cut);transition:background-color .6s ease,box-shadow .6s ease}
-[data-ai-change]{border-radius:4px}
-[data-ai-change="new"]{background-color:rgb(139 92 246/.075);--plate-ai-bar:-7px 0 0 -4px rgb(139 92 246/.9)}
-[data-ai-change="new"] [data-ai-change="new"]{background-color:transparent}
-[data-ai-change="seen"]:hover,[data-ai-change][data-ai-change-active]{--plate-ai-bar:-7px 0 0 -4px rgb(139 92 246/.45)}
-[data-ai-change-removed="before"]{--plate-ai-cut:0 -5px 0 -3px rgb(244 63 94/.7)}
-[data-ai-change-removed="after"]{--plate-ai-cut:0 5px 0 -3px rgb(244 63 94/.7)}
-::highlight(${AI_HIGHLIGHT.change}){background-color:rgb(139 92 246/.18)}
+[data-ai-change]{border-radius:4px;transition:background-color .5s ease,box-shadow .5s ease}
+[data-ai-change="new"]{background-color:${TINT};box-shadow:-6px 0 0 ${TINT},6px 0 0 ${TINT}}
+[data-ai-change="new"] [data-ai-change]{background-color:transparent;box-shadow:none}
+[data-ai-change="seen"]{transition-duration:${AI_CHANGE_FADE}ms}
 ::highlight(${AI_HIGHLIGHT.pending}){color:transparent}
 ::highlight(${AI_HIGHLIGHT.trail[0]}){background-color:rgb(139 92 246/.34);color:#6d28d9}
 ::highlight(${AI_HIGHLIGHT.trail[1]}){background-color:rgb(139 92 246/.2)}
@@ -31,14 +32,7 @@ const CSS_TEXT = `
 [data-ai-edit-caret]{position:fixed;z-index:51;pointer-events:none;width:2px;border-radius:2px;background:#8b5cf6;box-shadow:0 0 10px rgb(139 92 246/.7);display:none}
 [data-ai-edit-caret]::before{content:"";position:absolute;right:2px;top:12%;height:76%;width:64px;border-radius:999px 0 0 999px;background:linear-gradient(to left,rgb(139 92 246/.32),rgb(56 189 248/.12) 55%,transparent);filter:blur(3px)}
 [data-ai-edit-caret]>span{position:absolute;bottom:100%;left:0;margin-bottom:3px;white-space:nowrap;background:linear-gradient(110deg,#7c3aed,#6366f1);color:#fff;border-radius:6px 6px 6px 0;padding:3px 8px;font:600 11px/1.4 system-ui,sans-serif;box-shadow:0 3px 14px rgb(124 58 237/.25)}
-[data-ai-change-chip]{position:fixed;z-index:60;display:flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:Canvas;color:CanvasText;box-shadow:0 6px 20px rgb(15 23 42/.14),0 0 0 1px rgb(15 23 42/.08);font:500 12px/1 system-ui,sans-serif;transform:translate(-100%,calc(-100% - 6px));animation:plate-ai-chip-in .14s ease-out}
-[data-ai-change-chip] [data-chip-label]{padding:6px 8px;color:#7c3aed;font-weight:600;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-[data-ai-change-chip] button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:6px}
-[data-ai-change-chip] button:hover,[data-ai-change-chip] button:focus-visible{background:rgb(139 92 246/.1)}
-[data-ai-change-chip] button[data-action="reject"]:hover,[data-ai-change-chip] button[data-action="reject"]:focus-visible{background:rgb(244 63 94/.1);color:#be123c}
-[data-ai-change-chip][data-placement="below"]{transform:translate(-100%,6px);animation:none}
-@keyframes plate-ai-chip-in{from{opacity:0;transform:translate(-100%,calc(-100% - 2px))}}
-@media (prefers-reduced-motion:reduce){[data-ai-change],[data-ai-change-removed]{transition:none}[data-ai-change-chip]{animation:none}}
+@media (prefers-reduced-motion:reduce){[data-ai-change]{transition:none}}
 `;
 
 export function ensureAIEditStyles(doc: Document) {
@@ -156,71 +150,31 @@ export function textRanges(element: HTMLElement): Range[] {
   return ranges;
 }
 
-const ATTRIBUTES = [
-  'data-ai-change',
-  'data-ai-change-kind',
-  'data-ai-change-removed',
-];
+export const AI_CHANGE_ATTRIBUTE = 'data-ai-change';
 
 /**
- * Mirror the ledger onto the DOM: block attributes for status, removal
- * markers on neighbours, and word highlights for rewritten text. Returns the
- * change owning each decorated element, for hover handling.
+ * Mirror revealed changes onto their block elements as `data-ai-change`, and
+ * update `owners` in place to map each decorated element to its change.
  */
 export function syncAIChangeDecorations(
   editor: SlateEditor,
   ledger: AIChangeLedger,
-  previous: Set<HTMLElement>
-): { decorated: Set<HTMLElement>; owners: Map<HTMLElement, AIChange> } {
-  const wanted = new Map<HTMLElement, Record<string, string>>();
-  const owners = new Map<HTMLElement, AIChange>();
-  const ranges: Range[] = [];
+  owners: Map<HTMLElement, AIChange>
+) {
+  const next = new Map<HTMLElement, AIChange>();
   for (const change of ledger.changes) {
     if (change.pending) continue;
     for (const ref of change.refs) {
-      const path = ref.current;
-      const element = path && toDOMElement(editor, path);
-      if (!path || !element) continue;
-      wanted.set(element, {
-        ...wanted.get(element),
-        'data-ai-change': change.status,
-        'data-ai-change-kind': change.kind,
-      });
-      owners.set(element, change);
-      if (change.status === 'new' && change.text?.inserted.length)
-        ranges.push(...toDOMRanges(editor, path, change.text.inserted));
-    }
-    const anchor = !change.refs.length && change.anchor;
-    const anchorPath = anchor && anchor.ref.current;
-    const element = anchorPath && toDOMElement(editor, anchorPath);
-    if (anchor && element) {
-      wanted.set(element, {
-        ...wanted.get(element),
-        'data-ai-change-removed': anchor.after ? 'after' : 'before',
-      });
-      if (!owners.has(element)) owners.set(element, change);
+      const element = ref.current && toDOMElement(editor, ref.current);
+      if (element) next.set(element, change);
     }
   }
-  for (const element of new Set([...previous, ...wanted.keys()])) {
-    const attributes = wanted.get(element) ?? {};
-    for (const name of ATTRIBUTES) {
-      const value = attributes[name];
-      if (value === undefined) element.removeAttribute(name);
-      else if (element.getAttribute(name) !== value)
-        element.setAttribute(name, value);
-    }
+  for (const element of owners.keys())
+    if (!next.has(element)) element.removeAttribute(AI_CHANGE_ATTRIBUTE);
+  owners.clear();
+  for (const [element, change] of next) {
+    owners.set(element, change);
+    if (element.getAttribute(AI_CHANGE_ATTRIBUTE) !== change.status)
+      element.setAttribute(AI_CHANGE_ATTRIBUTE, change.status);
   }
-  try {
-    const root = editor.api.toDOMNode(editor);
-    if (root)
-      setHighlightRanges(
-        root.ownerDocument,
-        AI_HIGHLIGHT.change,
-        ledger,
-        ranges
-      );
-  } catch {
-    /* Not mounted. */
-  }
-  return { decorated: new Set(wanted.keys()), owners };
 }

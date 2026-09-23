@@ -229,7 +229,7 @@ const ownProps = (node: Tree, isIgnored: (key: string) => boolean) =>
   );
 
 /** `set_node` from `current` to `target`'s own properties, if they differ. */
-export function setOwnProps(
+function setOwnProps(
   editor: SlateEditor,
   path: Path,
   current: Tree,
@@ -263,7 +263,7 @@ const sameMarks = (a: Tree, b: Tree) => {
  * leaves with identical marks, edit text in place so DOM text nodes and any
  * selection inside unchanged words survive.
  */
-export function replaceChildren(
+function replaceChildren(
   editor: SlateEditor,
   path: Path,
   current: Tree[],
@@ -326,13 +326,12 @@ export function replaceChildren(
 }
 
 /** Replace `removed` siblings at `parent[index]` with `inserted` ones. */
-export function replaceSiblings(
+function replaceSiblings(
   editor: SlateEditor,
   parent: Path,
   index: number,
   removed: Descendant[],
-  inserted: Descendant[],
-  { inheritIds = true }: { inheritIds?: boolean } = {}
+  inserted: Descendant[]
 ) {
   for (let offset = removed.length - 1; offset >= 0; offset--)
     editor.tf.apply({
@@ -345,11 +344,7 @@ export function replaceSiblings(
     const clone = structuredClone(node) as Tree;
     // A same-type positional replacement keeps its identity for comments,
     // anchors and collaboration cursors.
-    if (
-      inheritIds &&
-      previous?.id !== undefined &&
-      previous.type === clone.type
-    )
+    if (previous?.id !== undefined && previous.type === clone.type)
       clone.id = previous.id;
     editor.tf.apply({
       type: 'insert_node',
