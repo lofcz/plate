@@ -43,16 +43,7 @@ const directEditPlugins = [
         )
       : plugin
   ),
-  AIChangesPlugin.configure({
-    options: {
-      labels: {
-        accept: 'Keep',
-        changed: 'ScioBot edit',
-        reject: 'Revert',
-        removed: 'ScioBot removed text',
-      },
-    },
-  }),
+  AIChangesPlugin,
 ];
 
 export function DirectEditPlayground() {
@@ -174,7 +165,7 @@ export function DirectEditPlayground() {
           type="button"
           onClick={() => {
             playback.current?.cancel();
-            editor.getApi(AIChangesPlugin).aiChanges.acceptAll();
+            editor.getApi(AIChangesPlugin).aiChanges.settleAll();
             editor.tf.setValue(deserializeMd(editor, original));
           }}
         >

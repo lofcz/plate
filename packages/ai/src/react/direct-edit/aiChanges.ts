@@ -9,21 +9,12 @@ import type {
 
 import { ElementApi, NodeApi, PathApi } from 'platejs';
 
-import {
-  type AIEditGroupKind,
-  type AIEditTextDiff,
-  diffAIEdit,
-} from './diffAIEdit';
-import {
-  createIgnoredProp,
-  replaceChildren,
-  replaceSiblings,
-  setOwnProps,
-} from './planAIEdit';
+import { type AIEditGroupKind, diffAIEdit } from './diffAIEdit';
+import { createIgnoredProp } from './planAIEdit';
 
 /**
  * - `new`: highlighted until acknowledged.
- * - `seen`: acknowledged by hovering; still revertible until accepted.
+ * - `seen`: acknowledged; fading out, then forgotten.
  */
 export type AIChangeStatus = 'new' | 'seen';
 
@@ -34,19 +25,16 @@ export interface AIChange {
   status: AIChangeStatus;
   /** Hidden while edit playback has not reached it yet. */
   pending: boolean;
-  /** Resulting nodes, in order. Empty for pure removals. */
+  /** Resulting nodes, in order. */
   refs: PathRef[];
-  /** Sibling marking where removed content used to be. */
-  anchor?: { after: boolean; ref: PathRef };
-  /** Original nodes, restored on reject. For `text`/`props`: the original node. */
-  removed: Descendant[];
-  /** Word-level difference, for `text` changes. */
-  text?: AIEditTextDiff;
   /** Baseline location, while the session baseline is live. */
   base?: { parent: Path; index: number; count: number };
   /** Node identities when last computed; unchanged tokens carry status over. */
   tokens: object[];
 }
+
+/** How long an acknowledged change fades before it is forgotten. */
+export const AI_CHANGE_FADE = 1200;
 
 type Tree = { children?: Tree[]; [key: string]: unknown };
 
@@ -70,14 +58,19 @@ const nodeAt = (root: Descendant[], path: Path): Tree | undefined =>
 const covers = (outer: Path, inner: Path) =>
   PathApi.equals(outer, inner) || PathApi.isAncestor(outer, inner);
 
+const pathsOf = (change: AIChange) =>
+  change.refs.flatMap((ref) => (ref.current ? [ref.current] : []));
+
 /**
- * Per-editor record of AI changes.
+ * Per-editor record of content the AI wrote, highlighted until the user
+ * acknowledges it.
  *
  * Within one session (typically one user request, possibly spanning many
  * agent tool calls) changes are recomputed as `diff(baseline, current)`, so
- * repeated edits of one block merge and reject restores the pre-session
- * content. A user operation seals the baseline; one inside a changed block
- * also accepts that change. A new session accepts all previous changes.
+ * repeated edits of one block merge. Acknowledged changes fold into the
+ * baseline and never reappear unless the AI edits them again. A user
+ * operation seals the baseline; one inside a changed block also settles that
+ * change. A new session settles all previous changes.
  */
 export class AIChangeLedger {
   changes: AIChange[] = [];
@@ -85,6 +78,7 @@ export class AIChangeLedger {
   private session: string | undefined;
   private muted = 0;
   private version = 0;
+  private readonly fades = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly listeners = new Set<() => void>();
   /** Node identity cache for diffs using this ledger's `ignoreProps`. */
   readonly keyCache = new WeakMap<object, string>();
@@ -162,34 +156,13 @@ export class AIChangeLedger {
     const next: AIChange[] = [];
 
     for (const group of groups) {
+      // Removals have nothing left to highlight; playback shows them leaving.
+      if (!group.insertCount) continue;
       const beforeParent = group.ancestors.at(-1)?.[0] ?? [];
       const afterParent = group.ancestors.at(-1)?.[1] ?? [];
-      const removed = (nodeAt(baseline, beforeParent)?.children ?? []).slice(
-        group.beforeIndex,
-        group.beforeIndex + group.removeCount
-      ) as Descendant[];
-      const siblings = nodeAt(current, afterParent)?.children ?? [];
-      const nodes = siblings.slice(
-        group.afterIndex,
-        group.afterIndex + group.insertCount
-      );
-      const refs = nodes.map((_, offset) =>
-        editor.api.pathRef([...afterParent, group.afterIndex + offset])
-      );
-      let anchor: AIChange['anchor'];
-      if (!refs.length) {
-        if (siblings[group.afterIndex])
-          anchor = {
-            after: false,
-            ref: editor.api.pathRef([...afterParent, group.afterIndex]),
-          };
-        else if (group.afterIndex > 0)
-          anchor = {
-            after: true,
-            ref: editor.api.pathRef([...afterParent, group.afterIndex - 1]),
-          };
-      }
-      const tokens: object[] = nodes.length ? nodes : removed;
+      const tokens: object[] = (
+        nodeAt(current, afterParent)?.children ?? []
+      ).slice(group.afterIndex, group.afterIndex + group.insertCount);
       const prior = previous.get(tokens[0]);
       const same =
         prior?.kind === group.kind &&
@@ -200,10 +173,9 @@ export class AIChangeLedger {
         kind: group.kind,
         status: same ? prior.status : 'new',
         pending: same ? prior.pending : pending,
-        refs,
-        anchor,
-        removed,
-        text: group.text,
+        refs: tokens.map((_, offset) =>
+          editor.api.pathRef([...afterParent, group.afterIndex + offset])
+        ),
         base: {
           parent: beforeParent,
           index: group.beforeIndex,
@@ -213,21 +185,22 @@ export class AIChangeLedger {
       });
     }
 
-    const paths = (change: AIChange) =>
-      [...change.refs, change.anchor?.ref].flatMap((ref) =>
-        ref?.current ? [ref.current] : []
-      );
-    const fresh = next.flatMap(paths);
+    const fresh = next.flatMap(pathsOf);
     const survivors = kept.filter((change) => {
-      const overlaps = paths(change).some((path) =>
+      const overlaps = pathsOf(change).some((path) =>
         fresh.some((other) => covers(path, other) || covers(other, path))
       );
-      if (overlaps) release(change);
+      if (overlaps) this.release(change);
       return !overlaps;
     });
-    for (const change of this.changes) if (change.base) release(change);
+    const ids = new Set(next.map((change) => change.id));
+    for (const change of this.changes)
+      if (change.base) {
+        for (const ref of change.refs) ref.unref();
+        if (!ids.has(change.id)) this.stopFade(change.id);
+      }
     this.changes = [...survivors, ...next].sort((a, b) =>
-      PathApi.compare(paths(a)[0] ?? [], paths(b)[0] ?? [])
+      PathApi.compare(pathsOf(a)[0] ?? [], pathsOf(b)[0] ?? [])
     );
     this.notify();
   }
@@ -237,7 +210,7 @@ export class AIChangeLedger {
     if (operation.type === 'set_selection') return;
     if (this.baseline) {
       // User content can't be expressed against the baseline any more; keep
-      // current changes as standalone, revertible records.
+      // current changes as standalone records.
       this.baseline = undefined;
       for (const change of this.changes) change.base = undefined;
     }
@@ -249,15 +222,13 @@ export class AIChangeLedger {
   /** Called after every operation; forgets changes whose content is gone. */
   prune() {
     const gone = this.changes.filter((change) =>
-      change.refs.length
-        ? change.refs.every((ref) => !ref.current)
-        : !change.anchor?.ref.current
+      change.refs.every((ref) => !ref.current)
     );
     if (gone.length) this.drop(gone);
   }
 
   private drop(changes: AIChange[]) {
-    for (const change of changes) release(change);
+    for (const change of changes) this.release(change);
     this.changes = this.changes.filter((change) => !changes.includes(change));
     this.notify();
   }
@@ -267,12 +238,9 @@ export class AIChangeLedger {
     let changed = false;
     for (const change of this.changes) {
       if (!change.pending) continue;
-      const own = [...change.refs, change.anchor?.ref].flatMap((ref) =>
-        ref?.current ? [ref.current] : []
-      );
       if (
         !paths ||
-        own.some((path) =>
+        pathsOf(change).some((path) =>
           paths.some((other) => covers(path, other) || covers(other, path))
         )
       ) {
@@ -283,20 +251,29 @@ export class AIChangeLedger {
     if (changed) this.notify();
   }
 
-  markSeen(id: string) {
+  /** Fade a change out, then forget it. */
+  acknowledge(id: string) {
     const change = this.get(id);
     if (!change || change.status === 'seen') return;
     change.status = 'seen';
+    this.fades.set(
+      id,
+      setTimeout(() => {
+        this.fades.delete(id);
+        this.settle(id);
+      }, AI_CHANGE_FADE)
+    );
     this.notify();
   }
 
-  /** Keep a change: it stops being highlighted or revertible. */
-  accept(id: string) {
+  /** Forget a change immediately, keeping its content. */
+  settle(id: string) {
     const change = this.get(id);
     if (!change) return;
+    this.stopFade(id);
     if (this.baseline && change.base) {
-      const nodes = change.refs.flatMap((ref) =>
-        ref.current ? [NodeApi.get(this.editor, ref.current) as Descendant] : []
+      const nodes = pathsOf(change).map(
+        (path) => NodeApi.get(this.editor, path) as Descendant
       );
       this.baseline = splice(
         this.baseline,
@@ -311,87 +288,27 @@ export class AIChangeLedger {
     this.drop([change]);
   }
 
-  /** Restore the original content of a change as one undoable step. */
-  reject(id: string) {
-    const change = this.get(id);
-    if (!change) return;
-    this.mute(() =>
-      this.editor.tf.withNewBatch(() =>
-        this.editor.tf.withoutNormalizing(() => this.revert(change))
-      )
-    );
-    if (this.baseline) this.recompute();
-    else this.drop([change]);
-  }
-
-  acceptAll() {
-    this.clear();
-    this.notify();
-  }
-
-  rejectAll() {
-    const changes = this.changes.toReversed();
-    this.mute(() =>
-      this.editor.tf.withNewBatch(() =>
-        this.editor.tf.withoutNormalizing(() => {
-          for (const change of changes) this.revert(change);
-        })
-      )
-    );
+  /** Forget every change, keeping content. */
+  settleAll() {
     this.clear();
     this.notify();
   }
 
   private clear() {
-    for (const change of this.changes) release(change);
+    for (const change of this.changes) this.release(change);
     this.changes = [];
     this.baseline = undefined;
   }
 
-  private revert(change: AIChange) {
-    const editor = this.editor;
-    if (change.kind === 'text' || change.kind === 'props') {
-      const path = change.refs[0]?.current;
-      if (!path) return;
-      const node = NodeApi.get(editor, path) as Tree;
-      const original = change.removed[0] as Tree;
-      setOwnProps(editor, path, node, original, this.isIgnored);
-      if (change.kind === 'text')
-        replaceChildren(
-          editor,
-          path,
-          node.children ?? [],
-          original.children ?? []
-        );
-      return;
-    }
-    const paths = change.refs.flatMap((ref) =>
-      ref.current ? [ref.current] : []
-    );
-    let at = paths[0];
-    if (!at && change.anchor?.ref.current)
-      at = change.anchor.after
-        ? PathApi.next(change.anchor.ref.current)
-        : change.anchor.ref.current;
-    if (!at) return;
-    const parent = PathApi.parent(at);
-    const siblings = paths.filter((path) =>
-      PathApi.equals(PathApi.parent(path), parent)
-    );
-    replaceSiblings(
-      editor,
-      parent,
-      at.at(-1)!,
-      siblings.map((path) => NodeApi.get(editor, path) as Descendant),
-      change.removed,
-      { inheritIds: false }
-    );
+  private release(change: AIChange) {
+    for (const ref of change.refs) ref.unref();
+    this.stopFade(change.id);
   }
-}
 
-function release(change: AIChange) {
-  for (const ref of change.refs) ref.unref();
-  change.anchor?.ref.unref();
+  private stopFade(id: string) {
+    clearTimeout(this.fades.get(id));
+    this.fades.delete(id);
+  }
 }
 
 function touches(operation: Operation, change: AIChange): boolean {
@@ -402,17 +319,8 @@ function touches(operation: Operation, change: AIChange): boolean {
   // Merging node `i` into `i - 1` edits node `i - 1` too.
   const previous = operation.type === 'merge_node' && PathApi.previous(path);
   if (previous) targets.push(previous);
-  for (const ref of change.refs) {
-    const own = ref.current;
-    if (own && targets.some((target) => covers(own, target))) return true;
-  }
-  const anchor = change.anchor?.ref.current;
-  if (!anchor || change.refs.length || path.length !== anchor.length)
-    return false;
-  const gap = anchor.at(-1)! + (change.anchor!.after ? 1 : 0);
-  return (
-    PathApi.equals(PathApi.parent(path), PathApi.parent(anchor)) &&
-    path.at(-1) === gap
+  return pathsOf(change).some((own) =>
+    targets.some((target) => covers(own, target))
   );
 }
 

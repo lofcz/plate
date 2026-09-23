@@ -1,7 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 
 const OVERLAY = '[data-ai-edit-caret], [data-ai-edit-ghost]';
-const REVERT = /Revert/;
 const PLAYBACK_HIGHLIGHT = /pending|trail/;
 
 const editorOf = (page: Page) =>
@@ -42,51 +41,47 @@ test('three distant edits type in order, scroll, stay marked, and undo as one ch
   expect(errors).toEqual([]);
 });
 
-test('rewritten words are highlighted inside a changed paragraph', async ({
+test('a changed paragraph is tinted as a whole, without word marks', async ({
   page,
 }) => {
   await page.getByRole('button', { name: 'Tweak words' }).click();
   await settled(page);
   await expect(page.locator('[data-ai-change="new"]')).toHaveCount(1);
-  const words = await page.evaluate(() => {
-    const highlight = (CSS as any).highlights.get('plate-ai-change');
-    return [...(highlight ?? [])].map((range: Range) => range.toString());
-  });
-  expect(words).toEqual(['investigate', 'small groups', 'present']);
+  expect(
+    await page.evaluate(() => [...(CSS as any).highlights.keys()])
+  ).toEqual([]);
 });
 
-test('hovering acknowledges a change and the chip reverts it', async ({
-  page,
-}) => {
-  const editor = editorOf(page);
+test('hovering fades a change out for good', async ({ page }) => {
   await page.getByRole('button', { name: 'Tweak words' }).click();
   await settled(page);
   const change = page.locator('[data-ai-change]');
   await change.hover();
-  await expect(page.locator('[data-ai-change-chip]')).toContainText(
-    'ScioBot edit'
-  );
   await expect(change).toHaveAttribute('data-ai-change', 'seen', {
     timeout: 2000,
   });
-  await page.getByRole('button', { name: REVERT }).click();
-  await expect(editor).not.toContainText('investigate');
-  await expect(editor).toContainText(
-    'Students explore the topic in pairs and share their observations.'
-  );
+  await expect(page.locator('[data-ai-change]')).toHaveCount(0, {
+    timeout: 3000,
+  });
+  await page.mouse.move(0, 0);
+  await page
+    .getByText('Students investigate the topic', { exact: false })
+    .hover();
+  await page.waitForTimeout(900);
   await expect(page.locator('[data-ai-change]')).toHaveCount(0);
-  await expect(page.locator('[data-ai-change-chip]')).toHaveCount(0);
+  await expect(editorOf(page)).toContainText('investigate');
 });
 
-test('keeping a change clears its marker and keeps the text', async ({
+test('passing the pointer over a change does not acknowledge it', async ({
   page,
 }) => {
   await page.getByRole('button', { name: 'Tweak words' }).click();
   await settled(page);
-  await page.locator('[data-ai-change]').hover();
-  await page.getByRole('button', { name: 'Keep' }).click();
-  await expect(page.locator('[data-ai-change]')).toHaveCount(0);
-  await expect(editorOf(page)).toContainText('investigate');
+  const change = page.locator('[data-ai-change]');
+  await change.hover();
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(900);
+  await expect(change).toHaveAttribute('data-ai-change', 'new');
 });
 
 test('follow-ups in one request merge; the next request accepts earlier changes', async ({
@@ -131,25 +126,18 @@ test('typing inside a change accepts it; typing elsewhere interrupts playback on
   await expect(page.locator('[data-ai-change]')).toHaveCount(2);
 });
 
-test('removed blocks exit as a struck-through ghost and leave a removal marker', async ({
+test('removed blocks exit as a struck-through ghost and leave no marker', async ({
   page,
 }) => {
   await page.getByRole('button', { name: 'Remove a section' }).click();
   await expect(page.locator('[data-ai-edit-ghost]').first()).toBeVisible();
   await settled(page);
-  await expect(page.locator('[data-ai-change-removed]')).toHaveCount(1);
-  await page.locator('[data-ai-change-removed]').hover();
-  await expect(page.locator('[data-ai-change-chip]')).toContainText(
-    'ScioBot removed text'
-  );
-  await page.getByRole('button', { name: REVERT }).click();
-  await expect(page.locator('[data-ai-change-removed]')).toHaveCount(0);
-  await expect(editorOf(page)).toContainText('3. Learning together');
   expect(
     await page.evaluate(
       () => (window as any).directEditPlayground.editor.children.length
     )
-  ).toBe(36);
+  ).toBe(34);
+  await expect(page.locator('[data-ai-change]')).toHaveCount(0);
 });
 
 test('reduced motion commits immediately without a cursor or scrolling', async ({

@@ -207,47 +207,54 @@ describe('change tracking', () => {
     applyAnimatedAIEdit(editor, value, { reducedMotion: true, session })
       .finished;
 
-  it('merges edits within a session and reverts to the pre-session content', async () => {
+  it('merges edits of one block within a session', async () => {
     const editor = tracked([p('one two three'), p('keep')]);
     await edit(editor, [p('one TWO three'), p('keep')]);
     await edit(editor, [p('one TWO THREE'), p('keep')]);
     const changes = ledgerOf(editor).changes;
     expect(changes).toHaveLength(1);
     expect(changes[0].kind).toBe('text');
-    editor.getApi(AIChangesPlugin).aiChanges.reject(changes[0].id);
-    expect(editor.api.string([0])).toBe('one two three');
-    expect(ledgerOf(editor).changes).toHaveLength(0);
-    editor.tf.undo();
-    expect(editor.api.string([0])).toBe('one TWO THREE');
+    expect(changes[0].status).toBe('new');
   });
 
-  it('restores removed blocks and removes inserted ones on reject', async () => {
+  it('tracks written blocks only, not removals', async () => {
     const editor = tracked([p('a'), p('b'), p('c')]);
     await edit(editor, [p('a'), p('c'), p('new')]);
-    const api = editor.getApi(AIChangesPlugin).aiChanges;
-    expect(api.list().map((change) => change.kind)).toEqual([
-      'remove',
-      'insert',
-    ]);
-    api.rejectAll();
-    expect(
-      editor.children.map((node) => editor.api.string(node as any))
-    ).toEqual(['a', 'b', 'c']);
+    const changes = editor.getApi(AIChangesPlugin).aiChanges.list();
+    expect(changes.map((change) => change.kind)).toEqual(['insert']);
+    expect(changes[0].refs[0].current).toEqual([2]);
   });
 
-  it('accepting keeps content and clears the change', async () => {
+  it('acknowledging fades a change out and it stays gone for the session', async () => {
+    const editor = tracked([p('a x'), p('b x'), p('c x')]);
+    await edit(editor, [p('A x'), p('b x'), p('c x')]);
+    const ledger = ledgerOf(editor);
+    const [first] = ledger.changes;
+    ledger.acknowledge(first.id);
+    expect(ledger.get(first.id)?.status).toBe('seen');
+    ledger.settle(first.id);
+    expect(ledger.changes).toHaveLength(0);
+    await edit(editor, [p('A x'), p('B x'), p('c x')]);
+    expect(ledger.changes.map((change) => change.refs[0].current)).toEqual([
+      [1],
+    ]);
+    await edit(editor, [p('A y'), p('B x'), p('c x')]);
+    expect(ledger.changes.map((change) => change.refs[0].current)).toEqual([
+      [0],
+      [1],
+    ]);
+  });
+
+  it('settleAll keeps content and clears every change', async () => {
     const editor = tracked([p('a'), p('b')]);
     await edit(editor, [p('a'), p('b'), p('c')]);
     const api = editor.getApi(AIChangesPlugin).aiChanges;
-    api.accept(api.list()[0].id);
+    api.settleAll();
     expect(api.list()).toHaveLength(0);
     expect(editor.children).toHaveLength(3);
-    await edit(editor, [p('a'), p('b'), p('c'), p('d')]);
-    expect(api.list()).toHaveLength(1);
-    expect(api.list()[0].removed).toHaveLength(0);
   });
 
-  it('a user edit inside a change accepts it; elsewhere it does not', async () => {
+  it('a user edit inside a change settles it; elsewhere it does not', async () => {
     const editor = tracked([p('first words'), p('second words')]);
     await edit(editor, [p('FIRST words'), p('SECOND words')]);
     expect(ledgerOf(editor).changes).toHaveLength(2);
@@ -257,7 +264,7 @@ describe('change tracking', () => {
     ).toEqual([[0]]);
   });
 
-  it('a new session accepts earlier changes', async () => {
+  it('a new session settles earlier changes', async () => {
     const editor = tracked([p('a x'), p('b x')]);
     await edit(editor, [p('A x'), p('b x')], 's1');
     await edit(editor, [p('A x'), p('B x')], 's2');
