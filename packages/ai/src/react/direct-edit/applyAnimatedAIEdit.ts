@@ -61,16 +61,35 @@ type Ghost = {
 
 type Segment = { end: number; node: Text; start: number };
 
+/** A held animated property whose value can change every frame. */
+type Control = { set: (value: string) => void; stop: () => void };
+
+/**
+ * Layout height of a changed run: holds the old height, collapses while the
+ * old blocks exit, then grows behind the typing caret.
+ */
+type Region = {
+  /** One clip per new element, hiding lines not yet reached. */
+  clips: (Control | undefined)[];
+  exit?: { duration: number; from: number; start: number };
+  /** Natural margin gap next to `pad`. */
+  gap: number;
+  height: number;
+  last: number;
+  /** Collapsed-margin partner of `pad`. */
+  neighbour: number;
+  pad?: Control;
+  phase: 'exit' | 'grow' | 'hold';
+  /** Grow target from the area top; natural height when unset. */
+  target?: number;
+};
+
 type Step = {
   committed: AIEditCommitted;
   elements: HTMLElement[];
   ghost?: Ghost;
   holds: Animation[];
-  reserve?: {
-    element: HTMLElement;
-    extra: number;
-    property: 'marginBottom' | 'marginTop';
-  };
+  region?: Region;
   segments: Segment[];
   total: number;
 };
@@ -85,6 +104,19 @@ const MAX_TYPED = 1400;
 const TRAIL = [8, 22, 44];
 const HOLD = 3_600_000;
 const EASE = 'cubic-bezier(.2,.7,.2,1)';
+
+const HIDDEN = 'inset(0 -100vw 100% -100vw)';
+
+const px = (value: string) => Number.parseFloat(value) || 0;
+
+const collapse = (a: number, b: number) =>
+  a >= 0 && b >= 0 ? Math.max(a, b) : a < 0 && b < 0 ? Math.min(a, b) : a + b;
+
+/** Margin whose collapse with a non-negative `neighbour` margin is `gap`. */
+const marginFor = (gap: number, neighbour: number) =>
+  gap >= neighbour ? gap : gap - neighbour;
+
+const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
 const isRun = (item: AIEditPlanItem) =>
   item.kind === 'insert' || item.kind === 'remove' || item.kind === 'replace';
@@ -442,7 +474,9 @@ export function applyAnimatedAIEdit(
       layer.style.width = `${Math.max(0, clip.right - clip.left)}px`;
       layer.style.height = `${Math.max(0, clip.bottom - clip.top)}px`;
       const editorLeft = editable.getBoundingClientRect().left;
+      const now = Date.now();
       for (const step of steps) {
+        updateRegion(step, now);
         const ghost = step.ghost;
         if (!ghost?.element.isConnected) continue;
         let top: number | undefined;
@@ -454,12 +488,121 @@ export function applyAnimatedAIEdit(
           if (rect)
             top = step.committed.anchor!.after
               ? rect.bottom
-              : rect.top - ghost.height;
+              : rect.top - (step.region?.height ?? ghost.height);
         }
         if (top === undefined) continue;
         ghost.element.style.transform = `translate(${editorLeft + ghost.left - clip.left}px,${top - clip.top}px)`;
+        if (step.region)
+          ghost.element.style.clipPath = `inset(0 0 ${Math.max(0, ghost.height - step.region.height)}px 0)`;
       }
     }
+
+    const control = (
+      element: HTMLElement,
+      property: string,
+      initial: string
+    ): Control | undefined => {
+      const animation = animate(
+        element,
+        [{ [property]: initial }, { [property]: initial }],
+        HOLD,
+        'both'
+      );
+      const effect = animation?.effect as KeyframeEffect | null | undefined;
+      if (!animation || !effect) return;
+      let current = initial;
+      return {
+        set: (value) => {
+          if (value === current) return;
+          current = value;
+          effect.setKeyframes([{ [property]: value }, { [property]: value }]);
+        },
+        stop: () => animation.cancel(),
+      };
+    };
+    const naturalHeight = (step: Step) => {
+      const first = step.elements[0];
+      const last = step.elements.at(-1);
+      return first && last
+        ? last.getBoundingClientRect().bottom -
+            first.getBoundingClientRect().top
+        : 0;
+    };
+    const setupRegion = (step: Step) => {
+      if (step.region || !isRun(step.committed.item)) return;
+      const last = step.elements.at(-1);
+      const anchor = last ? undefined : anchorElement(step);
+      if (!last && !(anchor && step.ghost)) return;
+      const element = (last ?? anchor)!;
+      const below = !!last || step.committed.anchor!.after;
+      const property = below ? 'marginBottom' : 'marginTop';
+      const sibling = below
+        ? element.nextElementSibling
+        : element.previousElementSibling;
+      const neighbour = Math.max(
+        0,
+        sibling
+          ? px(
+              win.getComputedStyle(sibling)[
+                below ? 'marginTop' : 'marginBottom'
+              ]
+            )
+          : 0
+      );
+      const gap = collapse(
+        px(win.getComputedStyle(element)[property]),
+        neighbour
+      );
+      const height = step.ghost?.height ?? 0;
+      step.region = {
+        clips: step.elements.map((child) => control(child, 'clipPath', HIDDEN)),
+        gap,
+        height,
+        last: Date.now(),
+        neighbour,
+        pad: control(
+          element,
+          property,
+          `${marginFor(gap + height - naturalHeight(step), neighbour)}px`
+        ),
+        phase: 'hold',
+      };
+    };
+    const updateRegion = (step: Step, now: number) => {
+      const region = step.region;
+      if (!region) return;
+      const natural = naturalHeight(step);
+      if (region.phase === 'exit' && region.exit) {
+        const { duration, from, start } = region.exit;
+        const progress = clamp((now - start) / Math.max(1, duration), 0, 1);
+        region.height =
+          from * (1 - smoothstep(clamp((progress - 0.15) / 0.85, 0, 1)));
+      } else if (region.phase === 'grow') {
+        const target = Math.min(natural, region.target ?? natural);
+        region.height +=
+          (target - region.height) * (1 - Math.exp(-(now - region.last) / 70));
+        if (Math.abs(target - region.height) < 0.5) region.height = target;
+      }
+      region.last = now;
+      region.pad?.set(
+        `${marginFor(region.gap + region.height - natural, region.neighbour)}px`
+      );
+      const top = step.elements[0]?.getBoundingClientRect().top ?? 0;
+      step.elements.forEach((element, index) => {
+        const rect = element.getBoundingClientRect();
+        const hidden = rect.bottom - top - region.height;
+        region.clips[index]?.set(
+          hidden >= rect.height
+            ? HIDDEN
+            : `inset(0 -100vw ${Math.max(0, hidden)}px -100vw)`
+        );
+      });
+    };
+    const releaseRegion = (step: Step) => {
+      step.region?.pad?.stop();
+      for (const clip of step.region?.clips ?? []) clip?.stop();
+      step.region = undefined;
+    };
 
     // Hold the pre-edit look: hide new content, keep old blocks in place.
     // Polled per animation frame so hidden content never paints first.
@@ -491,48 +634,13 @@ export function applyAnimatedAIEdit(
           );
           if (hold) step.holds.push(hold);
         }
+      setupRegion(step);
       const ghost = step.ghost;
       if (!ghost) continue;
       ghost.element.style.position = 'absolute';
       ghost.element.style.top = '0';
       ghost.element.style.left = '0';
       layer.append(ghost.element);
-      const first = step.elements[0];
-      const last = step.elements.at(-1);
-      let reserve: Step['reserve'];
-      if (first && last) {
-        const extra =
-          ghost.height -
-          (last.getBoundingClientRect().bottom -
-            first.getBoundingClientRect().top);
-        if (extra > 1)
-          reserve = { element: last, extra, property: 'marginBottom' };
-      } else {
-        const anchor = anchorElement(step);
-        if (anchor)
-          reserve = {
-            element: anchor,
-            extra: ghost.height,
-            property: step.committed.anchor!.after
-              ? 'marginBottom'
-              : 'marginTop',
-          };
-      }
-      if (reserve) {
-        const base =
-          Number.parseFloat(
-            win.getComputedStyle(reserve.element)[reserve.property]
-          ) || 0;
-        const held = `${base + reserve.extra}px`;
-        const hold = animate(
-          reserve.element,
-          [{ [reserve.property]: held }, { [reserve.property]: held }],
-          HOLD,
-          'both'
-        );
-        if (hold) step.holds.push(hold);
-        step.reserve = reserve;
-      }
     }
     layout();
 
@@ -569,6 +677,18 @@ export function applyAnimatedAIEdit(
         const trail: Range[][] = TRAIL.map(() => []);
         for (const step of typed) {
           const head = progress * step.total;
+          const region = step.region;
+          if (region) {
+            const index = clamp(Math.ceil(head) - 1, 0, step.total - 1);
+            const [range] = sliceSegments(doc, step.segments, index, index + 1);
+            const rects = range?.getClientRects();
+            const line = rects?.[rects.length - 1];
+            const first = step.elements[0];
+            region.target =
+              progress < 1 && line && first
+                ? line.bottom - first.getBoundingClientRect().top
+                : undefined;
+          }
           setHighlightRanges(
             doc,
             AI_HIGHLIGHT.pending,
@@ -592,6 +712,24 @@ export function applyAnimatedAIEdit(
       }
     };
 
+    const settle = async (batch: Step[]) => {
+      const end = Date.now() + 600;
+      for (const step of batch) if (step.region) step.region.target = undefined;
+      while (
+        !invalid() &&
+        Date.now() < end &&
+        batch.some(
+          (step) =>
+            step.region &&
+            Math.abs(step.region.height - naturalHeight(step)) > 0.5
+        )
+      ) {
+        layout();
+        await frame();
+      }
+      for (const step of batch) releaseRegion(step);
+    };
+
     for (const [index, batch] of batches.entries()) {
       if (invalid()) return;
       const slot = Math.max(
@@ -606,6 +744,7 @@ export function applyAnimatedAIEdit(
         if (revealed && !step.elements.length) {
           step.elements = resolveElements(step);
           prepareText(step);
+          setupRegion(step);
         }
       }
       const target = lead.elements[0] ?? anchorElement(lead);
@@ -631,8 +770,17 @@ export function applyAnimatedAIEdit(
         })
       );
       const exiting = batch.filter((step) => step.ghost?.element.isConnected);
-      const exit = exiting.length ? clamp(slot * 0.28, 160, 420) : 0;
-      for (const step of exiting)
+      const exit = exiting.length ? clamp(slot * 0.3, 200, 460) : 0;
+      for (const step of exiting) {
+        const region = step.region;
+        if (region) {
+          region.phase = 'exit';
+          region.exit = {
+            duration: exit,
+            from: region.height,
+            start: Date.now(),
+          };
+        }
         animate(
           step.ghost!.element,
           [
@@ -643,6 +791,7 @@ export function applyAnimatedAIEdit(
           exit,
           'forwards'
         );
+      }
       if (exit) await wait(exit);
       for (const step of exiting) step.ghost!.element.remove();
       if (invalid()) return;
@@ -652,27 +801,17 @@ export function applyAnimatedAIEdit(
       for (const step of batch) {
         for (const hold of step.holds) hold.cancel();
         step.holds = [];
-        if (step.reserve) {
-          const { element, extra, property } = step.reserve;
-          const base =
-            Number.parseFloat(win.getComputedStyle(element)[property]) || 0;
-          animate(
-            element,
-            [{ [property]: `${base + extra}px` }, { [property]: `${base}px` }],
-            enter
-          );
+        if (step.region) {
+          step.region.phase = 'grow';
+          step.region.target = step.total ? 0 : undefined;
         }
         if (isRun(step.committed.item))
           for (const element of step.elements)
             animate(
               element,
               [
-                {
-                  filter: 'blur(2px)',
-                  opacity: 0,
-                  transform: 'translateY(6px)',
-                },
-                { filter: 'blur(0)', opacity: 1, transform: 'none' },
+                { filter: 'blur(2px)', opacity: 0 },
+                { filter: 'blur(0)', opacity: 1 },
               ],
               enter
             );
@@ -691,6 +830,7 @@ export function applyAnimatedAIEdit(
       const typing = clamp(longest * 16, 180, Math.max(180, remaining - 40));
       label.textContent = `✦ ${options.label ?? 'AI'}${batches.length > 1 ? ` · ${index + 1}/${batches.length}` : ''}`;
       await type(batch, typing);
+      await settle(batch);
     }
   })().finally(() => {
     cleanup();
