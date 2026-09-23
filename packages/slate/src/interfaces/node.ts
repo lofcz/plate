@@ -228,11 +228,8 @@ export const NodeApi: {
       return [];
     }
   },
-  get: (...args) => {
-    try {
-      return SlateNode.get(...args);
-    } catch {}
-  },
+  // Slate's throwing lookups serialize the whole document into the error.
+  get: (root, path) => SlateNode.getIf(root as any, path) as any,
   hasSingleChild: (node) => {
     if (TextApi.isText(node)) return true;
 
@@ -251,9 +248,12 @@ export const NodeApi: {
       return SlateNode.leaf(...args);
     } catch {}
   },
-  parent: (...args) => {
+  parent: (root, path) => {
     try {
-      return SlateNode.parent(...args);
+      if (!path.length || !SlateNode.has(root as any, path.slice(0, -1)))
+        return;
+
+      return SlateNode.parent(root as any, path) as any;
     } catch {}
   },
   ...NodeExtension,

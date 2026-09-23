@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LinkPlugin } from '@platejs/link/react';
 import type { PlateElementProps } from 'platejs/react';
 import {
+  AIChangesPlugin,
   applyAnimatedAIEdit,
   type AnimatedAIEditOptions,
 } from '@platejs/ai/react';
@@ -17,18 +18,42 @@ const revised = original
   .replace('## 1. Learning together', '## 1. Start with a question ✨')
   .replace('## 6. Learning together', '## 6. Experiment and discover 🔬')
   .replace('## 12. Learning together', '## 12. Share your discoveries 🎉');
-
-const directEditPlugins = EDITOR_PLUGINS.map((plugin) =>
-  plugin.key === LinkPlugin.key
-    ? LinkPlugin.withComponent(
-        ({ attributes, children, element }: PlateElementProps) => (
-          <a {...attributes} href={String(element.url ?? '')}>
-            {children}
-          </a>
-        )
-      )
-    : plugin
+const tweaked = original.replace(
+  'Students explore the topic in pairs and share their observations.',
+  'Students investigate the topic in small groups and present their observations.'
 );
+const followUp = tweaked.replace(
+  'Take time to listen, discuss, and reflect on what you discovered.',
+  'Take time to listen carefully, debate, and reflect on what you discovered.'
+);
+const pruned = original
+  .split('\n\n')
+  .filter((_, index) => index !== 4 && index !== 5)
+  .join('\n\n');
+
+const directEditPlugins = [
+  ...EDITOR_PLUGINS.map((plugin) =>
+    plugin.key === LinkPlugin.key
+      ? LinkPlugin.withComponent(
+          ({ attributes, children, element }: PlateElementProps) => (
+            <a {...attributes} href={String(element.url ?? '')}>
+              {children}
+            </a>
+          )
+        )
+      : plugin
+  ),
+  AIChangesPlugin.configure({
+    options: {
+      labels: {
+        accept: 'Keep',
+        changed: 'ScioBot edit',
+        reject: 'Revert',
+        removed: 'ScioBot removed text',
+      },
+    },
+  }),
+];
 
 export function DirectEditPlayground() {
   const editor = usePlateEditor({
@@ -37,14 +62,15 @@ export function DirectEditPlayground() {
   });
   const [playing, setPlaying] = useState(false);
   const playback = useRef<ReturnType<typeof applyAnimatedAIEdit> | null>(null);
+  const session = useRef(0);
   useEffect(() => {
     const harness = {
       editor,
       setMarkdown(markdown: string) {
         editor.tf.setValue(deserializeMd(editor, markdown));
       },
-      applyMarkdown(markdown: string) {
-        return this.apply(deserializeMd(editor, markdown));
+      applyMarkdown(markdown: string, options: AnimatedAIEditOptions = {}) {
+        return this.apply(deserializeMd(editor, markdown), options);
       },
       apply(
         value: typeof editor.children,
@@ -52,6 +78,7 @@ export function DirectEditPlayground() {
       ) {
         playback.current = applyAnimatedAIEdit(editor, value, {
           label: 'ScioBot',
+          session: String(session.current),
           ...options,
         });
         return playback.current.finished;
@@ -63,12 +90,13 @@ export function DirectEditPlayground() {
       Reflect.deleteProperty(window, 'directEditPlayground');
     };
   }, [editor]);
-  const apply = (markdown = revised) => {
+  const apply = (markdown: string, sameRequest = false) => {
+    if (!sameRequest) session.current++;
     setPlaying(true);
     playback.current = applyAnimatedAIEdit(
       editor,
       deserializeMd(editor, markdown),
-      { label: 'ScioBot' }
+      { label: 'ScioBot', session: String(session.current) }
     );
     void playback.current.finished.finally(() => setPlaying(false));
   };
@@ -85,6 +113,7 @@ export function DirectEditPlayground() {
         style={{
           padding: '18px 28px',
           display: 'flex',
+          flexWrap: 'wrap',
           gap: 12,
           alignItems: 'center',
           background: 'white',
@@ -95,8 +124,17 @@ export function DirectEditPlayground() {
         <span role="status">
           {playing ? 'Editing your document…' : 'Ready'}
         </span>
-        <button type="button" onClick={() => apply()}>
+        <button type="button" onClick={() => apply(revised)}>
           Edit three sections
+        </button>
+        <button type="button" onClick={() => apply(tweaked)}>
+          Tweak words
+        </button>
+        <button type="button" onClick={() => apply(followUp, true)}>
+          Follow-up (same request)
+        </button>
+        <button type="button" onClick={() => apply(pruned)}>
+          Remove a section
         </button>
         <button
           type="button"
@@ -136,6 +174,7 @@ export function DirectEditPlayground() {
           type="button"
           onClick={() => {
             playback.current?.cancel();
+            editor.getApi(AIChangesPlugin).aiChanges.acceptAll();
             editor.tf.setValue(deserializeMd(editor, original));
           }}
         >
