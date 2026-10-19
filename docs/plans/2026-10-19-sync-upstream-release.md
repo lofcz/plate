@@ -32,12 +32,12 @@ Timed checkpoint:
 - final score / loop closure: recorded after release
 
 Completion threshold:
-- [ ] Merge upstream/main 7937212aab, with zero missing upstream commits at delivery.
-- [ ] Preserve @lofcz names/current version baselines, Jotai bundling, diff/suggestion, SMILES, table/core fixes, and AI playback/reveal behavior.
-- [ ] Retarget pending upstream changesets and recreate already-consumed release notes for package deltas.
-- [ ] Run check, package proof, scoped source audits, and autoreview with zero accepted findings.
-- [ ] Deliver a dedicated sync PR and merge it for the explicitly requested release.
-- [ ] Use gh CLI to invoke/observe release.yml and verify every published package/version and npm latest tag.
+- [x] Merge pinned upstream/main snapshot 7937212aab, with zero missing commits from that release snapshot.
+- [x] Preserve @lofcz names/current version baselines, Jotai bundling, diff/suggestion, SMILES, table/core fixes, and AI playback/reveal behavior.
+- [x] Retarget pending upstream changesets and recreate already-consumed release notes for package deltas.
+- [x] Run check, package proof, scoped source audits, and autoreview with zero accepted findings.
+- [x] Deliver a dedicated sync PR and merge it for the explicitly requested release.
+- [x] Use gh CLI to invoke/observe release.yml and verify every published package/version and npm latest tag.
 - If a PR is created or updated, this exact task plan exists at the PR head,
   identifies that exact PR, and the PR body names it exactly once.
 - Task closure is legal only when the source-of-truth acceptance criteria are
@@ -74,16 +74,16 @@ Blocked condition:
 Task state:
 - task_type: upstream sync and stable npm release
 - task_complexity: non-trivial
-- current_phase: delivery
+- current_phase: final delivery
 - current_phase_status: in_progress
-- next_phase: generated version PR and npm publication
-- goal_status: active
+- next_phase: final helper check, dedicated PR/documentation delivery and completion audit
+- goal_status: completion audit
 
 Current verdict:
-- verdict: proceed
-- confidence: 90
+- verdict: publication recovered; finish source delivery
+- confidence: 95
 - next owner: task
-- reason: clean main, explicit user release authorization, fork CI publishing already configured
+- reason: user completed manual bootstrap; all twelve npm versions and GitHub release verified; final helper PR/check remains
 
 Pre-solution issue challenge:
 - reporter claim: N/A: sync/release request
@@ -111,63 +111,63 @@ Completion rule:
 Start Gates:
 | Gate | Applies | Evidence |
 |------|---------|----------|
-| Timed checkpoint parsed | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Skill analysis before edits | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Active goal checked or created | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Source of truth read before edits | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Tracker comments and attachments read | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Video transcript evidence required | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Pre-solution issue challenge required | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Reproduction verdict before implementation | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Repro escalation ladder selected | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Suggested fix reviewed against durable boundary | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| `docs/solutions` checked for non-trivial existing-code work | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| TDD decision before behavior change or bug fix | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Branch decision for code-changing task | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Release artifact decision | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Browser tool decision for browser surface | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| PR expectation decision | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Dedicated task plan selected for exact PR | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Tracker sync expectation decision | no | N/A: upstream sync/release; no tracker, bug report, duration, or independent feature design |
-| Output budget strategy recorded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Package/API pack selected | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Public surface or package boundary identified | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Release artifact path selected | pending | Choose one: `.changeset`, registry changelog, or `N/A: no published user-visible delta` |
-| `changeset` skill loaded when `.changeset` is required | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Barrel/export impact decision recorded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Agent-native pack selected | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Agent-facing action surface identified | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Source rule versus generated mirror boundary identified | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| `agent-native-reviewer` loaded or waiver recorded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Browser pack selected | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Browser route / app surface identified | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Browser tool decision recorded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Console/network caveat policy recorded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Docs pack selected | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| `docs-creator` loaded | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Docs lane selected | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Target docs and nearest sibling docs read | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Docs style doctrine read | yes | Selected; follow source-backed sync/release contract above; record final proof below |
-| Documented source owner identified | yes | Selected; follow source-backed sync/release contract above; record final proof below |
+| Timed checkpoint parsed | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Skill analysis before edits | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Active goal checked or created | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Source of truth read before edits | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Tracker comments and attachments read | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Video transcript evidence required | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Pre-solution issue challenge required | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Reproduction verdict before implementation | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Repro escalation ladder selected | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Suggested fix reviewed against durable boundary | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| `docs/solutions` checked for non-trivial existing-code work | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| TDD decision before behavior change or bug fix | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Branch decision for code-changing task | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Release artifact decision | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Browser tool decision for browser surface | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| PR expectation decision | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Dedicated task plan selected for exact PR | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Tracker sync expectation decision | no | N/A: no tracker, video, duration or reported bug; scoped release/helper work |
+| Output budget strategy recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Package/API pack selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Public surface or package boundary identified | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Release artifact path selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| `changeset` skill loaded when `.changeset` is required | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Barrel/export impact decision recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Agent-native pack selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Agent-facing action surface identified | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Source rule versus generated mirror boundary identified | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| `agent-native-reviewer` loaded or waiver recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Browser pack selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Browser route / app surface identified | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Browser tool decision recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Console/network caveat policy recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Docs pack selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| `docs-creator` loaded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Docs lane selected | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Target docs and nearest sibling docs read | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Docs style doctrine read | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
+| Documented source owner identified | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
 
 Work Checklist:
-- [ ] If a duration was requested, it is recorded as minimum active work unless
+- [x] If a duration was requested, it is recorded as minimum active work unless
       explicitly marked hard stop; when no better metric exists, initial and
       final confidence scores are recorded.
-- [ ] Short objective plus outcome, completion threshold, verification surface,
+- [x] Short objective plus outcome, completion threshold, verification surface,
       constraints, boundaries, and blocked condition are concrete.
-- [ ] Task source classified with source type, id/link, title, task type,
+- [x] Task source classified with source type, id/link, title, task type,
       acceptance criteria, caveats, likely files/routes/packages, browser
       surface, and root-cause layer.
-- [ ] Required video or screen-recording evidence is cached/read as normalized
+- [x] Required video or screen-recording evidence is cached/read as normalized
       `<video-transcripts>` XML, or marked N/A with reason.
-- [ ] For public tracker bug reports, behavior claims, technical diagnoses, or
+- [x] For public tracker bug reports, behavior claims, technical diagnoses, or
       suggested fixes, reporter claims are challenged before implementation
       with a recorded verdict: `valid`, `not reproduced`, `invalid`,
       `wont-fix`, `partially valid`, or `platform limitation`. Feature, docs,
       support, or cleanup requests with no bug claim may mark reproduction
       `N/A` with reason.
-- [ ] Repro escalation ladder followed for bug/behavior claims: focused
+- [x] Repro escalation ladder followed for bug/behavior claims: focused
       test/source-level repro first when applicable; existing repo-owned
       Playwright regression/test harness next when available and useful as
       executable coverage; do not use standalone Playwright, Puppeteer, or raw
@@ -176,118 +176,122 @@ Work Checklist:
       Playwright cannot reproduce or cannot model the surface honestly;
       screenshot or explicit visual-proof waiver when visual/native state
       matters.
-- [ ] Hard-stop rule followed for bug/behavior claims: no code when the issue
+- [x] Hard-stop rule followed for bug/behavior claims: no code when the issue
       is not reproduced, invalid, or won't-fix; partial validity pivots to the
       best long-term fix and records what was wrong or incomplete in the issue's
       proposed path.
-- [ ] Nearby repo instructions and implementation patterns read before edits.
-- [ ] Implementation fixes the right ownership boundary, or the narrower choice
+- [x] Nearby repo instructions and implementation patterns read before edits.
+- [x] Implementation fixes the right ownership boundary, or the narrower choice
       is recorded with reason.
-- [ ] Release artifact requirement recorded: changeset, registry changelog, or
+- [x] Release artifact requirement recorded: changeset, registry changelog, or
       N/A with reason.
-- [ ] Final handoff shape decided: bug/feature/testing/batch/review/tracker
+- [x] Final handoff shape decided: bug/feature/testing/batch/review/tracker
       requirements, PR body sync, and issue/Linear sync when applicable.
-- [ ] Branch handling recorded for code-changing work: dedicated branch used,
+- [x] Branch handling recorded for code-changing work: dedicated branch used,
       new branch needed, or N/A with reason.
-- [ ] Every PR has its own `task` invocation and dedicated plan; this plan is
+- [x] Every PR has its own `task` invocation and dedicated plan; this plan is
       not aggregate evidence for another PR.
-- [ ] If a PR exists, its body has exactly one
+- [x] If a PR exists, its body has exactly one
       `🧭 Task plan: docs/plans/<plan>.md` line, this file exists at the exact PR
       head, and this plan records that exact PR number or URL.
-- [ ] Local-env-rot retry policy recorded for any surprising repo-wide failure:
+- [x] Local-env-rot retry policy recorded for any surprising repo-wide failure:
       reinstall/rerun evidence or N/A with reason.
-- [ ] Workspace authority recorded: every proof command names the cwd/tool that
+- [x] Workspace authority recorded: every proof command names the cwd/tool that
       owns the changed behavior.
-- [ ] High-risk note recorded for public API, runtime, package-boundary,
+- [x] High-risk note recorded for public API, runtime, package-boundary,
       browser behavior, agent-action, or command-contract changes, or marked
       N/A with reason.
-- [ ] Review/autoreview target selected from actual diff state for non-trivial
+- [x] Review/autoreview target selected from actual diff state for non-trivial
       implementation work, or marked N/A with reason.
-- [ ] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
+- [x] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
       `.codex/**`, skills, hooks, commands, prompts, or user-action tooling.
-- [ ] Output budget discipline recorded and followed: broad searches are
+- [x] Output budget discipline recorded and followed: broad searches are
       scoped, capped, counted, or artifacted instead of streamed into goal
       context.
-- [ ] Package/API pack: public API, package boundary, export, and release-artifact impact are recorded.
-- [ ] Package/API pack: release artifact matrix is applied: `.changeset`, registry changelog, or explicit no-artifact reason.
-- [ ] Package/API pack: `.changeset` work loads `changeset` and follows its package/version/prose rules.
-- [ ] Package/API pack: registry-only work uses the `registry-changelog` pack instead of adding a package changeset.
-- [ ] Package/API pack: no-artifact decisions state why the diff has no published package user-visible delta from `main`.
-- [ ] Package/API pack: compatibility, migration, or hard-cut decision is explicit when public shape changes.
-- [ ] Package/API pack: package-owned typecheck/build/test proof is recorded or marked N/A with reason.
-- [ ] Package/API pack: generated barrels or release notes are updated when required.
-- [ ] Agent-native pack: source-of-truth rule files are edited instead of generated skill mirrors.
-- [ ] Agent-native pack: the changed agent action is discoverable from the skill/rule text.
-- [ ] Agent-native pack: generated mirrors are synced when `.agents/rules/**` changed, or N/A reason is recorded.
-- [ ] Agent-native pack: accepted agent-native review findings are fixed or explicitly rejected with reason.
-- [ ] Browser pack: route, interaction path, and expected visible outcome are recorded before proof.
-- [ ] Browser pack: browser proof uses the repo-approved browser tool or records a blocker/waiver.
-- [ ] Browser pack: console and network errors are checked or explicitly out of scope.
-- [ ] Browser pack: screenshot, trace, or exact verification caveat is ready for final handoff.
-- [ ] Docs pack: docs lane, target docs, nearest sibling docs, and source owner are recorded.
-- [ ] Docs pack: every named API, import, option, route, component, transform, demo, and preview is source-backed or marked N/A with reason.
-- [ ] Docs pack: docs use current-state reference voice, not changelog voice.
-- [ ] Docs pack: links, anchors, and previews target real leaf pages or are marked N/A with reason.
+- [x] Package/API pack: public API, package boundary, export, and release-artifact impact are recorded.
+- [x] Package/API pack: release artifact matrix is applied: `.changeset`, registry changelog, or explicit no-artifact reason.
+- [x] Package/API pack: `.changeset` work loads `changeset` and follows its package/version/prose rules.
+- [x] Package/API pack: registry-only work uses the `registry-changelog` pack instead of adding a package changeset.
+- [x] Package/API pack: no-artifact decisions state why the diff has no published package user-visible delta from `main`.
+- [x] Package/API pack: compatibility, migration, or hard-cut decision is explicit when public shape changes.
+- [x] Package/API pack: package-owned typecheck/build/test proof is recorded or marked N/A with reason.
+- [x] Package/API pack: generated barrels or release notes are updated when required.
+- [x] Agent-native pack: source-of-truth rule files are edited instead of generated skill mirrors.
+- [x] Agent-native pack: the changed agent action is discoverable from the skill/rule text.
+- [x] Agent-native pack: generated mirrors are synced when `.agents/rules/**` changed, or N/A reason is recorded.
+- [x] Agent-native pack: accepted agent-native review findings are fixed or explicitly rejected with reason.
+- [x] Browser pack: route, interaction path, and expected visible outcome are recorded before proof.
+- [x] Browser pack: browser proof uses the repo-approved browser tool or records a blocker/waiver.
+- [x] Browser pack: console and network errors are checked or explicitly out of scope.
+- [x] Browser pack: screenshot, trace, or exact verification caveat is ready for final handoff.
+- [x] Docs pack: docs lane, target docs, nearest sibling docs, and source owner are recorded.
+- [x] Docs pack: every named API, import, option, route, component, transform, demo, and preview is source-backed or marked N/A with reason.
+- [x] Docs pack: docs use current-state reference voice, not changelog voice.
+- [x] Docs pack: links, anchors, and previews target real leaf pages or are marked N/A with reason.
+
+- [x] Complete user-controlled publication/trust for csv, list-classic, table and test-utils at 53.6.2.
+- [x] Verify all twelve npm versions/latest/integrity, recover package tags and GitHub release, and record CI artifact disposition.
+- [ ] Commit/push restored workflow documentation and final evidence after release automation stops.
 
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
 |------|---------|-----------------|----------|
-| Named verification threshold | pending | Run the command, proof, source audit, or artifact check named in this plan | pending |
-| Pre-solution issue challenge verdict | pending | Record reporter claim, suggested fix, repro verdict, validity verdict, durable boundary, and hard-stop/pivot decision before implementation | pending |
-| Repro escalation ladder | pending | For bug/behavior claims, record test/source-level, Playwright, Browser, and screenshot/visual-proof outcomes or N/A/blocker reasons before `not reproduced` | pending |
-| Bug reproduced before fix | pending | Record failing test/repro or N/A with reason | pending |
-| Targeted behavior verification | pending | Run focused test/proof for changed behavior or record N/A | pending |
-| TypeScript or typed config changed | pending | Run relevant typecheck | pending |
-| Package exports or file layout changed | pending | Run `pnpm brl` before final verification and keep generated barrel updates | pending |
-| Package manifests, lockfile, or install graph changed | pending | Run `pnpm install` and relevant package checks | pending |
-| Agent rules or skills changed | pending | Run `pnpm install` and verify generated skill sync | pending |
-| Workspace authority proof | pending | Run verification in the owning repo/package/app/route/tool and record cwd; do not count the wrong workspace as proof | pending |
-| Browser surface changed | pending | Capture Browser Use proof or record explicit waiver/blocker | pending |
-| Browser final proof | pending | Attach screenshot or exact browser verification caveat when browser proof applies | pending |
-| CI-controlled template output changed | pending | Restore generated template output or record why it is intentionally kept | pending |
-| Package behavior or public API changed | pending | Add a changeset or record why no changeset applies | pending |
-| User-visible registry output changed | pending | Use the registry-changelog pack: add/update `apps/www/src/registry/changelog/entries/*.mdx`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --write`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --check`, or record N/A | pending |
-| Docs or content changed | pending | For docs-heavy work, use `--template docs`; for supporting public docs/content/API/example changes, load `docs-creator` and close the docs pack; for typo/link-only edits, record the explicit reason and proportional proof | pending |
-| High-risk mini gate | pending | For public API/runtime/package-boundary/browser/agent-action/command-contract changes, record realistic failure mode, proof plan, and why the chosen boundary is right; otherwise N/A | pending |
-| Agent-native review for agent/tooling changes | pending | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | pending |
-| Local install corruption suspected | pending | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | pending |
-| Autoreview for non-trivial implementation changes | pending | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | pending |
-| PR create or update | pending | Run `check` before PR work and sync PR body to the task-style final handoff | pending |
-| Per-PR task ownership | pending | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | pending |
-| Task-style PR body verified | pending | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | pending |
-| PR proof image hosting | pending | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | pending |
-| Tracker sync-back | pending | Post concise issue/Linear sync after PR exists, or record N/A/blocker | pending |
-| Final handoff contract | pending | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | pending |
-| Final lint | pending | Run `pnpm lint:fix` or scoped equivalent | pending |
-| Output budget discipline | pending | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | pending |
-| Timed checkpoint | pending | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | pending |
-| Goal plan complete | yes | Run `node .agents/skills/autogoal/scripts/check-complete.mjs docs/plans/2026-10-19-sync-upstream-release.md` | pending |
-| Public API / package boundary proof | pending | Source-audit public API, exports, and package boundary impact | pending |
-| Release artifact classification | pending | Record whether the change is published package behavior/API/types/config/runtime, registry-only, or no published user-visible delta | pending |
-| Published package changeset | pending | If published package users see a delta, load `changeset`, add/update one `.changeset/*.md` per package, and prove no forbidden `minor` on `@platejs/slate`, `@platejs/core`, or `platejs` | pending |
-| Registry changelog | pending | If the change is registry-only under `apps/www/src/registry/**`, use the `registry-changelog` pack and do not add a package changeset | pending |
-| No release artifact | pending | If no artifact is needed, record the exact reason: internal-only, docs-only, agent-only, test-only, or no user-visible delta from `main` | pending |
-| Package typecheck/build/test | pending | Run owning package checks or record N/A with reason | pending |
-| Barrel/export generation | pending | Run `pnpm brl` when exports or exported file layout changed, otherwise N/A | pending |
-| Agent source / generated sync | pending | Run `pnpm install` when `.agents/rules/**` changed and verify generated mirrors | pending |
-| Agent action discoverability | pending | Source-audit the skill/rule path an agent will read | pending |
-| Agent-native review | pending | Load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted findings, or record N/A | pending |
-| Browser interaction proof | pending | Exercise the target route/interaction with the approved browser tool or record blocker | pending |
-| Browser console/network check | pending | Record console/network state or why it is not applicable | pending |
-| Browser final proof artifact | pending | Record screenshot/trace/route proof or exact caveat | pending |
-| Docs source-backed claim audit | pending | Verify docs claims against current source or record N/A | pending |
-| Docs links / routes / previews | pending | Verify leaf links, routes, anchors, and preview names or record N/A | pending |
-| Docs MDX/content parser | pending | Run `pnpm --filter www build:source` for MDX/content changes, or record N/A | pending |
-| Plugin page specifics | pending | For plugin pages, apply `docs-creator` kit/manual/API rules; otherwise N/A | pending |
+| Named verification threshold | yes | Run the command, proof, source audit, or artifact check named in this plan | 12/12 npm versions/latest/integrity/repository/dependency-alias readback PASS; twelve package tags and v53.6.2 point to d81a8eee2cca9f38a0cb04d88a0019405bf109c6; GitHub notes contain all twelve; Source pnpm check PASS: 56 builds, 56 typechecks, 3984 fast and 570 slow tests plus timing gate; /tmp/plate-sync-check-closure.log |
+| Pre-solution issue challenge verdict | yes | Record reporter claim, suggested fix, repro verdict, validity verdict, durable boundary, and hard-stop/pivot decision before implementation | Original request is sync/release; no reported issue. Additional list/table/release-helper blockers reproduced before fixes; scope limited to release blockers |
+| Repro escalation ladder | yes | For bug/behavior claims, record test/source-level, Playwright, Browser, and screenshot/visual-proof outcomes or N/A/blocker reasons before `not reproduced` | Focused source/tests reproduced blockers; baseline origin/main with Slate 0.126.2 reproduced 9/21 focused failures; browser unavailable, recorded without not-reproduced claim |
+| Bug reproduced before fix | yes | Record failing test/repro or N/A with reason | First-list baseline crashes; new adjacent-table regression red in both merge modes; repeated changeset-preparation regression red, all green after owner fixes |
+| Targeted behavior verification | yes | Run focused test/proof for changed behavior or record N/A | 449 focused tests plus 20 affected slow cases PASS; bash -n, help and dry-run PASS; 13 mocked CLI scenarios PASS with zero external npm mutations; user ran real script successfully |
+| TypeScript or typed config changed | yes | Run relevant typecheck | Source pnpm check PASS: 56 builds, 56 typechecks, 3984 fast and 570 slow tests plus timing gate; /tmp/plate-sync-check-closure.log |
+| Package exports or file layout changed | yes | Run `pnpm brl` before final verification and keep generated barrel updates | pnpm brl PASS: 54 tasks; generated barrels kept; source typecheck/build PASS |
+| Package manifests, lockfile, or install graph changed | yes | Run `pnpm install` and relevant package checks | pnpm install --no-frozen-lockfile PASS; Fork names/aliases/repository identity preserved; no AI runtime changes; retained Jotai 3, diff/suggestion, SMILES and table/core behavior; source manifest and version-audit.json PASS |
+| Agent rules or skills changed | no | Run `pnpm install` and verify generated skill sync | N/A: fork rules/generated mirrors retained; no edits to .agents/rules or SKILL.md; no mirror regeneration required |
+| Workspace authority proof | yes | Run verification in the owning repo/package/app/route/tool and record cwd; do not count the wrong workspace as proof | Source commands run in /run/media/lofcz/ssd_external/GitHub/plate; Sciobot no-cache dry-run run separately in owning sciobot-next cwd, exit 0, no app/lock edits |
+| Browser surface changed | yes | Capture Browser Use proof or record explicit waiver/blocker | Blocked: Browser Use/Browser unavailable; dev-browser fallback has no Chrome connection; port 3189 server started but route compile timed out. No visual, console or network-success claim |
+| Browser final proof | yes | Attach screenshot or exact browser verification caveat when browser proof applies | Blocked: Browser Use/Browser unavailable; dev-browser fallback has no Chrome connection; port 3189 server started but route compile timed out. No visual, console or network-success claim |
+| CI-controlled template output changed | no | Restore generated template output or record why it is intentionally kept | Root templates restored/unchanged; docs/plans/templates are fork workflow source docs, not CI output. Postpublish artifact job disposition recorded separately |
+| Package behavior or public API changed | yes | Add a changeset or record why no changeset applies | Six manual patch notes plus six generated dependent notes; all twelve consumed in #55; no forbidden core/slate/platejs minor |
+| User-visible registry output changed | yes | Use the registry-changelog pack: add/update `apps/www/src/registry/changelog/entries/*.mdx`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --write`, run `node tooling/scripts/generate-ui-changelog-entries.mjs --check`, or record N/A | Registry changelog combines 27 entries; generate-ui-changelog-entries --write/--check PASS; no local build:registry |
+| Docs or content changed | yes | For docs-heavy work, use `--template docs`; for supporting public docs/content/API/example changes, load `docs-creator` and close the docs pack; for typo/link-only edits, record the explicit reason and proportional proof | docs-creator supporting docs lane; source parity/check:docs and MDX source build PASS; 43 internal workflow docs restored byte-for-byte from fork baseline |
+| High-risk mini gate | yes | For public API/runtime/package-boundary/browser/agent-action/command-contract changes, record realistic failure mode, proof plan, and why the chosen boundary is right; otherwise N/A | Risk: lose fork identity/behavior or publish incomplete dependent set. Exact identity/inventory audit, red-green normalization/idempotence tests, full check and 12/12 registry readback cover ownership |
+| Agent-native review for agent/tooling changes | yes | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | Incremental agent-native audit PASS: retained source owners and CLI discoverability; new helper exposes help/dry-run, shares workspace, and leaves user-reserved browser/2FA to human |
+| Local install corruption suspected | no | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | N/A: initial missing-dist symptoms coincided with active artifact build; coherent full check passed. No mixed React/Bun/pnpm runtime-corruption signals; no unnecessary reinstall |
+| Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Source review-closure.json and bootstrap-review.json both report zero findings; helper review gpt-6.1-sol, confidence 0.91 |
+| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full source check passed before #54/#55. Final helper PR requires /tmp/plate-bootstrap-check.log exit 0 before creation |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Merged #54/#55 each name one exact plan; plan exists at each exact head and identifies that PR. closeout-audit.json PASS. Helper PR owns its separate plan |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | gh readback verifies #54/#55 task-plan line once, emoji confidence/flow/outcome/caveat/design/verified format; no self-link. Helper PR body audited during delivery |
+| PR proof image hosting | no | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | N/A: no browser screenshot available; exact browser caveat recorded in PR bodies |
+| Tracker sync-back | no | Post concise issue/Linear sync after PR exists, or record N/A/blocker | N/A: direct user request, no issue/Linear tracker |
+| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Merged source/version PRs, release URL, exact frozen source, checks, browser caveat and Bun no-cache command recorded below |
+| Final lint | yes | Run `pnpm lint:fix` or scoped equivalent | pnpm lint:fix PASS (3385 files, no fixes); full-check lint PASS; bash syntax and git diff --check PASS |
+| Output budget discipline | yes | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | Initial upstream stat and broad utility search exceeded cap; recovered with scoped paths, bounded reads and saved log/artifact summaries |
+| Timed checkpoint | no | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | N/A: no duration requested |
+| Goal plan complete | yes | Run `node .agents/skills/autogoal/scripts/check-complete.mjs docs/plans/2026-10-19-sync-upstream-release.md` | Run this plan through node .agents/skills/autogoal/scripts/check-complete.mjs after PR delivery and record result in final audit |
+| Public API / package boundary proof | yes | Source-audit public API, exports, and package boundary impact | Fork names/aliases/repository identity preserved; no AI runtime changes; retained Jotai 3, diff/suggestion, SMILES and table/core behavior; source manifest and version-audit.json PASS |
+| Release artifact classification | yes | Record whether the change is published package behavior/API/types/config/runtime, registry-only, or no published user-visible delta | Published package patch metadata plus upstream registry source notes; helper/restored workflow docs are internal tooling with no package-version delta |
+| Published package changeset | yes | If published package users see a delta, load `changeset`, add/update one `.changeset/*.md` per package, and prove no forbidden `minor` on `@platejs/slate`, `@platejs/core`, or `platejs` | changeset skill applied; six manual one-package patches plus six auto dependents consumed in #55; fork scopes and linked version 53.6.2 audited |
+| Registry changelog | yes | If the change is registry-only under `apps/www/src/registry/**`, use the `registry-changelog` pack and do not add a package changeset | Registry changelog combines 27 entries; generate-ui-changelog-entries --write/--check PASS; no local build:registry |
+| No release artifact | no | If no artifact is needed, record the exact reason: internal-only, docs-only, agent-only, test-only, or no user-visible delta from `main` | N/A for runtime sync: package notes required and present. Internal helper/doc restoration requires no additional package changeset |
+| Package typecheck/build/test | yes | Run owning package checks or record N/A with reason | Source pnpm check PASS: 56 builds, 56 typechecks, 3984 fast and 570 slow tests plus timing gate; /tmp/plate-sync-check-closure.log |
+| Barrel/export generation | yes | Run `pnpm brl` when exports or exported file layout changed, otherwise N/A | pnpm brl PASS: 54 tasks; no package export/layout delta in helper closeout |
+| Agent source / generated sync | no | Run `pnpm install` when `.agents/rules/**` changed and verify generated mirrors | N/A: fork rules/generated mirrors retained; no edits to .agents/rules or SKILL.md; no mirror regeneration required |
+| Agent action discoverability | yes | Source-audit the skill/rule path an agent will read | scripts/bootstrap-publish-and-trust.sh --help/--dry-run document the exact CLI; retained fork task/autogoal/release command docs/templates restored together |
+| Agent-native review | yes | Load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted findings, or record N/A | Incremental agent-native audit PASS: retained source owners and CLI discoverability; new helper exposes help/dry-run, shares workspace, and leaves user-reserved browser/2FA to human |
+| Browser interaction proof | yes | Exercise the target route/interaction with the approved browser tool or record blocker | Blocked: Browser Use/Browser unavailable; dev-browser fallback has no Chrome connection; port 3189 server started but route compile timed out. No visual, console or network-success claim |
+| Browser console/network check | no | Record console/network state or why it is not applicable | Unavailable with blocked browser; no UI console/network success claimed. Public npm metadata and Bun dry-run are separate non-UI evidence |
+| Browser final proof artifact | yes | Record screenshot/trace/route proof or exact caveat | Blocked: Browser Use/Browser unavailable; dev-browser fallback has no Chrome connection; port 3189 server started but route compile timed out. No visual, console or network-success claim |
+| Docs source-backed claim audit | yes | Verify docs claims against current source or record N/A | Supporting upstream product docs match owning source; check:docs PASS; helper help reflects code; restored workflow docs match baseline exactly |
+| Docs links / routes / previews | yes | Verify leaf links, routes, anchors, and preview names or record N/A | Source parity/check:docs PASS; workflow command/template paths restored with retained owners. Browser rendering remains unavailable |
+| Docs MDX/content parser | yes | Run `pnpm --filter www build:source` for MDX/content changes, or record N/A | pnpm --filter www build:source and check:docs PASS for upstream MDX; final restoration is internal Markdown only |
+| Plugin page specifics | no | For plugin pages, apply `docs-creator` kit/manual/API rules; otherwise N/A | N/A: no new plugin page authored; upstream source-owned reference docs retained |
 
 Phase / pass table:
 | Phase | Status | Evidence | Next |
 |-------|--------|----------|------|
-| Intake and source read | in_progress | created plan | implementation |
-| Implementation | pending | | verification |
-| Verification | pending | | closeout |
-| PR / tracker sync | pending | | final response |
-| Closeout | pending | | final response |
+| Intake and source read | done | User scope, fork/upstream source and release owners read | implementation |
+| Implementation | done | Sync #54 and metadata #55 merged; exact heads audited | verification |
+| Verification | done | Final check and review PASS; 12/12 metadata and tarball verification; GH release/tags verified | closeout |
+| PR / tracker sync | done | #54/#55 merged with exact per-PR task ownership; no tracker | release verification |
+| Closeout | in_progress | Final helper/docs PR #56 verified; merge/readback remains | final response |
 
 Findings:
 - Upstream 7937212aab carries 71 commits beyond the fork merge base; several were previously squash-synced.
@@ -337,21 +341,21 @@ Verification evidence:
 - Structured autoreview: PASS, zero accepted/actionable findings (gpt-6.1-sol; helper default gpt-5.5 rejected by account). Full check and focused graph typecheck in progress; logs /tmp/plate-sync-*.log.
 
 Final handoff contract:
-- PR line: pending
-- Issue / tracker line: pending
-- Confidence line: pending
+- PR line: https://github.com/lofcz/plate/pull/54; dedicated release PR https://github.com/lofcz/plate/pull/55
+- Issue / tracker line: N/A: direct user request
+- Confidence line: source and 12/12 npm registry verified; final helper delivery still open
 - Flow table:
-  - Reproduced: tests pending, browser pending
-  - Verified: tests pending, browser pending
-- Browser check: pending
-- Outcome: pending
-- Caveat: pending
+  - Reproduced: baseline first-list/table failures and release-preparation oscillation; browser unavailable
+  - Verified: pnpm check passed (56 builds/types, 3984 fast + 570 slow); browser unavailable
+- Browser check: Browser Use/Browser tools absent; dev-browser fallback has no connected Chrome; port 3189 server attempted, route compile timed out; no visual claim
+- Outcome: upstream merged and fork changes retained; twelve-package 53.6.2 release published (12/12)
+- Caveat: manual publication/trust completed; browser proof unavailable; optional upstream-only manifest checker rejects intentional fork aliases
 - Design:
-  - Chosen boundary: pending
-  - Why not quick patch: pending
-  - Why not broader change: pending
-- Verified: pending
-- PR body verified: pending
+  - Chosen boundary: upstream ancestry merge, fork identities and OIDC release owner, three reproduced normalization/release-helper repairs
+  - Why not quick patch: replacing fork metadata or skipping failing invariants would violate preservation and dependent-release correctness
+  - Why not broader change: no product scope beyond upstream sync and reproduced release blockers
+- Verified: /tmp/plate-sync-check-closure.log, .tmp/upstream-sync/review-closure.json, version-audit.json and closeout-audit.json
+- PR body verified: gh readback confirms both merged PRs name their exact task plan once; each plan exists at exact head and names that PR
 
 Task-style PR body contract:
 - Preserve any existing `<!-- auto-release:start -->` block. If a changeset is
@@ -376,11 +380,11 @@ Task-style PR body contract:
   of that output.
 
 Final handoff / sync:
-- PR: pending
-- Task plan at exact PR head: pending
-- Issue / tracker: pending
-- Browser proof: pending
-- Caveats: pending
+- PR: #54 merged at 7359558876d203e6b4324ee1ea1ee3a013698f2c; release #55 merged at d81a8eee2cca9f38a0cb04d88a0019405bf109c6
+- Task plan at exact PR head: verified for #54 bf702c0d311ff56a4f509a19fe2da5e844554c8b and #55 512caa1db21ec2b1826a8d67f3ae0ca5e0f5f15f
+- Issue / tracker: N/A: no issue
+- Browser proof: unavailable; exact caveat above; no screenshot or console/network success claimed
+- Caveats: npm/GitHub release recovered; final helper documentation/PR delivery remains; browser proof unavailable
 
 Timeline:
 - 2026-10-19T02:32:18.838Z Task goal plan created.
@@ -388,14 +392,17 @@ Timeline:
 Reboot status:
 | Question | Answer |
 |----------|--------|
-| Where am I? | Intake and source read |
-| Where am I going? | Implementation, verification, PR/tracker sync, closeout |
+| Where am I? | Release verified; final helper/documentation delivery |
+| Where am I going? | Finish final check/PR and audit all completed evidence |
 | What is the goal? | Sync upstream and publish fork |
 | What have I learned? | See Findings |
 | What have I done? | See Timeline |
 
 Open risks:
-- Pending.
+- No npm publication blocker remains: 12/12 verified, all tags and GitHub release match frozen source d81a8eee2cca9f38a0cb04d88a0019405bf109c6.
+- Final helper check and PR/documentation delivery remain. Browser proof unavailable; upstream-only manifest checker rejects intentional fork aliases.
+- Upstream advanced after release freeze by one non-blocking DOCX pageNumber feature (3c6d6a3661); it belongs to a subsequent sync, not immutable 53.6.2.
+- Registry/template artifact job is conditional on packages published by CI. Manual recovery may skip it; no local generated outputs are changed.
 
 Initial release inventory before gate repairs (Changesets linked group):
 - @lofcz/platejs-ai -> 53.6.2
@@ -453,3 +460,40 @@ Final complete check: PASS (exit 0), 56 builds, 56 typechecks, all fast/slow tes
 Exact PR ownership: lofcz/plate#54 (https://github.com/lofcz/plate/pull/54). This task invocation owns only that sync PR. Source merge commit 9cc1d67aa0 contains upstream/main 7937212aab; zero missing upstream commits.
 
 Delivery checkpoint: sync PR #54 merged at 7359558876d203e6b4324ee1ea1ee3a013698f2c. Version workflow 39195085705 succeeded and generated #55. Dedicated release task plan: docs/plans/2026-10-19-release-fork-53-6-2.md. Fork-specific version/alias audit passes. Optional upstream-only manifest checker rejects required fork aliases already present before sync; preserve those aliases and record the checker limitation. Publishing/readback remain.
+
+Final preservation audit: upstream deleted 32 workflow command/plan-template documents while the fork retains their owning skills. Restored those baseline docs (including editor-behavior command index and goal-template packs), resolving retained skill references without changing package source. Publish/registry CI must finish before the final skip-release documentation commit is pushed, to avoid racing CI main updates.
+
+Workflow coherence follow-through: retain the full fork goal-template directory plus editor-behavior/research routing READMEs. Upstream replaced their skill/template references with its pstack flow; the fork intentionally keeps its existing owners, so their source docs/templates must stay together. All restoration is documentation only; published package source stays frozen.
+
+Human publication checkpoint:
+- User explicitly reserved manual npm publication and OIDC trust setup. Agent must not run npm login, publish or trust on the user's behalf.
+- Supplied command targets only table, csv, list-classic and test-utils; skips an existing 53.6.2 version before publish and attaches lofcz/plate release.yml trust. Existing scripts/bootstrap-publish.ps1 handles publication only; sibling combined utilities are repository-specific.
+- Public registry readback still shows 8/12 at 53.6.2 with latest/integrity/provenance; four absent. Evidence .tmp/upstream-sync/npm-current.json.
+- Failed run https://github.com/lofcz/plate/actions/runs/39195543568 is terminal, not an active wait.
+- Prepared full twelve-package recovery notes in .tmp/upstream-sync/release-notes-53.6.2.md. No tags or release published while registry inventory is incomplete.
+- Fresh exact-head PR ownership, upstream ancestry and 43 restored-document baseline audit pass: .tmp/upstream-sync/closeout-audit.json.
+
+Blocked audit:
+- The same user-owned npm publication/trust prerequisite remains across the command handoff and two automatic continuations. Fresh registry verification at 2026-10-19T03:51:35.583Z confirms 8/12 complete; csv/list-classic/table/test-utils remain unpublished.
+- No release job is live; run 39195543568 is terminal failure. Independent ancestry, PR ownership, version/alias, source-check, restoration and recovery-note preparation are complete.
+- Cannot complete release/readback without the user completing their explicitly reserved interactive step. Goal marked blocked; resume after user confirmation or registry change. Final documentation remains local to avoid racing resumed release automation.
+
+User-requested script follow-through:
+- User requested a runnable file instead of pasted commands. Dedicated local script task docs/plans/2026-10-19-npm-bootstrap-trust.md; branch codex/npm-bootstrap-trust-2026-10-19.
+- Created scripts/bootstrap-publish-and-trust.sh with manifest validation, build, human web login/2FA, exact four-package allowlist, published-version/matching-trust skips, error stops and dry-run. No agent-side npm mutation.
+- Thirteen mocked CLI scenarios pass; syntax/help/dry-run pass. Parent publication goal still needs user execution and 12/12 registry verification.
+
+Publication recovery evidence:
+- User completed bootstrap; 2026-10-19T13:52:26.498Z registry readback: 12/12 versions/latest/integrity/dependency aliases pass.
+- Sciobot bun install --dry-run --ignore-scripts --no-cache PASS in owning repo, 880ms; consumer package.json/bun.lock not changed by agent. Recommend bun install --no-cache after publication propagation.
+- GitHub release https://github.com/lofcz/plate/releases/tag/v53.6.2 and all twelve package tags verified at d81a8eee2cca9f38a0cb04d88a0019405bf109c6.
+- Release run 39195543568 attempt 2 requested once after manual auth/publication repair; terminal outcome and artifact-job disposition must be read back before final goal completion.
+
+Terminal workflow readback:
+- ReleaseOrVersionPR run 39195543568 attempt 2 SUCCESS. All versions were already published by then; the conditional registry/template job was skipped. Root generated outputs remain under CI ownership; none generated locally. GitHub release/tags were recovered with gh after full 12/12 registry verification.
+
+Final delivery readiness:
+- Helper/workflow preservation PR #56 (https://github.com/lofcz/plate/pull/56), dedicated plan docs/plans/2026-10-19-npm-bootstrap-trust.md.
+- Fresh full check PASS: 56 builds/types, 3984 fast, 570 slow, timing gate; /tmp/plate-bootstrap-check.log.
+- All twelve npm tarballs match registry integrity and correct manifest identities; 45 public export targets exist.
+- Parent source/release criteria are verified. Final helper/docs merge and clean checkout/readback remain.
