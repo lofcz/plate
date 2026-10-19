@@ -66,7 +66,7 @@ Boundaries:
 - Non-goals: new product scope, beta promotion, manual template/registry generation.
 
 Output budget strategy:
-- Save verbose logs under .tmp; show summaries, conflict paths, scoped diffs. Initial upstream stat exceeded the cap; use shortstat/path filters thereafter.
+- Save verbose logs under .tmp; show summaries, conflict paths, scoped diffs. Initial upstream stat and broad utility search exceeded the cap; subsequent output used bounded path lists, scoped reads and saved log summaries.
 
 Blocked condition:
 - Missing GitHub/npm publishing authorization, unresolved release-blocking checks after diagnosis, or ambiguous destructive product conflict. Continue all independent authorized work first.
@@ -74,16 +74,16 @@ Blocked condition:
 Task state:
 - task_type: upstream sync and stable npm release
 - task_complexity: non-trivial
-- current_phase: final delivery
-- current_phase_status: in_progress
-- next_phase: final helper check, dedicated PR/documentation delivery and completion audit
-- goal_status: completion audit
+- current_phase: complete
+- current_phase_status: done
+- next_phase: none
+- goal_status: complete
 
 Current verdict:
-- verdict: publication recovered; finish source delivery
+- verdict: complete
 - confidence: 95
 - next owner: task
-- reason: user completed manual bootstrap; all twelve npm versions and GitHub release verified; final helper PR/check remains
+- reason: user completed manual bootstrap; all twelve npm versions and GitHub release verified; helper/docs #56 merged and final check passed
 
 Pre-solution issue challenge:
 - reporter claim: N/A: sync/release request
@@ -231,7 +231,7 @@ Work Checklist:
 
 - [x] Complete user-controlled publication/trust for csv, list-classic, table and test-utils at 53.6.2.
 - [x] Verify all twelve npm versions/latest/integrity, recover package tags and GitHub release, and record CI artifact disposition.
-- [ ] Commit/push restored workflow documentation and final evidence after release automation stops.
+- [x] Commit/push restored workflow documentation and final evidence after release automation stops.
 
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
@@ -256,9 +256,9 @@ Completion Gates:
 | Agent-native review for agent/tooling changes | yes | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | Incremental agent-native audit PASS: retained source owners and CLI discoverability; new helper exposes help/dry-run, shares workspace, and leaves user-reserved browser/2FA to human |
 | Local install corruption suspected | no | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | N/A: initial missing-dist symptoms coincided with active artifact build; coherent full check passed. No mixed React/Bun/pnpm runtime-corruption signals; no unnecessary reinstall |
 | Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Source review-closure.json and bootstrap-review.json both report zero findings; helper review gpt-6.1-sol, confidence 0.91 |
-| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full source check passed before #54/#55. Final helper PR requires /tmp/plate-bootstrap-check.log exit 0 before creation |
-| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Merged #54/#55 each name one exact plan; plan exists at each exact head and identifies that PR. closeout-audit.json PASS. Helper PR owns its separate plan |
-| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | gh readback verifies #54/#55 task-plan line once, emoji confidence/flow/outcome/caveat/design/verified format; no self-link. Helper PR body audited during delivery |
+| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full source check passed before #54/#55; fresh /tmp/plate-bootstrap-check.log exit 0 before #56 creation |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Merged #54/#55 each name one exact plan; plan exists at each exact head and identifies that PR. closeout-audit.json PASS. Helper #56 owns docs/plans/2026-10-19-npm-bootstrap-trust.md at exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | gh readback verifies #54/#55 task-plan line once, emoji confidence/flow/outcome/caveat/design/verified format; no self-link. Helper #56 body and exact head audited before merge |
 | PR proof image hosting | no | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | N/A: no browser screenshot available; exact browser caveat recorded in PR bodies |
 | Tracker sync-back | no | Post concise issue/Linear sync after PR exists, or record N/A/blocker | N/A: direct user request, no issue/Linear tracker |
 | Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Merged source/version PRs, release URL, exact frozen source, checks, browser caveat and Bun no-cache command recorded below |
@@ -291,7 +291,7 @@ Phase / pass table:
 | Implementation | done | Sync #54 and metadata #55 merged; exact heads audited | verification |
 | Verification | done | Final check and review PASS; 12/12 metadata and tarball verification; GH release/tags verified | closeout |
 | PR / tracker sync | done | #54/#55 merged with exact per-PR task ownership; no tracker | release verification |
-| Closeout | in_progress | Final helper/docs PR #56 verified; merge/readback remains | final response |
+| Closeout | done | Final check/registry/tag/release evidence PASS; helper/docs #56 merged at a7c5a98389a8793cdbce99d6c3d71307173c9fa1 | complete |
 
 Findings:
 - Upstream 7937212aab carries 71 commits beyond the fork merge base; several were previously squash-synced.
@@ -306,10 +306,10 @@ Decisions and tradeoffs:
 - Preserve fork OIDC publishing/release tests, generated release history, and all CI-owned templates. Upstream app/registry source improvements remain.
 - Keep upstream HTML conversion owner and native-autolink guard; transplant fork paired-void handling into legacyHtmlToJsx.
 - Keep fork slow-test timeout with upstream git-visible test selection.
-- Recreate four consumed upstream patch changesets under @lofcz; prepare-release-changesets derives five runtime-dependent releases.
+- Six manual package patches and six auto-dependent notes were retargeted to @lofcz and consumed by #55.
 
 Implementation notes:
-- Dedicated branch: codex/sync-upstream-release-2026-10-19. Pending real merge preserves both upstream/fork ancestry.
+- Dedicated branch: codex/sync-upstream-release-2026-10-19. Real merge preserves both upstream/fork ancestry.
 - Review scope frozen at ~182 files, mostly upstream docs/plans and source; no new product scope.
 - Agent-native audit: retained fork task/autogoal/release commands remain discoverable and CLI-accessible; new generic type-probe/trial-power commands have CLI flags and tests. No UI-only actions introduced.
 - Source proof cwd: /run/media/lofcz/ssd_external/GitHub/plate.
@@ -343,7 +343,7 @@ Verification evidence:
 Final handoff contract:
 - PR line: https://github.com/lofcz/plate/pull/54; dedicated release PR https://github.com/lofcz/plate/pull/55
 - Issue / tracker line: N/A: direct user request
-- Confidence line: source and 12/12 npm registry verified; final helper delivery still open
+- Confidence line: source and 12/12 npm registry verified; helper/docs #56 merged
 - Flow table:
   - Reproduced: baseline first-list/table failures and release-preparation oscillation; browser unavailable
   - Verified: pnpm check passed (56 builds/types, 3984 fast + 570 slow); browser unavailable
@@ -384,7 +384,7 @@ Final handoff / sync:
 - Task plan at exact PR head: verified for #54 bf702c0d311ff56a4f509a19fe2da5e844554c8b and #55 512caa1db21ec2b1826a8d67f3ae0ca5e0f5f15f
 - Issue / tracker: N/A: no issue
 - Browser proof: unavailable; exact caveat above; no screenshot or console/network success claimed
-- Caveats: npm/GitHub release recovered; final helper documentation/PR delivery remains; browser proof unavailable
+- Caveats: npm/GitHub release and helper/docs delivered; browser proof unavailable
 
 Timeline:
 - 2026-10-19T02:32:18.838Z Task goal plan created.
@@ -392,17 +392,18 @@ Timeline:
 Reboot status:
 | Question | Answer |
 |----------|--------|
-| Where am I? | Release verified; final helper/documentation delivery |
-| Where am I going? | Finish final check/PR and audit all completed evidence |
+| Where am I? | Complete; source/version/helper PRs merged and npm/GitHub release verified |
+| Where am I going? | No required work remains; final completion audit |
 | What is the goal? | Sync upstream and publish fork |
 | What have I learned? | See Findings |
 | What have I done? | See Timeline |
 
 Open risks:
-- No npm publication blocker remains: 12/12 verified, all tags and GitHub release match frozen source d81a8eee2cca9f38a0cb04d88a0019405bf109c6.
-- Final helper check and PR/documentation delivery remain. Browser proof unavailable; upstream-only manifest checker rejects intentional fork aliases.
-- Upstream advanced after release freeze by one non-blocking DOCX pageNumber feature (3c6d6a3661); it belongs to a subsequent sync, not immutable 53.6.2.
-- Registry/template artifact job is conditional on packages published by CI. Manual recovery may skip it; no local generated outputs are changed.
+- No remaining publication or delivery blocker. Twelve npm versions, tarballs and release tags verified; three task-owned PRs merged.
+- Browser proof unavailable; optional upstream-only manifest checker rejects intentional fork aliases.
+- Four manual bootstrap packages lack provenance for this version; trusted publishers are configured for future CI.
+- One upstream DOCX pageNumber feature arrived after the frozen 7937212aab snapshot; it belongs to a subsequent release.
+- Postpublish registry/template job skipped after manual recovery; no local generated outputs changed.
 
 Initial release inventory before gate repairs (Changesets linked group):
 - @lofcz/platejs-ai -> 53.6.2
@@ -497,3 +498,12 @@ Final delivery readiness:
 - Fresh full check PASS: 56 builds/types, 3984 fast, 570 slow, timing gate; /tmp/plate-bootstrap-check.log.
 - All twelve npm tarballs match registry integrity and correct manifest identities; 45 public export targets exist.
 - Parent source/release criteria are verified. Final helper/docs merge and clean checkout/readback remain.
+
+Final completion audit:
+- Source #54 and version #55 merged with exact plan ownership; helper/workflow preservation #56 merged at a7c5a98389a8793cdbce99d6c3d71307173c9fa1, exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c.
+- Final full check PASS (56 builds, 56 typechecks, 3984 fast, 570 slow, timing gate); focused helper proof 13/13; structured review zero findings.
+- Public registry metadata 12/12 PASS; actual tarball integrity and manifests 12/12 PASS; 45 export targets present; twelve package tags plus v53.6.2 point to frozen source d81a8eee2cca9f38a0cb04d88a0019405bf109c6.
+- Release workflow attempt 2 SUCCESS; conditional registry/template job skipped after manual publication. Source release/package improvements and retained fork workflows are delivered.
+- User's npm prerequisite is resolved. Sciobot uncached Bun dry-run passed; no consumer edits by agent. Existing consumer core/utils overrides remain at older pins and were reported to user.
+- Origin tag fetch retained three existing legacy local tags rather than clobber them; all thirteen new release tags fetched and verified. No legacy refs moved.
+- All named plan checkers run before goal completion; final evidence-only documentation commit is pushed with [skip release].

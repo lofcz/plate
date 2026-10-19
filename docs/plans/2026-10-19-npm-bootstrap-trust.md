@@ -58,16 +58,16 @@ Blocked condition:
 Task state:
 - task_type: release helper and fork workflow preservation
 - task_complexity: non-trivial
-- current_phase: delivery
-- current_phase_status: in_progress
-- next_phase: final check, dedicated PR ownership and delivery
-- goal_status: parent completion audit
+- current_phase: complete
+- current_phase_status: done
+- next_phase: none
+- goal_status: complete
 
 Current verdict:
-- verdict: helper verified and successfully run by user
+- verdict: complete
 - confidence: 95
 - next owner: task
-- reason: syntax/dry-run, 13 mocked scenarios and review pass; real npm readback is now 12/12; deliver helper and inherited fork docs
+- reason: syntax/dry-run, 13 mocked scenarios and review pass; real npm readback is now 12/12; helper and inherited fork docs delivered in #56
 
 Pre-solution issue challenge:
 - reporter claim: N/A: user requests a terminal script
@@ -182,7 +182,7 @@ Work Checklist:
 - [x] Agent-native pack: generated mirrors are synced when `.agents/rules/**` changed, or N/A reason is recorded.
 - [x] Agent-native pack: accepted agent-native review findings are fixed or explicitly rejected with reason.
 
-- [ ] Merge verified helper/workflow preservation PR #56 and read back final delivery.
+- [x] Merge verified helper/workflow preservation PR #56 and read back final delivery.
 
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
@@ -207,12 +207,12 @@ Completion Gates:
 | Agent-native review for agent/tooling changes | yes | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | Incremental agent-native audit PASS: retained source owners and CLI discoverability; new helper exposes help/dry-run, shares workspace, and leaves user-reserved browser/2FA to human |
 | Local install corruption suspected | no | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | N/A: initial missing-dist symptoms coincided with active artifact build; coherent full check passed. No mixed React/Bun/pnpm runtime-corruption signals; no unnecessary reinstall |
 | Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Source review-closure.json and bootstrap-review.json both report zero findings; helper review gpt-6.1-sol, confidence 0.91 |
-| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
-| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
-| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
+| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full check PASS before #56; body names this plan once; exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c owns #56; merged a7c5a98389a8793cdbce99d6c3d71307173c9fa1 |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Full check PASS before #56; body names this plan once; exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c owns #56; merged a7c5a98389a8793cdbce99d6c3d71307173c9fa1 |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | Full check PASS before #56; body names this plan once; exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c owns #56; merged a7c5a98389a8793cdbce99d6c3d71307173c9fa1 |
 | PR proof image hosting | no | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | N/A: no browser screenshot available; exact browser caveat recorded in PR bodies |
 | Tracker sync-back | no | Post concise issue/Linear sync after PR exists, or record N/A/blocker | N/A: direct user request, no issue/Linear tracker |
-| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
+| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Full check PASS before #56; body names this plan once; exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c owns #56; merged a7c5a98389a8793cdbce99d6c3d71307173c9fa1 |
 | Final lint | yes | Run `pnpm lint:fix` or scoped equivalent | pnpm lint:fix PASS (3385 files, no fixes); full-check lint PASS; bash syntax and git diff --check PASS |
 | Output budget discipline | yes | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | Initial upstream stat and broad utility search exceeded cap; recovered with scoped paths, bounded reads and saved log/artifact summaries |
 | Timed checkpoint | no | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | N/A: no duration requested |
@@ -228,7 +228,7 @@ Phase / pass table:
 | Implementation | done | Helper with exact targets/trust checks and 43 baseline-identical workflow docs | verification |
 | Verification | done | Full check 56 builds/types, 3984 fast, 570 slow; 13 mocks; clean review; 12 tarball integrity/export checks | delivery |
 | PR / tracker sync | done | #56 owns this exact plan; body names it once; no tracker | closeout |
-| Closeout | in_progress | Binding exact #56 ownership and final merge/readback | final response |
+| Closeout | done | Final check/registry/tag/release evidence PASS; helper/docs #56 merged at a7c5a98389a8793cdbce99d6c3d71307173c9fa1 | complete |
 
 Findings:
 - Existing bootstrap PowerShell utility handles token publication only. New helper composes human web login, four exact package publishes and trusted-publisher checks.
@@ -260,21 +260,21 @@ Verification evidence:
 - 43 inherited restored docs match baseline 8c500a93d1 exactly: closeout-audit.json.
 
 Final handoff contract:
-- PR line: pending
-- Issue / tracker line: pending
-- Confidence line: pending
+- PR line: https://github.com/lofcz/plate/pull/56
+- Issue / tracker line: N/A: direct user request
+- Confidence line: 95%; executable proof and clean structured review
 - Flow table:
-  - Reproduced: tests pending, browser pending
-  - Verified: tests pending, browser pending
-- Browser check: pending
-- Outcome: pending
-- Caveat: pending
+  - Reproduced: partial release auth blocker; 13 mocked CLI success/failure cases; browser N/A for terminal helper
+  - Verified: full pnpm check plus script syntax/dry-run/mocks; browser N/A for terminal helper
+- Browser check: N/A: terminal helper. Parent source task records unavailable browser tools.
+- Outcome: user ran helper successfully; all twelve packages verified; helper/workflow docs merged
+- Caveat: human browser/2FA intentional; parent UI browser proof unavailable; optional manifest checker is upstream-only
 - Design:
-  - Chosen boundary: pending
-  - Why not quick patch: pending
-  - Why not broader change: pending
-- Verified: pending
-- PR body verified: pending
+  - Chosen boundary: npm/pnpm CLI composition with fixed package scope and trusted-publisher checks
+  - Why not quick patch: one runnable script must validate identities and stop after auth/registry/publish/trust failures
+  - Why not broader change: routine OIDC workflow needs no token fallback or new publishing policy
+- Verified: 13 mocks, syntax/help/dry-run, clean review, final full check, user execution and npm/GitHub readback
+- PR body verified: gh exact head/body readback for #56; one task-plan line, no self-link
 
 Task-style PR body contract:
 - Preserve any existing `<!-- auto-release:start -->` block. If a changeset is
@@ -299,11 +299,11 @@ Task-style PR body contract:
   of that output.
 
 Final handoff / sync:
-- PR: pending
-- Task plan at exact PR head: pending
-- Issue / tracker: pending
-- Browser proof: pending
-- Caveats: pending
+- PR: https://github.com/lofcz/plate/pull/56, merged a7c5a98389a8793cdbce99d6c3d71307173c9fa1
+- Task plan at exact PR head: verified 953df5265b1a201c9c404e5637da4c1c3ab34c1c
+- Issue / tracker: N/A: no tracker
+- Browser proof: N/A: terminal helper; inherited source browser caveat recorded
+- Caveats: human auth intentional; inherited browser/optional manifest-checker limitations recorded
 
 Timeline:
 - 2026-10-19T03:56:35.683Z Task goal plan created.
@@ -311,16 +311,18 @@ Timeline:
 Reboot status:
 | Question | Answer |
 |----------|--------|
-| Where am I? | Helper verified and user execution complete; final delivery |
-| Where am I going? | Final check, dedicated PR and completion audit |
+| Where am I? | Complete; helper and retained fork workflow docs merged |
+| Where am I going? | No required work remains; final completion audit |
 | What is the goal? | Deliver a verified human-operated npm bootstrap helper and preserve fork workflow docs |
 | What have I learned? | See Findings |
 | What have I done? | See Timeline |
 
 Open risks:
-- Parent release has no npm publication blocker. Final check and PR delivery remain.
-- Human npm browser/2FA is intentional. Agent performed only mocked/dry-run helper execution.
-- No browser QA needed for this terminal helper; parent source task records unavailable browser proof.
+- No remaining publication or delivery blocker. Twelve npm versions, tarballs and release tags verified; three task-owned PRs merged.
+- Browser proof unavailable; optional upstream-only manifest checker rejects intentional fork aliases.
+- Four manual bootstrap packages lack provenance for this version; trusted publishers are configured for future CI.
+- One upstream DOCX pageNumber feature arrived after the frozen 7937212aab snapshot; it belongs to a subsequent release.
+- Postpublish registry/template job skipped after manual recovery; no local generated outputs changed.
 
 Task intake:
 - Separate task invocation for the requested local bootstrap script. User wants one runnable file, not pasted commands.
@@ -340,7 +342,7 @@ Script implementation checkpoint:
 
 Inherited delivery scope:
 - This task also delivers the parent release's 43 restored fork workflow documents, unchanged from baseline, plus final plan evidence. This is preserved original sync scope, not new product work.
-- [ ] Commit/push helper and inherited docs after full check, bind this plan to #56, then merge and audit readback.
+- [x] Commit/push helper and inherited docs after full check, bind this plan to #56, then merge and audit readback.
 
 Publication recovery evidence:
 - User completed bootstrap; 2026-10-19T13:52:26.498Z registry readback: 12/12 versions/latest/integrity/dependency aliases pass.
@@ -354,3 +356,12 @@ Terminal workflow readback:
 Exact PR ownership: lofcz/plate#56 (https://github.com/lofcz/plate/pull/56). This separate task invocation owns only this helper/workflow preservation PR. Parent #54/#55 each retain their own task plan.
 - Full final check evidence: .tmp/upstream-sync/bootstrap-check-result.json and /tmp/plate-bootstrap-check.log, exit 0.
 - Actual published artifact evidence: 12 tarballs, 497787 bytes, 45 export targets verified; .tmp/upstream-sync/npm-artifact-verification.json.
+
+Final completion audit:
+- Source #54 and version #55 merged with exact plan ownership; helper/workflow preservation #56 merged at a7c5a98389a8793cdbce99d6c3d71307173c9fa1, exact head 953df5265b1a201c9c404e5637da4c1c3ab34c1c.
+- Final full check PASS (56 builds, 56 typechecks, 3984 fast, 570 slow, timing gate); focused helper proof 13/13; structured review zero findings.
+- Public registry metadata 12/12 PASS; actual tarball integrity and manifests 12/12 PASS; 45 export targets present; twelve package tags plus v53.6.2 point to frozen source d81a8eee2cca9f38a0cb04d88a0019405bf109c6.
+- Release workflow attempt 2 SUCCESS; conditional registry/template job skipped after manual publication. Source release/package improvements and retained fork workflows are delivered.
+- User's npm prerequisite is resolved. Sciobot uncached Bun dry-run passed; no consumer edits by agent. Existing consumer core/utils overrides remain at older pins and were reported to user.
+- Origin tag fetch retained three existing legacy local tags rather than clobber them; all thirteen new release tags fetched and verified. No legacy refs moved.
+- All named plan checkers run before goal completion; final evidence-only documentation commit is pushed with [skip release].
