@@ -45,6 +45,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -57,6 +60,7 @@ describe('table sizing and selection helpers', () => {
           colSizes: [0, 120],
           type: 'table',
         },
+        { type: 'p', children: [{ text: '' }] },
       ]);
     });
 
@@ -76,6 +80,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -88,6 +95,7 @@ describe('table sizing and selection helpers', () => {
           colSizes: [64, 30],
           type: 'table',
         },
+        { type: 'p', children: [{ text: '' }] },
       ]);
     });
   });
@@ -117,6 +125,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -129,18 +140,22 @@ describe('table sizing and selection helpers', () => {
           children: [{ size: 48 }, {}],
           type: 'table',
         },
+        { type: 'p', children: [{ text: '' }] },
       ]);
     });
   });
 
   describe('moveSelectionFromCell', () => {
-    it('moves a collapsed selection to the next cell', () => {
+    it('moves a collapsed selection to the next row in the same column', () => {
       const input = (
         <editor>
           <htable>
             <htr>
               <htd>
-                <hp>11</hp>
+                <hp>
+                  11
+                  <cursor />
+                </hp>
               </htd>
               <htd>
                 <hp>12</hp>
@@ -148,16 +163,16 @@ describe('table sizing and selection helpers', () => {
             </htr>
             <htr>
               <htd>
-                <hp>
-                  21
-                  <cursor />
-                </hp>
+                <hp>21</hp>
               </htd>
               <htd>
                 <hp>22</hp>
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -174,16 +189,19 @@ describe('table sizing and selection helpers', () => {
             </htr>
             <htr>
               <htd>
-                <hp>21</hp>
+                <hp>
+                  <cursor />
+                  21
+                </hp>
               </htd>
               <htd>
-                <hp>
-                  22
-                  <cursor />
-                </hp>
+                <hp>22</hp>
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -221,6 +239,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -250,6 +271,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -362,6 +386,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -382,6 +409,9 @@ describe('table sizing and selection helpers', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 

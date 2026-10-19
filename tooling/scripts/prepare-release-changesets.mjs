@@ -100,7 +100,17 @@ export function resolveWorkspaceDependencyName(
 export function getAutoReleasePackages(releases, workspacePackages) {
   const releasedPackageNames = new Set(
     releases
-      .filter((release) => release.type !== 'none')
+      .filter(
+        (release) =>
+          release.type !== 'none' &&
+          // Generated changesets are output, not release roots on the next run.
+          (release.changesets === undefined ||
+            release.changesets.some(
+              (id) =>
+                !id.startsWith(autoChangesetFilenamePrefix) &&
+                id !== legacyAutoChangesetFilename.slice(0, -3)
+            ))
+      )
       .map((release) => release.name)
   );
   const autoReleasePackageNames = new Set();

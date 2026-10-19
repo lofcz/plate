@@ -46,6 +46,9 @@ describe('deleteTableMergeColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -83,6 +86,9 @@ describe('deleteTableMergeColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -116,6 +122,7 @@ describe('deleteTableMergeColumn', () => {
           },
         ],
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 });

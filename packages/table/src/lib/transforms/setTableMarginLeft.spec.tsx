@@ -28,6 +28,9 @@ describe('setTableMarginLeft', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
         <htable>
           <htr>
             <htd>
@@ -38,16 +41,21 @@ describe('setTableMarginLeft', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
     const editor = createTableEditor(input);
 
-    setTableMarginLeft(editor, { marginLeft: 48 }, { at: [1] });
+    setTableMarginLeft(editor, { marginLeft: 48 }, { at: [2] });
 
     expect(editor.children).toMatchObject([
       { type: 'table' },
+      { type: 'p', children: [{ text: '' }] },
       { marginLeft: 48, type: 'table' },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 

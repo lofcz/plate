@@ -42,6 +42,9 @@ describe('insertTableMergeColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -74,6 +77,9 @@ describe('insertTableMergeColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -105,6 +111,7 @@ describe('insertTableMergeColumn', () => {
         ],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 });

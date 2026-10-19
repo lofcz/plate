@@ -217,7 +217,7 @@ importers:
         version: 6.0.1
       slate-test-utils:
         specifier: 1.3.2
-        version: 1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2))(slate@0.126.2)
+        version: 1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0))(slate@0.146.0)
       tailwind-merge:
         specifier: 3.3.1
         version: 3.3.1
@@ -581,7 +581,7 @@ importers:
         version: 1.2.7(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@slate-yjs/react':
         specifier: 1.1.0
-        version: 1.1.0(@slate-yjs/core@1.0.2(slate@0.126.2)(yjs@13.6.29))(react@19.2.4)(slate-react@0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2))(slate@0.126.2)(yjs@13.6.29)
+        version: 1.1.0(@slate-yjs/core@1.0.2(slate@0.146.0)(yjs@13.6.29))(react@19.2.4)(slate-react@0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0))(slate@0.146.0)(yjs@13.6.29)
       '@tabler/icons-react':
         specifier: 3.34.0
         version: 3.34.0(react@19.2.4)
@@ -594,9 +594,6 @@ importers:
       '@uploadthing/react':
         specifier: 7.3.1
         version: 7.3.1(next@16.2.6(@babel/core@7.29.0)(@playwright/test@1.53.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.89.2))(react@19.2.4)(uploadthing@7.7.2(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@playwright/test@1.53.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.89.2))(tailwindcss@4.1.8))
-      agentation:
-        specifier: ^3.0.2
-        version: 3.0.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ai:
         specifier: ^7.0.0
         version: 7.0.4(zod@3.25.76)
@@ -745,8 +742,8 @@ importers:
         specifier: 1.0.8
         version: 1.0.8
       slate:
-        specifier: 0.126.2
-        version: 0.126.2
+        specifier: 0.146.0
+        version: 0.146.0
       sonner:
         specifier: 2.0.5
         version: 2.0.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1106,17 +1103,17 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.4)
       slate:
-        specifier: 0.126.2
-        version: 0.126.2
+        specifier: 0.146.0
+        version: 0.146.0
       slate-dom:
-        specifier: 0.126.0
-        version: 0.126.0(slate@0.126.2)
+        specifier: 0.146.0
+        version: 0.146.0(slate@0.146.0)
       slate-hyperscript:
-        specifier: 0.125.0
-        version: 0.125.0(slate@0.126.2)
+        specifier: 0.138.3
+        version: 0.138.3(slate@0.146.0)
       slate-react:
-        specifier: 0.126.4
-        version: 0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2)
+        specifier: 0.145.1
+        version: 0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0)
       use-deep-compare:
         specifier: ^1.3.0
         version: 1.3.0(react@19.2.4)
@@ -1478,6 +1475,12 @@ importers:
       '@platejs/date':
         specifier: workspace:@lofcz/platejs-date@*
         version: link:../date
+      acorn:
+        specifier: ^8.16.0
+        version: 8.16.0
+      acorn-jsx:
+        specifier: ^5.3.2
+        version: 5.3.2(acorn@8.16.0)
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
@@ -1493,6 +1496,24 @@ importers:
       mdast-util-to-markdown:
         specifier: ^2.1.2
         version: 2.1.2
+      micromark:
+        specifier: ^4.0.2
+        version: 4.0.2
+      micromark-core-commonmark:
+        specifier: ^2.0.3
+        version: 2.0.3
+      micromark-extension-mdxjs:
+        specifier: ^3.0.0
+        version: 3.0.0
+      micromark-util-character:
+        specifier: ^2.1.1
+        version: 2.1.1
+      micromark-util-events-to-acorn:
+        specifier: ^2.0.3
+        version: 2.0.3
+      micromark-util-types:
+        specifier: ^2.0.2
+        version: 2.0.2
       react-compiler-runtime:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.4)
@@ -1530,6 +1551,12 @@ importers:
       '@types/unist':
         specifier: ^3.0.3
         version: 3.0.3
+      mdast-util-from-markdown:
+        specifier: ^2.0.3
+        version: 2.0.3
+      micromark-extension-mdx-jsx:
+        specifier: ^3.0.2
+        version: 3.0.2
       platejs:
         specifier: workspace:@lofcz/platejs@*
         version: link:../plate
@@ -1694,11 +1721,11 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       slate:
-        specifier: 0.126.2
-        version: 0.126.2
+        specifier: 0.146.0
+        version: 0.146.0
       slate-dom:
-        specifier: 0.126.0
-        version: 0.126.0(slate@0.126.2)
+        specifier: 0.146.0
+        version: 0.146.0(slate@0.146.0)
     devDependencies:
       '@plate/scripts':
         specifier: workspace:*
@@ -1990,7 +2017,7 @@ importers:
     dependencies:
       '@slate-yjs/core':
         specifier: ^1.0.2
-        version: 1.0.2(slate@0.126.2)(yjs@13.6.29)
+        version: 1.0.2(slate@0.146.0)(yjs@13.6.29)
       react-compiler-runtime:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.4)
@@ -5642,17 +5669,6 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
-
-  agentation@3.0.2:
-    resolution: {integrity: sha512-iGzBxFVTuZEIKzLY6AExSLAQH6i6SwxV4pAu7v7m3X6bInZ7qlZXAwrEqyc4+EfP4gM7z2RXBF6SF4DeH0f2lA==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
 
   ai@7.0.4:
     resolution: {integrity: sha512-mZub080RWRxpWg8OY56KVnI3AoMVniccSWG+dwVb3nH81+GiNMDYBIdP41RLUivLpmU49pB7ssD7tvfIUaSaCA==}
@@ -9928,8 +9944,8 @@ packages:
     peerDependencies:
       slate: '>=0.121.0'
 
-  slate-dom@0.126.0:
-    resolution: {integrity: sha512-FdRlaKh0xksnymiRiv8/8c6dYhybwTg1QJIjmvEyeOUKHfdJI55YA4gGKv4vQj4ZKklau2aHY6uX/npJu5jYMA==}
+  slate-dom@0.146.0:
+    resolution: {integrity: sha512-ZIrdJ9YKRSMIgSdtQYsU8lpdsK3JLKdyzRT81vMjkZVHoDo4Pn8cSwLaEQ2uy4bOiRmCs7pOci3aiN16GNi71w==}
     peerDependencies:
       slate: '>=0.121.0'
 
@@ -9943,13 +9959,25 @@ packages:
     peerDependencies:
       slate: '>=0.114.3'
 
-  slate-react@0.126.4:
-    resolution: {integrity: sha512-uxEd6CUNI8QXrNvDE0WV8Ci7cTHq9gqB/j9l4VrS3wf0LdKadhtwGg+YOFXwjm4KXZWHw368z08nfE7v5Cx6Jw==}
+  slate-hyperscript@0.138.3:
+    resolution: {integrity: sha512-rsKTeNQ+eu99nxo7a3eBOW0mhG0v3yYCMDwyURNXl+wmS0xv+SIci0un1j2DTcjWJ184ubCEF7d3ySIJB40KFw==}
     peerDependencies:
+      slate: '>=0.114.3'
+
+  slate-react@0.145.1:
+    resolution: {integrity: sha512-4NlIssiDQcTgVww0NVNiJuQU9KDa/tyF1FahQ7f3f/AqWzI92du+rGWNcOrKX6QBBZJjMNW1s8wJbN6mTQ7mGw==}
+    peerDependencies:
+      '@types/lodash': ^4.14.0
+      '@types/react': '>=18.0.0'
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
       slate: '>=0.121.0'
-      slate-dom: '>=0.119.1'
+      slate-dom: '>=0.141.0'
+    peerDependenciesMeta:
+      '@types/lodash':
+        optional: true
+      '@types/react':
+        optional: true
 
   slate-test-utils@1.3.2:
     resolution: {integrity: sha512-3K/ZXPqlpzLoin71oErp7MUF+sLJMaFl2u5gnxqJvgIaQH4sFrZmLSAWvC27Bd/hCRSeTlVKUymv45tTIOymcA==}
@@ -9967,6 +9995,9 @@ packages:
 
   slate@0.126.2:
     resolution: {integrity: sha512-38C8GU9awiEbroZm+DzXEFUWKptb1QV9xcgcUjseas4PtqQdBnEPITocosYzFHXEVrlkafjZEv8KH8pjhe0esQ==}
+
+  slate@0.146.0:
+    resolution: {integrity: sha512-MWu3mbJdnY71IdXoh4xSm9WG64Ytn+WFR7MeMCpfEe4XdGNiN4bpOyqq4p6mAKTCWrA/PbwJ0YhSmlKmcErkew==}
 
   slice-ansi@5.0.0:
     resolution: {integrity: sha512-FC+lgizVPfie0kkhqUScwRu1O/lF6NOgJmlCgK+/LYxDCTk8sGelYaHDhFcDN+Sn3Cv+3VSa4Byeo+IMCzpMgQ==}
@@ -12325,7 +12356,7 @@ snapshots:
 
   '@mdx-js/mdx@3.1.1':
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/estree-jsx': 1.0.5
       '@types/hast': 3.0.4
       '@types/mdx': 2.0.13
@@ -14014,18 +14045,18 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@slate-yjs/core@1.0.2(slate@0.126.2)(yjs@13.6.29)':
+  '@slate-yjs/core@1.0.2(slate@0.146.0)(yjs@13.6.29)':
     dependencies:
-      slate: 0.126.2
+      slate: 0.146.0
       y-protocols: 1.0.7(yjs@13.6.29)
       yjs: 13.6.29
 
-  '@slate-yjs/react@1.1.0(@slate-yjs/core@1.0.2(slate@0.126.2)(yjs@13.6.29))(react@19.2.4)(slate-react@0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2))(slate@0.126.2)(yjs@13.6.29)':
+  '@slate-yjs/react@1.1.0(@slate-yjs/core@1.0.2(slate@0.146.0)(yjs@13.6.29))(react@19.2.4)(slate-react@0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0))(slate@0.146.0)(yjs@13.6.29)':
     dependencies:
-      '@slate-yjs/core': 1.0.2(slate@0.126.2)(yjs@13.6.29)
+      '@slate-yjs/core': 1.0.2(slate@0.146.0)(yjs@13.6.29)
       react: 19.2.4
-      slate: 0.126.2
-      slate-react: 0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2)
+      slate: 0.146.0
+      slate-react: 0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0)
       use-sync-external-store: 1.6.0(react@19.2.4)
       y-protocols: 1.0.7(yjs@13.6.29)
       yjs: 13.6.29
@@ -14409,7 +14440,7 @@ snapshots:
 
   '@types/estree-jsx@1.0.5':
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   '@types/estree@1.0.8': {}
 
@@ -14724,11 +14755,6 @@ snapshots:
   acorn@8.16.0: {}
 
   agent-base@7.1.4: {}
-
-  agentation@3.0.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    optionalDependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   ai@7.0.4(zod@3.25.76):
     dependencies:
@@ -16004,7 +16030,7 @@ snapshots:
   eslint-scope@9.1.2:
     dependencies:
       '@types/esrecurse': 4.3.1
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
@@ -16069,7 +16095,7 @@ snapshots:
 
   estree-util-attach-comments@3.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   estree-util-build-jsx@3.0.1:
     dependencies:
@@ -16082,7 +16108,7 @@ snapshots:
 
   estree-util-scope@1.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
 
   estree-util-to-js@2.0.0:
@@ -16093,7 +16119,7 @@ snapshots:
 
   estree-util-value-to-estree@3.5.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   estree-util-visit@2.0.0:
     dependencies:
@@ -16104,7 +16130,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   esutils@2.0.3: {}
 
@@ -16819,7 +16845,7 @@ snapshots:
 
   hast-util-to-estree@3.1.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/estree-jsx': 1.0.5
       '@types/hast': 3.0.4
       comma-separated-tokens: 2.0.3
@@ -16868,7 +16894,7 @@ snapshots:
 
   hast-util-to-jsx-runtime@2.3.6:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/hast': 3.0.4
       '@types/unist': 3.0.3
       comma-separated-tokens: 2.0.3
@@ -17957,7 +17983,7 @@ snapshots:
 
   micromark-extension-mdx-expression@3.0.1:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-factory-mdx-expression: 2.0.3
       micromark-factory-space: 2.0.1
@@ -17968,7 +17994,7 @@ snapshots:
 
   micromark-extension-mdx-jsx@3.0.2:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       estree-util-is-identifier-name: 3.0.0
       micromark-factory-mdx-expression: 2.0.3
@@ -17985,7 +18011,7 @@ snapshots:
 
   micromark-extension-mdxjs-esm@3.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
       micromark-util-character: 2.1.1
@@ -18034,7 +18060,7 @@ snapshots:
 
   micromark-factory-mdx-expression@2.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-factory-space: 2.0.1
       micromark-util-character: 2.1.1
@@ -18150,7 +18176,7 @@ snapshots:
 
   micromark-util-events-to-acorn@2.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/unist': 3.0.3
       devlop: 1.1.0
       estree-util-visit: 2.0.0
@@ -19265,7 +19291,7 @@ snapshots:
 
   recma-build-jsx@1.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       estree-util-build-jsx: 3.0.1
       vfile: 6.0.3
 
@@ -19280,14 +19306,14 @@ snapshots:
 
   recma-parse@1.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       esast-util-from-js: 2.0.1
       unified: 11.0.5
       vfile: 6.0.3
 
   recma-stringify@1.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       estree-util-to-js: 2.0.0
       unified: 11.0.5
       vfile: 6.0.3
@@ -19349,7 +19375,7 @@ snapshots:
 
   rehype-recma@1.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/hast': 3.0.4
       hast-util-to-estree: 3.1.3
     transitivePeerDependencies:
@@ -19922,7 +19948,7 @@ snapshots:
       slate: 0.124.1
       tiny-invariant: 1.3.1
 
-  slate-dom@0.126.0(slate@0.126.2):
+  slate-dom@0.146.0(slate@0.146.0):
     dependencies:
       '@juggle/resize-observer': 3.4.0
       direction: 1.0.4
@@ -19930,7 +19956,7 @@ snapshots:
       is-plain-object: 5.0.0
       lodash: 4.17.23
       scroll-into-view-if-needed: 3.1.0
-      slate: 0.126.2
+      slate: 0.146.0
       tiny-invariant: 1.3.1
 
   slate-hyperscript@0.100.0(slate@0.124.1):
@@ -19942,7 +19968,11 @@ snapshots:
     dependencies:
       slate: 0.126.2
 
-  slate-react@0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2):
+  slate-hyperscript@0.138.3(slate@0.146.0):
+    dependencies:
+      slate: 0.146.0
+
+  slate-react@0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0):
     dependencies:
       '@juggle/resize-observer': 3.4.0
       direction: 1.0.4
@@ -19951,11 +19981,14 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       scroll-into-view-if-needed: 3.1.0
-      slate: 0.126.2
-      slate-dom: 0.126.0(slate@0.126.2)
+      slate: 0.146.0
+      slate-dom: 0.146.0(slate@0.146.0)
       tiny-invariant: 1.3.1
+    optionalDependencies:
+      '@types/lodash': 4.17.17
+      '@types/react': 19.2.7
 
-  slate-test-utils@1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2))(slate@0.126.2):
+  slate-test-utils@1.3.2(@testing-library/jest-dom@6.6.3)(@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-react@0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0))(slate@0.146.0):
     dependencies:
       '@testing-library/jest-dom': 6.6.3
       '@testing-library/react': 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -19964,12 +19997,14 @@ snapshots:
       lodash.clonedeep: 4.5.0
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      slate: 0.126.2
-      slate-react: 0.126.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.126.0(slate@0.126.2))(slate@0.126.2)
+      slate: 0.146.0
+      slate-react: 0.145.1(@types/lodash@4.17.17)(@types/react@19.2.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(slate-dom@0.146.0(slate@0.146.0))(slate@0.146.0)
 
   slate@0.124.1: {}
 
   slate@0.126.2: {}
+
+  slate@0.146.0: {}
 
   slice-ansi@5.0.0:
     dependencies:

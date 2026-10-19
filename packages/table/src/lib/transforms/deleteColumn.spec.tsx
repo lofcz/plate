@@ -82,6 +82,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -99,6 +102,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -140,6 +146,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -157,6 +166,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -198,6 +210,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -215,6 +230,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -258,6 +276,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -281,6 +302,9 @@ describe('deleteColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -321,6 +345,9 @@ describe('deleteColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -338,6 +365,7 @@ describe('deleteColumn', () => {
         colSizes: [40],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 
@@ -368,6 +396,9 @@ describe('deleteColumn', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 

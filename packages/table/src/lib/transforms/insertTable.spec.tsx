@@ -55,6 +55,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -155,6 +158,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -167,6 +173,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
           <htable>
             <htr>
               <htd>
@@ -193,6 +202,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -261,6 +273,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
           <htable>
             <htr>
               <htd>
@@ -307,6 +322,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -319,6 +337,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
           <htable>
             <htr>
               <htd>
@@ -345,6 +366,9 @@ describe('insertTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 

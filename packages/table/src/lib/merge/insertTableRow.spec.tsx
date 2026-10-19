@@ -42,6 +42,9 @@ describe('insertTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -73,6 +76,9 @@ describe('insertTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -105,6 +111,7 @@ describe('insertTableMergeRow', () => {
         ],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 });

@@ -39,6 +39,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -56,6 +59,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -79,6 +85,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -124,6 +133,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -139,6 +151,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -162,6 +177,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -212,6 +230,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -227,6 +248,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -254,6 +278,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -297,6 +324,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -314,6 +344,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -341,6 +374,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -401,6 +437,9 @@ describe('withInsertFragmentTable', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor;
 
@@ -424,6 +463,9 @@ describe('withInsertFragmentTable', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </fragment>
         ) as any as TElement[];
 
@@ -474,6 +516,9 @@ describe('withInsertFragmentTable', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor;
 
@@ -529,6 +574,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -552,6 +600,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -579,6 +630,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -618,6 +672,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -634,6 +691,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as TElement[];
 
@@ -650,6 +710,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -692,6 +755,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -716,6 +782,9 @@ describe('withInsertFragmentTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 

@@ -50,6 +50,9 @@ describe('setSelectedCellsBorder integration', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -87,6 +90,9 @@ describe('setSelectedCellsBorder integration', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ).children
     );
@@ -119,6 +125,9 @@ describe('setSelectedCellsBorder integration', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -171,6 +180,9 @@ describe('setSelectedCellsBorder integration', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ).children
     );
@@ -202,6 +214,9 @@ describe('setSelectedCellsBorder integration', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -233,6 +248,9 @@ describe('setSelectedCellsBorder integration', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ).children
     );
@@ -262,6 +280,9 @@ describe('setSelectedCellsBorder integration', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -294,6 +315,9 @@ describe('setSelectedCellsBorder integration', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ).children
     );
@@ -326,6 +350,9 @@ describe('setSelectedCellsBorder integration', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -364,6 +391,9 @@ describe('setSelectedCellsBorder integration', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ).children
     );
