@@ -449,3 +449,5 @@ Affected AI/table slow lane after test-only repairs: all passing; exact counts/l
 Affected slow fixture proof: 20/20 tests pass with the owned slow runner. Final whole-repo lint:fix passes, 3385 files, no changes. Production AI source audit (excluding existing package metadata and repaired slow specs): zero diffs from origin/main. Final full-check closure log: /tmp/plate-sync-check-closure.log; final test-only review: /tmp/plate-sync-review-closure.log.
 
 Final complete check: PASS (exit 0), 56 builds, 56 typechecks, all fast/slow tests, timing hard gate. Lane pass counts: {"test": 3984, "test:slow": 570, "test:slowest": 3984}. Nonblocking timing warning zone only; no performance scope expansion. Evidence /tmp/plate-sync-check-closure.log and .tmp/upstream-sync/check-result.json. Final structured review .tmp/upstream-sync/review-closure.json: zero findings. Every changed published dependency is covered by the twelve-package release.
+
+Exact PR ownership: lofcz/plate#54 (https://github.com/lofcz/plate/pull/54). This task invocation owns only that sync PR. Source merge commit 9cc1d67aa0 contains upstream/main 7937212aab; zero missing upstream commits.
