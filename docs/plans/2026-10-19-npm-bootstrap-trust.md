@@ -120,23 +120,23 @@ Start Gates:
 | `agent-native-reviewer` loaded or waiver recorded | yes | Source: user request, retained fork workflow, existing release.yml/bootstrap and installed npm CLI; concrete boundaries and proof recorded in this plan |
 
 Work Checklist:
-- [ ] If a duration was requested, it is recorded as minimum active work unless
+- [x] If a duration was requested, it is recorded as minimum active work unless
       explicitly marked hard stop; when no better metric exists, initial and
       final confidence scores are recorded.
-- [ ] Short objective plus outcome, completion threshold, verification surface,
+- [x] Short objective plus outcome, completion threshold, verification surface,
       constraints, boundaries, and blocked condition are concrete.
-- [ ] Task source classified with source type, id/link, title, task type,
+- [x] Task source classified with source type, id/link, title, task type,
       acceptance criteria, caveats, likely files/routes/packages, browser
       surface, and root-cause layer.
-- [ ] Required video or screen-recording evidence is cached/read as normalized
+- [x] Required video or screen-recording evidence is cached/read as normalized
       `<video-transcripts>` XML, or marked N/A with reason.
-- [ ] For public tracker bug reports, behavior claims, technical diagnoses, or
+- [x] For public tracker bug reports, behavior claims, technical diagnoses, or
       suggested fixes, reporter claims are challenged before implementation
       with a recorded verdict: `valid`, `not reproduced`, `invalid`,
       `wont-fix`, `partially valid`, or `platform limitation`. Feature, docs,
       support, or cleanup requests with no bug claim may mark reproduction
       `N/A` with reason.
-- [ ] Repro escalation ladder followed for bug/behavior claims: focused
+- [x] Repro escalation ladder followed for bug/behavior claims: focused
       test/source-level repro first when applicable; existing repo-owned
       Playwright regression/test harness next when available and useful as
       executable coverage; do not use standalone Playwright, Puppeteer, or raw
@@ -145,42 +145,44 @@ Work Checklist:
       Playwright cannot reproduce or cannot model the surface honestly;
       screenshot or explicit visual-proof waiver when visual/native state
       matters.
-- [ ] Hard-stop rule followed for bug/behavior claims: no code when the issue
+- [x] Hard-stop rule followed for bug/behavior claims: no code when the issue
       is not reproduced, invalid, or won't-fix; partial validity pivots to the
       best long-term fix and records what was wrong or incomplete in the issue's
       proposed path.
-- [ ] Nearby repo instructions and implementation patterns read before edits.
-- [ ] Implementation fixes the right ownership boundary, or the narrower choice
+- [x] Nearby repo instructions and implementation patterns read before edits.
+- [x] Implementation fixes the right ownership boundary, or the narrower choice
       is recorded with reason.
-- [ ] Release artifact requirement recorded: changeset, registry changelog, or
+- [x] Release artifact requirement recorded: changeset, registry changelog, or
       N/A with reason.
-- [ ] Final handoff shape decided: bug/feature/testing/batch/review/tracker
+- [x] Final handoff shape decided: bug/feature/testing/batch/review/tracker
       requirements, PR body sync, and issue/Linear sync when applicable.
-- [ ] Branch handling recorded for code-changing work: dedicated branch used,
+- [x] Branch handling recorded for code-changing work: dedicated branch used,
       new branch needed, or N/A with reason.
-- [ ] Every PR has its own `task` invocation and dedicated plan; this plan is
+- [x] Every PR has its own `task` invocation and dedicated plan; this plan is
       not aggregate evidence for another PR.
-- [ ] If a PR exists, its body has exactly one
+- [x] If a PR exists, its body has exactly one
       `🧭 Task plan: docs/plans/<plan>.md` line, this file exists at the exact PR
       head, and this plan records that exact PR number or URL.
-- [ ] Local-env-rot retry policy recorded for any surprising repo-wide failure:
+- [x] Local-env-rot retry policy recorded for any surprising repo-wide failure:
       reinstall/rerun evidence or N/A with reason.
-- [ ] Workspace authority recorded: every proof command names the cwd/tool that
+- [x] Workspace authority recorded: every proof command names the cwd/tool that
       owns the changed behavior.
-- [ ] High-risk note recorded for public API, runtime, package-boundary,
+- [x] High-risk note recorded for public API, runtime, package-boundary,
       browser behavior, agent-action, or command-contract changes, or marked
       N/A with reason.
-- [ ] Review/autoreview target selected from actual diff state for non-trivial
+- [x] Review/autoreview target selected from actual diff state for non-trivial
       implementation work, or marked N/A with reason.
-- [ ] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
+- [x] Agent-native review decision recorded for `.agents/**`, `.claude/**`,
       `.codex/**`, skills, hooks, commands, prompts, or user-action tooling.
-- [ ] Output budget discipline recorded and followed: broad searches are
+- [x] Output budget discipline recorded and followed: broad searches are
       scoped, capped, counted, or artifacted instead of streamed into goal
       context.
-- [ ] Agent-native pack: source-of-truth rule files are edited instead of generated skill mirrors.
-- [ ] Agent-native pack: the changed agent action is discoverable from the skill/rule text.
-- [ ] Agent-native pack: generated mirrors are synced when `.agents/rules/**` changed, or N/A reason is recorded.
-- [ ] Agent-native pack: accepted agent-native review findings are fixed or explicitly rejected with reason.
+- [x] Agent-native pack: source-of-truth rule files are edited instead of generated skill mirrors.
+- [x] Agent-native pack: the changed agent action is discoverable from the skill/rule text.
+- [x] Agent-native pack: generated mirrors are synced when `.agents/rules/**` changed, or N/A reason is recorded.
+- [x] Agent-native pack: accepted agent-native review findings are fixed or explicitly rejected with reason.
+
+- [ ] Merge verified helper/workflow preservation PR #56 and read back final delivery.
 
 Completion Gates:
 | Gate | Applies | Required action | Evidence |
@@ -205,12 +207,12 @@ Completion Gates:
 | Agent-native review for agent/tooling changes | yes | For `.agents/**`, `.claude/**`, `.codex/**`, skills, hooks, commands, prompts, or user-action tooling, load `.agents/skills/agent-native-reviewer/SKILL.md` and close accepted/actionable findings, or record N/A | Incremental agent-native audit PASS: retained source owners and CLI discoverability; new helper exposes help/dry-run, shares workspace, and leaves user-reserved browser/2FA to human |
 | Local install corruption suspected | no | Run `pnpm run reinstall` once, rerun the exact failing command, or record N/A | N/A: initial missing-dist symptoms coincided with active artifact build; coherent full check passed. No mixed React/Bun/pnpm runtime-corruption signals; no unnecessary reinstall |
 | Autoreview for non-trivial implementation changes | yes | Load `.agents/skills/autoreview/SKILL.md`; use dirty local `--mode local`, branch/PR `--mode branch --base <base>`, or committed slice `--mode commit --commit <ref>` until no accepted/actionable findings, or record N/A for docs-only/trivial/no local patch | Source review-closure.json and bootstrap-review.json both report zero findings; helper review gpt-6.1-sol, confidence 0.91 |
-| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Helper delivery remains open until final check passes, dedicated PR owns this exact plan at its head, and branch is committed/pushed |
-| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Helper delivery remains open until final check passes, dedicated PR owns this exact plan at its head, and branch is committed/pushed |
-| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | Helper delivery remains open until final check passes, dedicated PR owns this exact plan at its head, and branch is committed/pushed |
+| PR create or update | yes | Run `check` before PR work and sync PR body to the task-style final handoff | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
+| Per-PR task ownership | yes | Verify one task-plan body line, plan at exact head, and exact PR ownership in this plan | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
+| Task-style PR body verified | yes | Verify the PR body with `gh pr view --json body`; it must preserve auto-release blocks when applicable, must not include a current-PR self-link, and must use the kitcn PR #270 emoji format: `🐛 Fixes ...`, `🟢 95-100% confidence`, `Phase / 🧪 Tests / 🌐 Browser` table, and bold emoji Outcome/Caveat/Design/Verified sections | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
 | PR proof image hosting | no | If PR body needs browser proof, replace local image paths with hosted GitHub URLs or record N/A | N/A: no browser screenshot available; exact browser caveat recorded in PR bodies |
 | Tracker sync-back | no | Post concise issue/Linear sync after PR exists, or record N/A/blocker | N/A: direct user request, no issue/Linear tracker |
-| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Helper delivery remains open until final check passes, dedicated PR owns this exact plan at its head, and branch is committed/pushed |
+| Final handoff contract | yes | Fill the final handoff fields below with exact PR/issue/confidence/tests/browser/outcome/caveats/design/verification content or N/A reason | Full check PASS; dedicated #56 body names this plan once; plan records exact ownership and is committed/pushed before merge |
 | Final lint | yes | Run `pnpm lint:fix` or scoped equivalent | pnpm lint:fix PASS (3385 files, no fixes); full-check lint PASS; bash syntax and git diff --check PASS |
 | Output budget discipline | yes | Verify no unbounded high-volume command output was streamed, or record the accidental output and recovery | Initial upstream stat and broad utility search exceeded cap; recovered with scoped paths, bounded reads and saved log/artifact summaries |
 | Timed checkpoint | no | If duration was requested, keep improving until elapsed, then finish the current loop cleanly; otherwise N/A | N/A: no duration requested |
@@ -222,11 +224,11 @@ Completion Gates:
 Phase / pass table:
 | Phase | Status | Evidence | Next |
 |-------|--------|----------|------|
-| Intake and source read | in_progress | created plan | implementation |
-| Implementation | pending | | verification |
-| Verification | pending | | closeout |
-| PR / tracker sync | pending | | final response |
-| Closeout | pending | | final response |
+| Intake and source read | done | User script request, existing bootstrap, fork workflow and installed npm trust CLI read | implementation |
+| Implementation | done | Helper with exact targets/trust checks and 43 baseline-identical workflow docs | verification |
+| Verification | done | Full check 56 builds/types, 3984 fast, 570 slow; 13 mocks; clean review; 12 tarball integrity/export checks | delivery |
+| PR / tracker sync | done | #56 owns this exact plan; body names it once; no tracker | closeout |
+| Closeout | in_progress | Binding exact #56 ownership and final merge/readback | final response |
 
 Findings:
 - Existing bootstrap PowerShell utility handles token publication only. New helper composes human web login, four exact package publishes and trusted-publisher checks.
@@ -254,7 +256,7 @@ Verification evidence:
 - Source review-closure.json and bootstrap-review.json both report zero findings; helper review gpt-6.1-sol, confidence 0.91
 - .tmp/upstream-sync/bootstrap-script-proof.json and bootstrap-review.json contain focused results.
 - .tmp/upstream-sync/npm-verification.json proves 12/12 target versions/latest/integrity and fork aliases; user output confirms successful publication/trust.
-- Fresh whole-repo check /tmp/plate-bootstrap-check.log runs before PR creation; no runtime source edits.
+- Fresh whole-repo check /tmp/plate-bootstrap-check.log PASS before PR creation: 56 builds/types, 3984 fast, 570 slow, timing gate exit 0; no runtime source edits.
 - 43 inherited restored docs match baseline 8c500a93d1 exactly: closeout-audit.json.
 
 Final handoff contract:
@@ -311,7 +313,7 @@ Reboot status:
 |----------|--------|
 | Where am I? | Helper verified and user execution complete; final delivery |
 | Where am I going? | Final check, dedicated PR and completion audit |
-| What is the goal? | TODO: Fill from Objective |
+| What is the goal? | Deliver a verified human-operated npm bootstrap helper and preserve fork workflow docs |
 | What have I learned? | See Findings |
 | What have I done? | See Timeline |
 
@@ -338,7 +340,7 @@ Script implementation checkpoint:
 
 Inherited delivery scope:
 - This task also delivers the parent release's 43 restored fork workflow documents, unchanged from baseline, plus final plan evidence. This is preserved original sync scope, not new product work.
-- [ ] Commit/push helper and inherited docs after full check, bind this plan to the exact PR, then merge and audit readback.
+- [ ] Commit/push helper and inherited docs after full check, bind this plan to #56, then merge and audit readback.
 
 Publication recovery evidence:
 - User completed bootstrap; 2026-10-19T13:52:26.498Z registry readback: 12/12 versions/latest/integrity/dependency aliases pass.
@@ -348,3 +350,7 @@ Publication recovery evidence:
 
 Terminal workflow readback:
 - ReleaseOrVersionPR run 39195543568 attempt 2 SUCCESS. All versions were already published by then; the conditional registry/template job was skipped. Root generated outputs remain under CI ownership; none generated locally. GitHub release/tags were recovered with gh after full 12/12 registry verification.
+
+Exact PR ownership: lofcz/plate#56 (https://github.com/lofcz/plate/pull/56). This separate task invocation owns only this helper/workflow preservation PR. Parent #54/#55 each retain their own task plan.
+- Full final check evidence: .tmp/upstream-sync/bootstrap-check-result.json and /tmp/plate-bootstrap-check.log, exit 0.
+- Actual published artifact evidence: 12 tarballs, 497787 bytes, 45 export targets verified; .tmp/upstream-sync/npm-artifact-verification.json.

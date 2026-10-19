@@ -289,9 +289,9 @@ Phase / pass table:
 |-------|--------|----------|------|
 | Intake and source read | done | User scope, fork/upstream source and release owners read | implementation |
 | Implementation | done | Sync #54 and metadata #55 merged; exact heads audited | verification |
-| Verification | in_progress | Source check/review pass; npm readback 8/12; manual step outstanding | publication recovery |
+| Verification | done | Final check and review PASS; 12/12 metadata and tarball verification; GH release/tags verified | closeout |
 | PR / tracker sync | done | #54/#55 merged with exact per-PR task ownership; no tracker | release verification |
-| Closeout | pending | Waiting for four npm packages and final documentation delivery | final response |
+| Closeout | in_progress | Final helper/docs PR #56 verified; merge/readback remains | final response |
 
 Findings:
 - Upstream 7937212aab carries 71 commits beyond the fork merge base; several were previously squash-synced.
@@ -491,3 +491,9 @@ Publication recovery evidence:
 
 Terminal workflow readback:
 - ReleaseOrVersionPR run 39195543568 attempt 2 SUCCESS. All versions were already published by then; the conditional registry/template job was skipped. Root generated outputs remain under CI ownership; none generated locally. GitHub release/tags were recovered with gh after full 12/12 registry verification.
+
+Final delivery readiness:
+- Helper/workflow preservation PR #56 (https://github.com/lofcz/plate/pull/56), dedicated plan docs/plans/2026-10-19-npm-bootstrap-trust.md.
+- Fresh full check PASS: 56 builds/types, 3984 fast, 570 slow, timing gate; /tmp/plate-bootstrap-check.log.
+- All twelve npm tarballs match registry integrity and correct manifest identities; 45 public export targets exist.
+- Parent source/release criteria are verified. Final helper/docs merge and clean checkout/readback remain.
