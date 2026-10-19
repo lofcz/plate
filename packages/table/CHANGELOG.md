@@ -1,5 +1,11 @@
 # @platejs/table
 
+## 53.6.2
+
+### Patch Changes
+
+- Keep an editable paragraph between tables when inserting a table beside an existing table.
+
 ## 53.1.8
 
 ### Patch Changes

@@ -1,10 +1,17 @@
 # @udecode/plate-serializer-csv
 
+## 53.6.2
+
+### Patch Changes
+
+- Updated `@lofcz/platejs-table`.
+
 ## 53.0.9
 
 ## 53.0.7
 
 ## 53.0.0
+
 ## 52.3.6
 
 ### Patch Changes

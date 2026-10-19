@@ -1,5 +1,11 @@
 # platejs
 
+## 53.6.2
+
+### Patch Changes
+
+- Updated `@lofcz/platejs-core`, `@lofcz/platejs-slate`, `@lofcz/platejs-utils`.
+
 ## 53.4.9
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @platejs/core
 
+## 53.6.2
+
+### Patch Changes
+
+- Update the Slate runtime and React bindings while preserving Jotai 3 integration.
+
 ## 53.5.0
 
 ### Patch Changes
