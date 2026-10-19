@@ -44,6 +44,9 @@ const makeTableWithCols = ({
           </htr>
         ))}
       </htable>
+      <hp>
+        <htext />
+      </hp>
     </editor>
   ) as unknown as Editor;
 
@@ -465,6 +468,9 @@ describe('insertTableColumn', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 

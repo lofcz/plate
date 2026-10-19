@@ -37,10 +37,12 @@ mock.module('@platejs/suggestion/react', () => ({
   SuggestionPlugin: { key: 'suggestion' },
 }));
 
-mock.module('platejs/react', async () => {
-  const actual = await import(
-    new URL('../../../../../plate/dist/react/index.js', import.meta.url).href
-  );
+const actualPlateReact = await import(
+  new URL('../../../../../plate/dist/react/index.js', import.meta.url).href
+);
+
+mock.module('platejs/react', () => {
+  const actual = actualPlateReact;
   const getEditorPlugin = actual.getEditorPlugin as any;
   const useEditorPlugin = actual.useEditorPlugin as any;
   const usePluginOption = actual.usePluginOption as any;
@@ -134,7 +136,10 @@ describe('ai chat action utils', () => {
           suggestionData: () => suggestionNode.suggestion,
         },
       }),
-      tf: { unsetNodes },
+      tf: {
+        unsetNodes,
+        withoutNormalizing: (callback: () => void) => callback(),
+      },
     } as any;
 
     acceptAISuggestions(editor);
@@ -170,7 +175,10 @@ describe('ai chat action utils', () => {
           suggestionData: () => suggestionNode.suggestion,
         },
       }),
-      tf: { unsetNodes },
+      tf: {
+        unsetNodes,
+        withoutNormalizing: (callback: () => void) => callback(),
+      },
     } as any;
 
     rejectAISuggestions(editor);

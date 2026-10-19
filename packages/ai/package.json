@@ -58,7 +58,7 @@
   "peerDependencies": {
     "@ai-sdk/react": "^4.0.0",
     "ai": "^7.0.0",
-    "platejs": ">=53.3.3",
+    "platejs": ">=53.3.18",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },

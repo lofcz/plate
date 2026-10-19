@@ -368,6 +368,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (editor: ReturnType<typeof createSlateEditor>) =>
@@ -408,6 +411,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (editor: ReturnType<typeof createSlateEditor>) =>
@@ -431,6 +437,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (
@@ -451,6 +460,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (editor: ReturnType<typeof createSlateEditor>) =>
@@ -492,6 +504,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (editor: ReturnType<typeof createSlateEditor>) =>
@@ -515,6 +530,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (
@@ -536,6 +554,9 @@ describe('withMergeRules', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         (editor: ReturnType<typeof createSlateEditor>) =>

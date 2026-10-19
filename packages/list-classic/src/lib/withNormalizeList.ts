@@ -91,11 +91,13 @@ export const withNormalizeList: OverrideEditor<ListConfig> = ({
           });
         }
 
-        const prevPath = PathApi.previous(path)!;
-        const prevNode = NodeApi.get<TElement>(editor, prevPath);
+        const prevPath = PathApi.previous(path);
+        const prevNode = prevPath
+          ? NodeApi.get<TElement>(editor, prevPath)
+          : undefined;
 
         // Has a list before with the same type
-        if (prevNode?.type === node.type) {
+        if (prevPath && prevNode?.type === node.type) {
           editor.tf.normalizeNode([prevNode, prevPath]);
 
           // early return since this node will no longer exists

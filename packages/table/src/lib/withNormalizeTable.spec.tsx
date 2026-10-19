@@ -52,6 +52,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -68,6 +71,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -119,6 +125,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -152,6 +161,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -206,6 +218,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -239,6 +254,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -295,6 +313,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -328,6 +349,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -369,6 +393,9 @@ describe('withNormalizeTable', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </fragment>
         ) as any as Value,
       });
@@ -385,6 +412,9 @@ describe('withNormalizeTable', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </fragment>
         ) as any as Value
       );
@@ -418,6 +448,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -432,6 +465,9 @@ describe('withNormalizeTable', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </fragment>
       ) as any as Value;
 
@@ -446,5 +482,35 @@ describe('withNormalizeTable', () => {
       });
       expect(editor.children).toMatchObject(output);
     });
+  });
+});
+
+describe('table root boundaries', () => {
+  it.each([
+    { disableMerge: true },
+    { disableMerge: false },
+  ])('separates a newly inserted table from its previous table (disableMerge: $disableMerge)', ({
+    disableMerge,
+  }) => {
+    const editor = createSlateEditor({
+      plugins: getTestTablePlugins({ disableMerge }),
+      value: [{ type: 'p', children: [{ text: '' }] }],
+    });
+
+    editor.tf.insertNodes(
+      editor.api.create.table({ colCount: 1, rowCount: 1 }),
+      { at: [0] }
+    );
+    editor.tf.insertNodes(
+      editor.api.create.table({ colCount: 1, rowCount: 1 }),
+      { at: [1] }
+    );
+
+    expect(editor.children.map((node) => node.type)).toEqual([
+      'table',
+      'p',
+      'table',
+      'p',
+    ]);
   });
 });

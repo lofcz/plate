@@ -96,6 +96,19 @@ export const withNormalizeTable: OverrideEditor<TableConfig> = ({
             }
           }
           if (path.length === 1) {
+            const previousNode = editor.children[path[0] - 1];
+
+            if (
+              ElementApi.isElement(previousNode) &&
+              previousNode.type === type
+            ) {
+              editor.tf.insertNodes(editor.api.create.block(), {
+                at: [path[0]],
+              });
+
+              return;
+            }
+
             const isLastBlock = path[0] === editor.children.length - 1;
 
             if (isLastBlock) {

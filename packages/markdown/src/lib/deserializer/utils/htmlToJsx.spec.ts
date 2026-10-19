@@ -158,3 +158,7 @@ Quoted text.
     expect(htmlToJsx(input)).toBe(input);
   });
 });
+
+it('preserves a complete native email autolink during HTML conversion', () => {
+  expect(htmlToJsx('<br@example.com>')).toBe('<br@example.com>');
+});

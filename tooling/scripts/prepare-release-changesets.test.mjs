@@ -185,3 +185,35 @@ test('uses an explicit changeset status base override', () => {
     ]
   );
 });
+
+test('keeps runtime dependent changesets on repeated release preparation', () => {
+  const workspacePackages = createWorkspacePackages({
+    '@lofcz/platejs-core': [],
+    '@lofcz/platejs-utils': ['@lofcz/platejs-core'],
+    '@lofcz/platejs': ['@lofcz/platejs-utils'],
+  });
+  const manualReleases = [
+    {
+      name: '@lofcz/platejs-core',
+      type: 'patch',
+      changesets: ['core-fix'],
+    },
+  ];
+  const first = getAutoReleasePackages(manualReleases, workspacePackages);
+  const existingGeneratedReleases = first.map(({ name }) => ({
+    name,
+    type: 'patch',
+    changesets: [
+      `auto-runtime-dependent-${name.replace(/^@/, '').replaceAll('/', '-')}`,
+    ],
+  }));
+
+  assert.equal(first.length, 2);
+  assert.deepEqual(
+    getAutoReleasePackages(
+      [...manualReleases, ...existingGeneratedReleases],
+      workspacePackages
+    ),
+    first
+  );
+});

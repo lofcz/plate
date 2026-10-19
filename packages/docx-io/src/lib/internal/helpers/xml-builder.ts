@@ -41,7 +41,6 @@ import { parseOmml } from '../utils/parse-omml';
 import {
   cmRegex,
   cmToTWIP,
-  HIPToTWIP,
   inchRegex,
   inchToTWIP,
   percentageRegex,
@@ -132,6 +131,15 @@ type Indentation = {
   right?: number;
 };
 
+/**
+ * `w:spacing` line height: twips when `lineRule` is `atLeast`, 240ths of a
+ * line when `auto`.
+ */
+type LineSpacing = {
+  line: number;
+  lineRule: 'atLeast' | 'auto';
+};
+
 type NumberingInfo = {
   levelId: number;
   numberingId: number;
@@ -162,7 +170,7 @@ type RunAttributes = {
   hyperlink?: boolean;
   i?: boolean;
   kbd?: boolean;
-  lineHeight?: number;
+  lineHeight?: LineSpacing;
   mark?: boolean;
   strike?: boolean;
   strong?: boolean | string;
@@ -365,11 +373,22 @@ const buildUnderline = (type = 'single'): XMLBuilderType =>
     .att('@w', 'val', type)
     .up();
 
-const buildLineBreak = (type = 'textWrapping'): XMLBuilderType =>
-  fragment({ namespaceAlias: { w: namespaces.w } })
-    .ele('@w', 'br')
-    .att('@w', 'type', type)
-    .up();
+/**
+ * Without a `type`, `w:br` is the line break Word itself writes for Shift+Enter. Although the spec makes
+ * `textWrapping` the default, Word for Mac displays a break written with that explicit type as a labelled text
+ * wrapping break instead of a plain line break.
+ */
+const buildLineBreak = (type?: string): XMLBuilderType => {
+  const lineBreakFragment = fragment({
+    namespaceAlias: { w: namespaces.w },
+  }).ele('@w', 'br');
+
+  if (type) {
+    lineBreakFragment.att('@w', 'type', type);
+  }
+
+  return lineBreakFragment.up();
+};
 
 const buildBorder = (
   borderSide = 'top',
@@ -398,23 +417,33 @@ const buildTextElement = (text: string): XMLBuilderType =>
     .txt(text)
     .up();
 
-const fixupLineHeight = (
-  lineHeight: number,
-  fontSize: number | null
-): number => {
-  // FIXME: If line height is anything other than a number
-
-  if (Number.isNaN(lineHeight)) {
-    // 240 TWIP or 12 point is default line height
-    return 240;
+const fixupLineHeight = (lineHeightString: string): LineSpacing | undefined => {
+  const matchedParts = lineHeightString
+    .trim()
+    .match(/^(\d*\.?\d+)(px|pt|cm|in|%|em)?$/i);
+  if (!matchedParts) {
+    return;
   }
-  if (fontSize) {
-    const actualLineHeight = +lineHeight * fontSize;
 
-    return HIPToTWIP(actualLineHeight);
+  const value = Number.parseFloat(matchedParts[1]);
+  if (value === 0) {
+    return;
   }
-  // 240 TWIP or 12 point is default line height
-  return +lineHeight * 240;
+
+  switch (matchedParts[2]?.toLowerCase()) {
+    case 'px':
+      return { line: pixelToTWIP(value), lineRule: 'atLeast' };
+    case 'pt':
+      return { line: pointToTWIP(value), lineRule: 'atLeast' };
+    case 'cm':
+      return { line: pointToTWIP((value * 72) / 2.54), lineRule: 'atLeast' };
+    case 'in':
+      return { line: pointToTWIP(value * 72), lineRule: 'atLeast' };
+    case '%':
+      return { line: Math.round((value / 100) * 240), lineRule: 'auto' };
+    default:
+      return { line: Math.round(value * 240), lineRule: 'auto' };
+  }
 };
 
 const fixupFontSize = (fontSizeString: string): number | undefined => {
@@ -598,10 +627,7 @@ const modifiedStyleAttributesBuilder = (
       modifiedAttributes.fontSize = fixupFontSize(style['font-size']);
     }
     if (style['line-height']) {
-      modifiedAttributes.lineHeight = fixupLineHeight(
-        Number.parseFloat(style['line-height']),
-        style['font-size'] ? fixupFontSize(style['font-size']) || null : null
-      );
+      modifiedAttributes.lineHeight = fixupLineHeight(style['line-height']);
     }
     if (style['margin-left'] || style['margin-right']) {
       const leftMargin = style['margin-left']
@@ -772,31 +798,24 @@ const buildRun = async (
   ) {
     const runFragmentsArray: XMLBuilderType[] = [];
 
-    let vNodes: (VNodeType | VTextType)[] = [vNode as VNodeType];
-    // create temp run fragments to split the paragraph into different runs
-    let tempAttributes: RunAttributes = cloneDeep(attributes);
-    let tempRunFragment = fragment({ namespaceAlias: { w: namespaces.w } }).ele(
-      '@w',
-      'r'
-    );
+    // each queued node carries the run attributes inherited from its formatting ancestors
+    let vNodes: {
+      attributes: ParagraphAttributes;
+      vNode: VNodeType | VTextType;
+    }[] = [{ attributes: cloneDeep(attributes), vNode: vNode as VNodeType }];
     while (vNodes.length) {
-      const tempVNode = vNodes.shift()!;
+      const queuedVNode = vNodes.shift()!;
+      const tempVNode = queuedVNode.vNode;
+      let tempAttributes = queuedVNode.attributes;
       if (isVText(tempVNode)) {
         const textFragment = buildTextElement((tempVNode as VTextType).text);
-        const tempRunPropertiesFragment = buildRunProperties({
-          ...attributes,
-          ...tempAttributes,
-        });
+        const tempRunPropertiesFragment = buildRunProperties(tempAttributes);
+        const tempRunFragment = fragment({
+          namespaceAlias: { w: namespaces.w },
+        }).ele('@w', 'r');
         tempRunFragment.import(tempRunPropertiesFragment);
         tempRunFragment.import(textFragment);
         runFragmentsArray.push(tempRunFragment);
-
-        // re initialize temp run fragments with new fragment
-        tempAttributes = cloneDeep(attributes);
-        tempRunFragment = fragment({ namespaceAlias: { w: namespaces.w } }).ele(
-          '@w',
-          'r'
-        );
       } else if (isVNode(tempVNode)) {
         const tempVn = tempVNode as VNodeType;
         if (
@@ -818,7 +837,7 @@ const buildRun = async (
             'pre',
           ].includes(tempVn.tagName || '')
         ) {
-          tempAttributes = {};
+          tempAttributes = { ...tempAttributes };
           switch (tempVn.tagName) {
             case 'strong':
             case 'b':
@@ -837,20 +856,29 @@ const buildRun = async (
             case 's':
               tempAttributes.strike = true;
               break;
+            // one vertical alignment and one highlight per run: the innermost tag wins
             case 'sub':
               tempAttributes.sub = true;
+              tempAttributes.sup = undefined;
               break;
             case 'sup':
               tempAttributes.sup = true;
+              tempAttributes.sub = undefined;
               break;
             case 'mark':
               tempAttributes.mark = true;
+              tempAttributes.code = undefined;
+              tempAttributes.kbd = undefined;
               break;
             case 'code':
               tempAttributes.code = true;
+              tempAttributes.kbd = undefined;
+              tempAttributes.mark = undefined;
               break;
             case 'kbd':
               tempAttributes.kbd = true;
+              tempAttributes.code = undefined;
+              tempAttributes.mark = undefined;
               break;
           }
           const formattingFragment = buildFormatting(tempVn.tagName || '');
@@ -862,7 +890,7 @@ const buildRun = async (
         } else if (tempVn.tagName === 'span') {
           const spanFragment = await buildRunOrRuns(
             tempVn,
-            { ...attributes, ...tempAttributes },
+            tempAttributes,
             docxDocumentInstance
           );
 
@@ -882,11 +910,9 @@ const buildRun = async (
 
       const tempVn = tempVNode as VNodeType;
       if (tempVn.children?.length) {
-        if (tempVn.children.length > 1) {
-          attributes = { ...attributes, ...tempAttributes };
-        }
-
-        vNodes = tempVn.children.slice().concat(vNodes);
+        vNodes = tempVn.children
+          .map((child) => ({ attributes: tempAttributes, vNode: child }))
+          .concat(vNodes);
       }
     }
     if (runFragmentsArray.length) {
@@ -1096,7 +1122,7 @@ const buildNumberingInstances = (): XMLBuilderType =>
     .up();
 
 const buildSpacing = (
-  lineSpacing?: number,
+  lineSpacing?: LineSpacing,
   beforeSpacing?: number,
   afterSpacing?: number
 ): XMLBuilderType => {
@@ -1106,7 +1132,7 @@ const buildSpacing = (
   );
 
   if (lineSpacing) {
-    spacingFragment.att('@w', 'line', String(lineSpacing));
+    spacingFragment.att('@w', 'line', String(lineSpacing.line));
   }
   if (beforeSpacing) {
     spacingFragment.att('@w', 'before', String(beforeSpacing));
@@ -1115,7 +1141,7 @@ const buildSpacing = (
     spacingFragment.att('@w', 'after', String(afterSpacing));
   }
 
-  spacingFragment.att('@w', 'lineRule', 'auto').up();
+  spacingFragment.att('@w', 'lineRule', lineSpacing?.lineRule ?? 'auto').up();
 
   return spacingFragment;
 };

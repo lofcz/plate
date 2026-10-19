@@ -47,6 +47,9 @@ describe('deleteTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -78,6 +81,7 @@ describe('deleteTableMergeRow', () => {
         ],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 
@@ -110,6 +114,9 @@ describe('deleteTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -142,6 +149,7 @@ describe('deleteTableMergeRow', () => {
         ],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 
@@ -183,6 +191,9 @@ describe('deleteTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -217,6 +228,7 @@ describe('deleteTableMergeRow', () => {
         ],
         type: 'table',
       },
+      { type: 'p', children: [{ text: '' }] },
     ]);
   });
 
@@ -233,6 +245,9 @@ describe('deleteTableMergeRow', () => {
             </htd>
           </htr>
         </htable>
+        <hp>
+          <htext />
+        </hp>
       </editor>
     ) as any as SlateEditor;
 
@@ -240,6 +255,8 @@ describe('deleteTableMergeRow', () => {
 
     deleteTableMergeRow(editor);
 
-    expect(editor.children).toEqual([]);
+    expect(editor.children).toMatchObject([
+      { type: 'p', children: [{ text: '' }] },
+    ]);
   });
 });

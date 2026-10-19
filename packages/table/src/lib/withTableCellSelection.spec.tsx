@@ -43,6 +43,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -86,6 +89,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         name: 'returns marks shared by every selected text node',
@@ -126,6 +132,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor,
         name: 'drops marks that are not shared by every selected text node',
@@ -172,6 +181,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -211,6 +223,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -256,6 +271,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -292,6 +310,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -326,6 +347,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -356,6 +380,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -388,6 +415,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -416,6 +446,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -440,6 +473,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -461,6 +497,9 @@ describe('withTableCellSelection', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -495,6 +534,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -545,6 +587,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -581,6 +626,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -617,6 +665,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -660,6 +711,9 @@ describe('withTableCellSelection', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 

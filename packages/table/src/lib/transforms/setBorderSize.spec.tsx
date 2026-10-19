@@ -47,6 +47,9 @@ describe('setBorderSize', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -73,6 +76,9 @@ describe('setBorderSize', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -95,6 +101,9 @@ describe('setBorderSize', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -121,6 +130,9 @@ describe('setBorderSize', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ).children
       );
@@ -150,6 +162,9 @@ describe('setBorderSize', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -176,6 +191,9 @@ describe('setBorderSize', () => {
               </htd>
             </htr>
           </htable>
+          <hp>
+            <htext />
+          </hp>
         </editor>
       ) as any as SlateEditor;
 
@@ -210,6 +228,9 @@ describe('setBorderSize', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor;
 
@@ -236,6 +257,9 @@ describe('setBorderSize', () => {
                 </htd>
               </htr>
             </htable>
+            <hp>
+              <htext />
+            </hp>
           </editor>
         ) as any as SlateEditor;
 
@@ -272,6 +296,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
@@ -298,6 +325,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
@@ -333,6 +363,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
@@ -359,6 +392,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
@@ -393,6 +429,9 @@ describe('setBorderSize', () => {
                     </htd>
                   </htr>
                 </htable>
+                <hp>
+                  <htext />
+                </hp>
               </editor>
             ) as any as SlateEditor;
 
@@ -419,6 +458,9 @@ describe('setBorderSize', () => {
                     </htd>
                   </htr>
                 </htable>
+                <hp>
+                  <htext />
+                </hp>
               </editor>
             ) as any as SlateEditor;
 
@@ -455,6 +497,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
@@ -481,6 +526,9 @@ describe('setBorderSize', () => {
                   </htd>
                 </htr>
               </htable>
+              <hp>
+                <htext />
+              </hp>
             </editor>
           ) as any as SlateEditor;
 
