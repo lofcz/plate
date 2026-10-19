@@ -1,5 +1,11 @@
 # @platejs/slate
 
+## 53.6.2
+
+### Patch Changes
+
+- Update Slate to 0.146.0, expose setChildren, and preserve undo history across unsaved edits.
+
 ## 53.5.0
 
 ### Patch Changes

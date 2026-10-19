@@ -1,5 +1,11 @@
 # @platejs/test-utils
 
+## 53.6.2
+
+### Patch Changes
+
+- Updated `@lofcz/platejs-slate`.
+
 ## 53.3.4
 
 ### Patch Changes

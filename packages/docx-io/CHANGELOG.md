@@ -1,5 +1,11 @@
 # @platejs/docx-io
 
+## 53.6.2
+
+### Patch Changes
+
+- Preserve nested inline formatting, escaped styles, line-height units, and Word-compatible line breaks in DOCX exports.
+
 ## 53.4.6
 
 ### Patch Changes

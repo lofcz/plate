@@ -1,5 +1,11 @@
 # @platejs/list-classic
 
+## 53.6.2
+
+### Patch Changes
+
+- Normalize a list at the start of its parent without looking up a missing previous sibling.
+
 ## 53.0.0
 
 ### Patch Changes
