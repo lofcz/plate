@@ -94,7 +94,7 @@ Explicit user requirements:
 - Scope includes packages/markdown, its patch changeset, this release ledger, and consumer dependency metadata.
 - Source risk: numbered prose inside a bullet can lose its ordinal. Prove both parse and serialize/reparse preservation.
 - Public API/exports remain unchanged; no migration or barrel changes apply.
-- Task plan owns the forthcoming source PR; PR URL pending creation after required checks.
+- Source PR ownership: https://github.com/lofcz/plate/pull/57 (this plan owns PR #57).
 
 Work Checklist:
 - [x] Explicit user requirements copied into this plan.
@@ -192,6 +192,8 @@ Release scope clarification:
 - Before-fix /tmp/plate-ordinal-before.log: exact 1./3./5. disappearance reproduced (1 failing regression).
 - After-fix /tmp/plate-ordinal-after.log: all 5 list deserializer tests pass, including normalized serialization round trip.
 - Default autoreview gpt-5.5 is unsupported on this ChatGPT account. Retry uses the account's configured gpt-6.1-sol; no user-requested engine/model was overridden.
-- Full pnpm check running; source risk remains confined to one-item ordered lists beginning a bullet's contents. Genuine multi-item nested lists retain their existing path.
+- Exact source commit aca0fad6ed passed full GitHub CI check in run 39882729777; local duplicate check continues; source risk remains confined to one-item ordered lists beginning a bullet's contents. Genuine multi-item nested lists retain their existing path.
 
 Review cycle 1: accepted zero-ordinal finding; reconstruct with nullish fallback, and include `0. month` in the parse/round-trip regression. No API or scope expansion.
+
+Source verification: GitHub full check and barrel drift detection passed at aca0fad6ed, run https://github.com/lofcz/plate/actions/runs/39882729777. Structured autoreview /tmp/plate-ordinal-review-clean.json reports zero findings after the accepted zero-ordinal repair. Source PR #57 is prepared for merge.
