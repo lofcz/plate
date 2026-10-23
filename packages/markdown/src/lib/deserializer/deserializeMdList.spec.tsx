@@ -5,10 +5,56 @@ import { jsxt } from '@platejs/test-utils';
 
 import { createTestEditor } from '../__tests__/createTestEditor';
 import { deserializeMd } from './deserializeMd';
+import { serializeMd } from '../serializer/serializeMd';
 jsxt;
 
 describe('deserializeMdList - comprehensive coverage', () => {
   const editor = createTestEditor([BaseListPlugin]);
+
+  it('preserves literal ordinals at the start of bullet content across round trips', () => {
+    const editor = createTestEditor([BaseListPlugin]);
+    const input = [
+      '* Monthly rates:',
+      '  * 0. month: **100 %**',
+      '  * 1. and 2. month: **80 %**',
+      '  * 3. and 4. month: **50 %**',
+      '  * 5. month: **40 %**',
+    ].join('\n');
+    const expected = [
+      {
+        children: [{ text: 'Monthly rates:' }],
+        indent: 1,
+        listStyleType: 'disc',
+      },
+      {
+        children: [{ text: '0. month: ' }, { bold: true, text: '100 %' }],
+        indent: 2,
+        listStyleType: 'disc',
+      },
+      {
+        children: [{ text: '1. and 2. month: ' }, { bold: true, text: '80 %' }],
+        indent: 2,
+        listStyleType: 'disc',
+      },
+      {
+        children: [{ text: '3. and 4. month: ' }, { bold: true, text: '50 %' }],
+        indent: 2,
+        listStyleType: 'disc',
+      },
+      {
+        children: [{ text: '5. month: ' }, { bold: true, text: '40 %' }],
+        indent: 2,
+        listStyleType: 'disc',
+      },
+    ];
+
+    editor.tf.setValue(deserializeMd(editor, input));
+    expect(editor.children).toMatchObject(expected);
+    const markdown = serializeMd(editor);
+    editor.tf.setValue(deserializeMd(editor, markdown));
+    expect(editor.children).toMatchObject(expected);
+    expect(serializeMd(editor)).toBe(markdown);
+  });
 
   it('preserves ordered-list starts after setValue normalizes the value', () => {
     const editor = createTestEditor([BaseListPlugin]);

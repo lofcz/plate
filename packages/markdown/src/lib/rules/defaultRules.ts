@@ -674,7 +674,29 @@ export const defaultRules: MdRules = {
             listStyleType = getPluginType(options.editor!, KEYS.listTodo);
 
           // Handle the main content of the list item
-          const [paragraph, ...subLists] = listItem.children || [];
+          let [paragraph, ...subLists] = listItem.children || [];
+
+          // CommonMark parses "* 5. month" as a bullet containing a one-item
+          // ordered list. Keep the ordinal as text before applying the outer
+          // bullet properties, which would otherwise discard its numbering.
+          if (
+            paragraph?.type === 'list' &&
+            paragraph.ordered &&
+            paragraph.children.length === 1
+          ) {
+            const [first, ...rest] = paragraph.children[0].children;
+
+            if (first?.type === 'paragraph') {
+              paragraph = {
+                ...first,
+                children: [
+                  { type: 'text', value: `${paragraph.start ?? 1}. ` },
+                  ...first.children,
+                ],
+              };
+              subLists = [...rest, ...subLists];
+            }
+          }
 
           // Create list item from paragraph content
           const result = paragraph
