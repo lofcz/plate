@@ -1,5 +1,11 @@
 # @platejs/markdown
 
+## 53.6.3
+
+### Patch Changes
+
+- aca0fad: Preserve leading ordinals such as `5. month` in Markdown bullet text across editor edits and round trips.
+
 ## 53.6.2
 
 ### Patch Changes
