@@ -1,17 +1,16 @@
 ---
 name: video-transcripts
-description: Generate structured video transcripts from local files or video URLs using Gemini Files API. Use when a GitHub or Linear tracker item, comment, or attachment includes a screen recording, .mov, .mp4, or tracker-hosted video and you need a <video-transcripts> block instead of hand-written notes.
-disable-model-invocation: true
+description: "Transcribe a supplied local or linked video with Gemini Files API when its contents are needed as evidence."
 ---
 
 # Video Transcripts
 
 ## Quick Start
 
-Run the helper once per relevant video:
+Run the helper once per relevant video. `<skill>` is this skill's directory:
 
 ```bash
-bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
+bash <skill>/scripts/generate_video_transcript.sh \
   "https://uploads.linear.app/.../screen-recording.mov" \
   --title "PDF preview hyperlinks trigger leave-page modal"
 ```
@@ -19,7 +18,7 @@ bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
 Or for a GitHub attachment:
 
 ```bash
-bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
+bash <skill>/scripts/generate_video_transcript.sh \
   "https://github.com/user-attachments/assets/..." \
   --title "Slash menu loses selection after confirm"
 ```
@@ -27,7 +26,7 @@ bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
 Or for a Screencastify watch page:
 
 ```bash
-bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
+bash <skill>/scripts/generate_video_transcript.sh \
   "https://app.screencastify.com/watch/..." \
   --title "Bulk send expands filtered recipients"
 ```
@@ -35,7 +34,7 @@ bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
 Or for a local file:
 
 ```bash
-bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh \
+bash <skill>/scripts/generate_video_transcript.sh \
   "/absolute/path/to/video.mov" \
   --title "Preview hyperlink exits workflow"
 ```
@@ -60,6 +59,12 @@ For auth-gated Linear uploads, the helper automatically retries with cookies fro
 ```
 
 ## Workflow
+
+A tracker comment or reply that anyone outside the team can read, such as one on
+a public repository, needs explicit message authority; one only the team can read
+follows the project's message rule. Prepare or return the transcript locally when
+publication is not authorized. Cache location and reuse rules below do not grant
+permission to post.
 
 1. Run the helper once for each relevant video.
 2. Give each run a short, bug-focused `--title`.
@@ -112,13 +117,13 @@ For Gemini 3 models, the helper forces minimal thinking so output budget goes to
 Override with:
 
 ```bash
-VIDEO_TRANSCRIPTS_MODEL=gemini-3-flash-preview bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh ...
+VIDEO_TRANSCRIPTS_MODEL=gemini-3-flash-preview bash <skill>/scripts/generate_video_transcript.sh ...
 ```
 
 Or:
 
 ```bash
-bash .agents/skills/video-transcripts/scripts/generate_video_transcript.sh ... \
+bash <skill>/scripts/generate_video_transcript.sh ... \
   --model gemini-2.5-flash
 ```
 
