@@ -153,6 +153,40 @@ Quoted text.
     );
   });
 
+  it('leaves an equals sign inside a quoted value alone', () => {
+    const input =
+      '<activity name="Polarita vazby C=O a porovnání s vazbou C=C" duration="15">\nText\n</activity>';
+    expect(htmlToJsx(input)).toBe(input);
+  });
+
+  it('leaves attribute keywords inside quoted values alone', () => {
+    const input =
+      '<activity name="Hidden checked items are required" note=\'use class=x for=y\' duration="5">\nText\n</activity>';
+    expect(htmlToJsx(input)).toBe(input);
+  });
+
+  it('leaves a value cut at a quoted > alone', () => {
+    const input = '<activity title="a C=O > b hidden" duration="5">';
+    expect(htmlToJsx(input)).toBe(input);
+  });
+
+  it('leaves JSX expression values alone', () => {
+    const input = '<Chart data={{ a: 1, label: "x=y" }} hidden={false}>';
+    expect(htmlToJsx(input)).toBe(input);
+  });
+
+  it('still rewrites real attributes next to quoted values', () => {
+    expect(
+      htmlToJsx('<input title="a=b hidden" class="c" disabled value=5>')
+    ).toBe(
+      '<input title="a=b hidden" className="c" disabled="true" value="5" />'
+    );
+  });
+
+  it('falls back to the first > for an unterminated quote', () => {
+    expect(htmlToJsx('<b title="open>text')).toBe('<b title="open>text');
+  });
+
   it('leaves already self-closing source chips alone', () => {
     const input = '<source title="Chip" url="https://example.com" />';
     expect(htmlToJsx(input)).toBe(input);
