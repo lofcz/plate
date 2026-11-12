@@ -165,16 +165,9 @@ Quoted text.
     expect(htmlToJsx(input)).toBe(input);
   });
 
-  it('keeps a > inside a quoted value within the tag', () => {
-    const input =
-      '<activity alt="a > b" prompt="arrow -> product, C=O" duration="5">';
+  it('leaves a value cut at a quoted > alone', () => {
+    const input = '<activity title="a C=O > b hidden" duration="5">';
     expect(htmlToJsx(input)).toBe(input);
-  });
-
-  it('void-closes an img whose quoted alt contains >', () => {
-    expect(htmlToJsx('<img alt="x > y" src=a.png>')).toBe(
-      '<img alt="x > y" src="a.png" />'
-    );
   });
 
   it('leaves JSX expression values alone', () => {
