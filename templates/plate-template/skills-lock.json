@@ -4,7 +4,7 @@
     "autoreview": {
       "source": "openclaw/agent-skills",
       "sourceType": "github",
-      "computedHash": "0a1574c8d4a4de8da17c518a62780117ca2ca7fd978262ae1f93231f4b52132c"
+      "computedHash": "b801749cbc98b9643f1822bbe161dbed113f7ff91a861989d426bd56601d91bb"
     },
     "react-useeffect": {
       "source": "softaworks/agent-toolkit",
@@ -29,7 +29,7 @@
     "video-transcripts": {
       "source": "udecode/dotai",
       "sourceType": "github",
-      "computedHash": "156e8c855d2146504a7bdb66ff7a14012167fd9c19c5a4d486437851d061ca87"
+      "computedHash": "da34c4910c0ac4fc7e8086c77842e6879eb4d24ef3eff119b5b7fada07b66c0e"
     }
   }
 }
