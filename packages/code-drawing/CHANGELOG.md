@@ -1,5 +1,11 @@
 # @platejs/code-drawing
 
+## 53.7.0
+
+### Patch Changes
+
+- Updated `@lofcz/platejs-utils`.
+
 ## 53.6.2
 
 ### Patch Changes
